@@ -9,10 +9,8 @@
     <script>
       // Secure AdSense loading - no sensitive data exposed to client
       window.loadAdSense = async function() {
-        if (location.hostname === 'localhost' || location.hostname.includes('replit.dev')) {
-          // Development mode - no ads loaded
-          return;
-        }
+        // Always try to load AdSense config from server
+        // Server will determine if ads should be enabled based on environment
         
         try {
           // Fetch AdSense config securely from server

@@ -46,8 +46,10 @@ Preferred communication style: Simple, everyday language.
 - **generated_tickets**: Tracks user-generated number combinations with metadata
 - **prediction_results**: Tracks performance of predictions against actual draws with match counts and prize levels
 - **performance_stats**: Aggregated performance metrics by game, method, and time period
+- **user_accounts**: User authentication with email, password hash, subscription tiers, MFA secrets and backup codes
+- **user_sessions**: Secure session management with MFA verification tracking and expiration
 - **sessions**: PostgreSQL-backed user sessions for database connectivity
-- Uses JSONB fields for flexible number array storage
+- Uses JSONB fields for flexible number array storage and MFA backup codes
 - UUID primary keys with PostgreSQL's gen_random_uuid()
 
 #### Core Services
@@ -56,18 +58,24 @@ Preferred communication style: Simple, everyday language.
 - **Number Generation**: Multiple algorithms (hot numbers, balanced, wheel systems)
 - **Prediction Tracking**: Automatic evaluation of predictions against actual draws
 - **Performance Analytics**: Statistical analysis for marketing and system improvement
+- **Authentication System**: Secure user registration, login with bcrypt password hashing
+- **MFA Service**: Google Authenticator TOTP integration with QR code generation and backup codes
+- **Session Management**: Secure token-based sessions with MFA verification requirements
 
 #### Frontend Pages
 - **Home Page**: Main interface with game selection, method selection, number generation, advertising spaces, and daily usage tracking
 - **Performance Page**: Marketing-focused analytics dashboard showing track record and method comparison
 - **Subscription Page**: PayPal-integrated subscription plans with four tiers (Free, Basic, Pro, Premium) 
+- **Authentication Page**: Complete MFA-enforced registration/login with Google Authenticator setup and educational content
 - **Not Found**: 404 error handling
 
 #### Advertising Integration
 - **AdSpace Component**: Flexible advertising component supporting multiple sizes (banner, square, rectangle, leaderboard)
-- **Google AdSense Integration**: Ready-to-deploy AdSense component with customizable ad slots
+- **Google AdSense Integration**: Production-ready AdSense with secure server-side Publisher ID handling
+- **Development Testing**: AdSense configured for development environment testing with domain approval workflow
 - **Strategic Ad Placement**: Header, mid-content, sidebar, and footer advertising spaces for free users
-- **Ad-Free Experience**: Premium users enjoy completely ad-free interface
+- **Ad-Free Experience**: All paid subscribers enjoy completely ad-free interface
+- **Security Focus**: Zero client-side credential exposure, all sensitive data handled server-side
 
 #### UI Components
 - Complete shadcn/ui component library
@@ -150,5 +158,9 @@ Preferred communication style: Simple, everyday language.
 - ✅ Enhanced subscription page with four tiers including free option
 - ✅ Integrated ad-free experience for all paid tiers
 - ✅ Added tier switcher for testing different user experiences
+- ✅ **SECURITY AUDIT COMPLETE**: Eliminated all API/credential exposure risks
+- ✅ **MFA IMPLEMENTATION**: Force Multi-Factor Authentication for all subscribers
+- ✅ **GOOGLE AUTHENTICATOR INTEGRATION**: TOTP-based 6-digit codes (no push notifications)
+- ✅ **SECURE DEVELOPMENT ADS**: AdSense configured for both development and production testing
 
 The application follows a monorepo structure with shared types and schemas, enabling type safety between frontend and backend while maintaining clear separation of concerns.

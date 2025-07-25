@@ -7,10 +7,16 @@ import {
   type InsertPredictionResult,
   type PerformanceStats,
   type InsertPerformanceStats,
+  type UserAccount,
+  type InsertUserAccount,
+  type UserSession,
+  type InsertUserSession,
   lotteryDraws,
   generatedTickets,
   predictionResults,
-  performanceStats
+  performanceStats,
+  userAccounts,
+  userSessions
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -35,6 +41,18 @@ export interface IStorage {
   getPerformanceStats(game: string, method?: string): Promise<PerformanceStats[]>;
   updatePerformanceStats(stats: InsertPerformanceStats): Promise<PerformanceStats>;
   getMarketingStats(): Promise<any>;
+  
+  // User management
+  getUserByEmail(email: string): Promise<UserAccount | undefined>;
+  getUserById(id: string): Promise<UserAccount | undefined>;
+  createUser(user: InsertUserAccount): Promise<UserAccount>;
+  updateUserMFASecret(userId: string, secret: string): Promise<void>;
+  enableUserMFA(userId: string, backupCodes: string[]): Promise<void>;
+  updateUserLastLogin(userId: string): Promise<void>;
+  
+  // Session management
+  createUserSession(session: InsertUserSession): Promise<UserSession>;
+  getUserSession(sessionToken: string): Promise<UserSession | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -173,6 +191,39 @@ export class MemStorage implements IStorage {
       methodComparison: [],
       recentWins: []
     };
+  }
+
+  // User management methods (not supported in memory storage)
+  async getUserByEmail(email: string): Promise<UserAccount | undefined> {
+    throw new Error("User management not supported in memory storage");
+  }
+
+  async getUserById(id: string): Promise<UserAccount | undefined> {
+    throw new Error("User management not supported in memory storage");
+  }
+
+  async createUser(user: InsertUserAccount): Promise<UserAccount> {
+    throw new Error("User management not supported in memory storage");
+  }
+
+  async updateUserMFASecret(userId: string, secret: string): Promise<void> {
+    throw new Error("User management not supported in memory storage");
+  }
+
+  async enableUserMFA(userId: string, backupCodes: string[]): Promise<void> {
+    throw new Error("User management not supported in memory storage");
+  }
+
+  async updateUserLastLogin(userId: string): Promise<void> {
+    throw new Error("User management not supported in memory storage");
+  }
+
+  async createUserSession(session: InsertUserSession): Promise<UserSession> {
+    throw new Error("Session management not supported in memory storage");
+  }
+
+  async getUserSession(sessionToken: string): Promise<UserSession | undefined> {
+    throw new Error("Session management not supported in memory storage");
   }
 }
 
@@ -381,6 +432,65 @@ export class DatabaseStorage implements IStorage {
         date: win.date?.toLocaleDateString() || ''
       }))
     };
+  }
+
+  // User management methods
+  async getUserByEmail(email: string): Promise<UserAccount | undefined> {
+    const [user] = await db.select().from(userAccounts)
+      .where(eq(userAccounts.email, email))
+      .limit(1);
+    return user;
+  }
+
+  async getUserById(id: string): Promise<UserAccount | undefined> {
+    const [user] = await db.select().from(userAccounts)
+      .where(eq(userAccounts.id, id))
+      .limit(1);
+    return user;
+  }
+
+  async createUser(user: InsertUserAccount): Promise<UserAccount> {
+    const [newUser] = await db.insert(userAccounts)
+      .values(user)
+      .returning();
+    return newUser;
+  }
+
+  async updateUserMFASecret(userId: string, secret: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({ mfaSecret: secret })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async enableUserMFA(userId: string, backupCodes: string[]): Promise<void> {
+    await db.update(userAccounts)
+      .set({ 
+        mfaEnabled: 1, 
+        mfaBackupCodes: backupCodes,
+        updatedAt: new Date()
+      })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async updateUserLastLogin(userId: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({ lastLogin: new Date() })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  // Session management methods
+  async createUserSession(session: InsertUserSession): Promise<UserSession> {
+    const [newSession] = await db.insert(userSessions)
+      .values(session)
+      .returning();
+    return newSession;
+  }
+
+  async getUserSession(sessionToken: string): Promise<UserSession | undefined> {
+    const [session] = await db.select().from(userSessions)
+      .where(eq(userSessions.sessionToken, sessionToken))
+      .limit(1);
+    return session;
   }
 }
 

@@ -46,6 +46,30 @@ export const performanceStats = pgTable("performance_stats", {
   lastUpdated: timestamp("last_updated").default(sql`now()`),
 });
 
+export const userAccounts = pgTable("user_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  subscriptionTier: text("subscription_tier").notNull().default("free"), // 'free', 'basic', 'pro', 'premium'
+  subscriptionStatus: text("subscription_status").notNull().default("active"), // 'active', 'cancelled', 'expired'
+  paypalSubscriptionId: text("paypal_subscription_id"),
+  mfaSecret: text("mfa_secret"), // Base32 encoded secret for TOTP
+  mfaEnabled: integer("mfa_enabled").notNull().default(0), // 0 = disabled, 1 = enabled
+  mfaBackupCodes: jsonb("mfa_backup_codes"), // Array of backup codes
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const userSessions = pgTable("user_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => userAccounts.id),
+  sessionToken: text("session_token").notNull().unique(),
+  mfaVerified: integer("mfa_verified").notNull().default(0), // 0 = not verified, 1 = verified
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 export const insertDrawSchema = createInsertSchema(lotteryDraws).omit({
   id: true,
 });
@@ -73,6 +97,22 @@ export const insertPerformanceStatsSchema = createInsertSchema(performanceStats)
 export type InsertPredictionResult = z.infer<typeof insertPredictionResultSchema>;
 export type PredictionResult = typeof predictionResults.$inferSelect;
 export type InsertPerformanceStats = z.infer<typeof insertPerformanceStatsSchema>;
+
+export const insertUserAccountSchema = createInsertSchema(userAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserAccount = z.infer<typeof insertUserAccountSchema>;
+export type UserAccount = typeof userAccounts.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type UserSession = typeof userSessions.$inferSelect;
 export type PerformanceStats = typeof performanceStats.$inferSelect;
 
 // Analysis types
