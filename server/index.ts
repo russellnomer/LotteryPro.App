@@ -2,10 +2,30 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { injectAdSenseId } from "./middleware/adsense";
+import { 
+  securityHeaders, 
+  apiRateLimit, 
+  sanitizeInput, 
+  securityLogger, 
+  sessionSecurity,
+  secureErrorHandler,
+  validateDependencyIntegrity
+} from "./middleware/security";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Validate dependencies on startup - OWASP A08:2021
+validateDependencyIntegrity();
+
+// Security middleware - OWASP, CIS, NIST compliance
+app.use(securityHeaders);
+app.use(securityLogger);
+app.use(sessionSecurity);
+app.use(sanitizeInput);
+app.use(apiRateLimit);
+
+app.use(express.json({ limit: '10mb' })); // DoS protection
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(injectAdSenseId);
 
 app.use((req, res, next) => {
@@ -41,13 +61,8 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // Use secure error handler
+  app.use(secureErrorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

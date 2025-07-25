@@ -6,6 +6,16 @@ import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
+import { 
+  securityHeaders, 
+  authRateLimit, 
+  apiRateLimit, 
+  sanitizeInput, 
+  securityLogger, 
+  sessionSecurity,
+  secureErrorHandler,
+  validateDependencyIntegrity
+} from "./middleware/security";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -285,11 +295,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Secure AdSense configuration endpoint - no sensitive data exposed
   app.get("/api/adsense-config", createAdSenseConfigEndpoint());
 
-  // Authentication routes
-  app.post("/api/auth/register", register);
-  app.post("/api/auth/login", login);
-  app.post("/api/auth/mfa/setup", setupMFA);
-  app.post("/api/auth/mfa/verify", verifyMFASetup);
+  // Authentication routes with rate limiting
+  app.post("/api/auth/register", authRateLimit, register);
+  app.post("/api/auth/login", authRateLimit, login);
+  app.post("/api/auth/mfa/setup", authRateLimit, setupMFA);
+  app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
 
   const httpServer = createServer(app);
   return httpServer;
