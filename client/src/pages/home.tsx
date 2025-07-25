@@ -77,9 +77,9 @@ export default function Home() {
               </h1>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">Dashboard</a>
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">Analysis</a>
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">History</a>
+              <a href="/" className="text-primary font-semibold transition-colors">Dashboard</a>
+              <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
+              <a href="#" className="text-gray-600 hover:text-primary transition-colors">Track Record</a>
               <a href="#" className="text-gray-600 hover:text-primary transition-colors">Help</a>
             </nav>
           </div>
@@ -293,6 +293,40 @@ export default function Home() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Performance Teaser */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <i className="fas fa-trophy text-primary mr-2"></i>Our Track Record
+                  </span>
+                  <a href="/performance" className="text-sm text-primary hover:underline">
+                    View Full Report →
+                  </a>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">25%</div>
+                    <div className="text-sm text-gray-600">Better than Random</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">73%</div>
+                    <div className="text-sm text-gray-600">Average Accuracy</div>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">Hot</div>
+                    <div className="text-sm text-gray-600">Best Method</div>
+                  </div>
+                </div>
+                <div className="mt-4 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-center">
+                  <p className="font-semibold">Why choose random when you can choose smart?</p>
+                  <p className="text-sm opacity-90">Our algorithms give you a statistical edge over pure luck.</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}

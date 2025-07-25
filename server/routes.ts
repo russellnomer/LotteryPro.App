@@ -1,10 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTicketSchema, type GameType } from "@shared/schema";
+import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/schema";
+import { seedHistoricalData } from "./seedData";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Seed historical data on startup
+  await seedHistoricalData();
   
   // Get historical draws for a specific game
   app.get("/api/draws/:game", async (req, res) => {
@@ -188,6 +192,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(analysis);
       
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Add new draw and evaluate predictions
+  app.post("/api/draws", async (req, res) => {
+    try {
+      const drawData = insertDrawSchema.parse(req.body);
+      const newDraw = await storage.createDraw(drawData);
+      
+      // Evaluate all predictions against this new draw
+      await storage.evaluatePredictions(newDraw);
+      
+      res.json(newDraw);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get performance stats
+  app.get("/api/performance/:game", async (req, res) => {
+    try {
+      const game = req.params.game as GameType;
+      const method = req.query.method as string;
+      
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ message: "Invalid game type" });
+      }
+      
+      const stats = await storage.getPerformanceStats(game, method);
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get marketing analytics
+  app.get("/api/marketing-stats", async (req, res) => {
+    try {
+      const stats = await storage.getMarketingStats();
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get prediction results for a ticket
+  app.get("/api/predictions/:ticketId?", async (req, res) => {
+    try {
+      const ticketId = req.params.ticketId;
+      const results = await storage.getPredictionResults(ticketId);
+      res.json(results);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

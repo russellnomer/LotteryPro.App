@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application for generating lottery numbers for Powerball and MegaMillions using statistical analysis. The app performs frequency analysis on historical lottery data and provides multiple generation methods including hot numbers, balanced selection, and wheel systems.
+This is a full-stack web application for generating lottery numbers for Powerball and MegaMillions using statistical analysis. The app performs frequency analysis on historical lottery data, provides multiple generation methods including hot numbers, balanced selection, and wheel systems, and tracks prediction performance against actual lottery results for marketing and improvement purposes.
 
 ## User Preferences
 
@@ -32,16 +32,22 @@ Preferred communication style: Simple, everyday language.
 #### Database Schema (shared/schema.ts)
 - **lottery_draws**: Stores historical lottery draw data with game type, dates, numbers, and jackpot info
 - **generated_tickets**: Tracks user-generated number combinations with metadata
+- **prediction_results**: Tracks performance of predictions against actual draws with match counts and prize levels
+- **performance_stats**: Aggregated performance metrics by game, method, and time period
+- **sessions**: PostgreSQL-backed user sessions for database connectivity
 - Uses JSONB fields for flexible number array storage
 - UUID primary keys with PostgreSQL's gen_random_uuid()
 
 #### Core Services
-- **Storage Layer**: Abstracted storage interface with in-memory fallback
+- **Storage Layer**: PostgreSQL database with Drizzle ORM, automated data seeding
 - **Lottery Analysis**: Frequency analysis, hot/cold number detection, wheel system generation
 - **Number Generation**: Multiple algorithms (hot numbers, balanced, wheel systems)
+- **Prediction Tracking**: Automatic evaluation of predictions against actual draws
+- **Performance Analytics**: Statistical analysis for marketing and system improvement
 
 #### Frontend Pages
 - **Home Page**: Main interface with game selection, method selection, and number generation
+- **Performance Page**: Marketing-focused analytics dashboard showing track record and method comparison
 - **Not Found**: 404 error handling
 
 #### UI Components
@@ -61,6 +67,14 @@ Preferred communication style: Simple, everyday language.
    - Choose generation method (hot/balanced/wheel)
    - View generated numbers and frequency charts
    - Save generated tickets to database
+4. **Prediction Tracking**:
+   - Automatically evaluate predictions when new draws are added
+   - Calculate accuracy, matches, and estimated prize levels
+   - Update performance statistics for marketing analytics
+5. **Performance Reporting**:
+   - Generate method comparison analytics
+   - Calculate improvement over random selection
+   - Display recent wins and track record for marketing
 
 ## External Dependencies
 
