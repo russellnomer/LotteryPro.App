@@ -18,6 +18,7 @@ export default function Home() {
   const [generatedNumbers, setGeneratedNumbers] = useState<TicketGeneration | null>(null);
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
+  const [selectedWheelType, setSelectedWheelType] = useState<string>('single');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -56,9 +57,14 @@ export default function Home() {
 
   const handleGenerateWheel = () => {
     if (analysis?.hotNumbers) {
-      const combinations = generateWheelCombinations(analysis.hotNumbers, selectedGame);
+      const combinations = generateWheelCombinations(analysis.hotNumbers, selectedGame, selectedWheelType);
       setWheelCombinations(combinations);
       setShowWheel(true);
+      
+      toast({
+        title: "Wheel Generated!",
+        description: `Generated ${WHEEL_SYSTEMS[selectedWheelType as keyof typeof WHEEL_SYSTEMS].name} with ${combinations.length} ${combinations.length === 1 ? 'ticket' : 'tickets'}.`
+      });
     }
   };
 
@@ -295,41 +301,84 @@ export default function Home() {
             {showWheel && wheelCombinations.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <i className="fas fa-cogs text-primary mr-2"></i>Wheel Combinations
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <i className="fas fa-cogs text-primary mr-2"></i>
+                      {WHEEL_SYSTEMS[selectedWheelType as keyof typeof WHEEL_SYSTEMS]?.name || 'Wheel Combinations'}
+                    </span>
+                    <Badge variant="secondary">
+                      {wheelCombinations.length} {wheelCombinations.length === 1 ? 'Ticket' : 'Tickets'}
+                    </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 gap-4">
-                    {wheelCombinations.map((combination, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600 mb-3">
-                          Combination {index + 1} • 6 Numbers Total
-                        </div>
-                        <div className="flex items-center gap-2 justify-center">
-                          {/* Main 5 numbers */}
-                          {combination.slice(0, 5).map((num, numIndex) => (
-                            <div key={numIndex} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-sm font-bold text-gray-800 shadow-sm border border-gray-200">
-                              {num}
+                    {wheelCombinations.map((combination, index) => {
+                      // Generate consistent bonus number for each combination
+                      const bonusNumber = Math.floor(Math.random() * (selectedGame === 'powerball' ? 26 : 24)) + 1;
+                      
+                      return (
+                        <div key={index} className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200">
+                          <div className="text-sm text-gray-600 mb-3 flex items-center justify-between">
+                            <span>
+                              {selectedWheelType === 'single' ? 'Optimized Single Ticket' : `Ticket ${index + 1}`} • 6 Numbers Total
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {selectedGame === 'powerball' ? 'Powerball' : 'MegaMillions'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 justify-center mb-3">
+                            {/* Main 5 numbers */}
+                            {combination.map((num, numIndex) => (
+                              <div key={numIndex} className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-sm font-bold text-gray-800 shadow-md border-2 border-gray-300">
+                                {num}
+                              </div>
+                            ))}
+                            
+                            {/* Separator */}
+                            <div className="text-gray-400 font-bold mx-2 text-lg">+</div>
+                            
+                            {/* Bonus number */}
+                            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md border-2 border-white ${
+                              selectedGame === 'powerball' ? 'bg-red-600' : 'bg-blue-600'
+                            }`}>
+                              {bonusNumber}
                             </div>
-                          ))}
+                          </div>
                           
-                          {/* Separator */}
-                          <div className="text-gray-400 font-bold mx-2">+</div>
-                          
-                          {/* Bonus number - generate random bonus for wheel */}
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${
-                            selectedGame === 'powerball' ? 'bg-red-500' : 'bg-blue-500'
-                          }`}>
-                            {Math.floor(Math.random() * (selectedGame === 'powerball' ? 26 : 24)) + 1}
+                          <div className="text-center bg-white rounded-md p-2">
+                            <div className="text-sm font-mono font-bold text-gray-800">
+                              {combination.join(' - ')} + {bonusNumber}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Complete 6-Number Selection
+                            </div>
                           </div>
                         </div>
-                        <div className="text-center mt-2 text-xs text-gray-500">
-                          {combination.slice(0, 5).join(' - ')} + Bonus
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                  
+                  {selectedWheelType === 'single' && (
+                    <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center text-green-800">
+                        <i className="fas fa-star mr-2"></i>
+                        <span className="text-sm font-medium">Single Ticket Optimization</span>
+                      </div>
+                      <p className="text-xs text-green-600 mt-1">
+                        This ticket combines hot numbers with balanced selection for optimal single-play strategy.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <Button 
+                    onClick={handleGenerateWheel}
+                    variant="outline"
+                    className="w-full mt-4"
+                  >
+                    <i className="fas fa-sync-alt mr-2"></i>Generate New Wheel
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -448,12 +497,21 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Select Wheel Type:</h4>
                   {Object.entries(WHEEL_SYSTEMS).map(([key, system]) => (
                     <div 
                       key={key} 
-                      className={`p-3 rounded-lg ${key === 'abbreviated' ? 'bg-primary bg-opacity-10 border-2 border-primary' : 'bg-gray-50'}`}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors border-2 ${
+                        selectedWheelType === key 
+                          ? 'bg-primary bg-opacity-10 border-primary' 
+                          : 'bg-gray-50 border-gray-200 hover:border-primary'
+                      }`}
+                      onClick={() => setSelectedWheelType(key)}
                     >
-                      <div className="font-medium text-gray-800">{system.name}</div>
+                      <div className="font-medium text-gray-800 flex items-center justify-between">
+                        {system.name}
+                        {selectedWheelType === key && <i className="fas fa-check text-primary"></i>}
+                      </div>
                       <div className="text-sm text-gray-600">{system.description}</div>
                       <div className="text-xs text-gray-500 mt-1">{system.ticketsRequired}</div>
                     </div>
@@ -464,7 +522,8 @@ export default function Home() {
                   className="w-full mt-4 bg-primary hover:bg-blue-700"
                   disabled={!analysis?.hotNumbers}
                 >
-                  Generate Wheel
+                  <i className="fas fa-cogs mr-2"></i>
+                  Generate {WHEEL_SYSTEMS[selectedWheelType as keyof typeof WHEEL_SYSTEMS]?.name || 'Wheel'}
                 </Button>
               </CardContent>
             </Card>

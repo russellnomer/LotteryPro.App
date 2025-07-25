@@ -34,47 +34,98 @@ export function calculateFrequencyAnalysis(draws: LotteryDraw[], game: GameType)
   };
 }
 
-export function generateWheelCombinations(hotNumbers: number[], game: GameType): number[][] {
+export function generateWheelCombinations(hotNumbers: number[], game: GameType, wheelType: string = 'abbreviated'): number[][] {
   const combinations: number[][] = [];
   const maxMain = game === 'powerball' ? 69 : 60;
+  const maxBonus = game === 'powerball' ? 26 : 24;
   
-  // Generate abbreviated wheel with key numbers
-  const keyNumbers = hotNumbers.slice(0, 3); // Use top 3 hot numbers as key
-  const poolNumbers = hotNumbers.slice(3, 8); // Additional pool
+  // Configuration for different wheel types
+  const wheelConfig = {
+    single: { count: 1, keyNumbers: 2, poolSize: 8 },
+    abbreviated: { count: 6, keyNumbers: 3, poolSize: 10 },
+    key: { count: 8, keyNumbers: 2, poolSize: 12 },
+    full: { count: 12, keyNumbers: 4, poolSize: 15 }
+  };
   
-  // Add some random numbers to the pool
-  while (poolNumbers.length < 10) {
+  const config = wheelConfig[wheelType as keyof typeof wheelConfig] || wheelConfig.abbreviated;
+  
+  // Use top hot numbers as key numbers
+  const keyNumbers = hotNumbers.slice(0, config.keyNumbers);
+  const poolNumbers = [...hotNumbers.slice(config.keyNumbers, 8)];
+  
+  // Add some strategic numbers to the pool
+  while (poolNumbers.length < config.poolSize) {
     const randomNum = Math.floor(Math.random() * maxMain) + 1;
     if (!hotNumbers.includes(randomNum) && !poolNumbers.includes(randomNum)) {
       poolNumbers.push(randomNum);
     }
   }
   
-  // Generate combinations ensuring at least one key number
-  for (let i = 0; i < 12; i++) {
+  if (wheelType === 'single') {
+    // Single ticket wheel - optimized selection
     const combination: number[] = [];
     
-    // Add one key number
-    const keyIndex = Math.floor(Math.random() * keyNumbers.length);
-    combination.push(keyNumbers[keyIndex]);
+    // Add 2 key hot numbers
+    combination.push(...keyNumbers.slice(0, 2));
     
-    // Fill rest from pool
-    const remainingPool = [...poolNumbers];
-    while (combination.length < 5 && remainingPool.length > 0) {
-      const randomIndex = Math.floor(Math.random() * remainingPool.length);
-      combination.push(remainingPool.splice(randomIndex, 1)[0]);
-    }
-    
-    // Fill any remaining with random numbers
-    while (combination.length < 5) {
-      const randomNum = Math.floor(Math.random() * maxMain) + 1;
-      if (!combination.includes(randomNum)) {
-        combination.push(randomNum);
+    // Add 2 from hot pool
+    const hotPool = hotNumbers.slice(2, 6);
+    for (let i = 0; i < 2 && i < hotPool.length; i++) {
+      if (!combination.includes(hotPool[i])) {
+        combination.push(hotPool[i]);
       }
     }
     
+    // Add 1 balanced number
+    const midRange = Math.floor(maxMain / 2);
+    let balancedNum = Math.floor(Math.random() * 20) + midRange - 10;
+    while (combination.includes(balancedNum) || balancedNum < 1 || balancedNum > maxMain) {
+      balancedNum = Math.floor(Math.random() * 20) + midRange - 10;
+    }
+    combination.push(balancedNum);
+    
+    // Sort and add to combinations
     combination.sort((a, b) => a - b);
     combinations.push(combination);
+    
+  } else {
+    // Multi-ticket wheels
+    for (let i = 0; i < config.count; i++) {
+      const combination: number[] = [];
+      
+      // Always include at least one key number
+      const keyIndex = i % keyNumbers.length;
+      combination.push(keyNumbers[keyIndex]);
+      
+      // For key wheel, add another key number
+      if (wheelType === 'key' && keyNumbers.length > 1) {
+        const secondKeyIndex = (keyIndex + 1) % keyNumbers.length;
+        if (!combination.includes(keyNumbers[secondKeyIndex])) {
+          combination.push(keyNumbers[secondKeyIndex]);
+        }
+      }
+      
+      // Fill rest from pool with variety
+      const availablePool = [...poolNumbers];
+      while (combination.length < 5 && availablePool.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availablePool.length);
+        const selectedNum = availablePool.splice(randomIndex, 1)[0];
+        if (!combination.includes(selectedNum)) {
+          combination.push(selectedNum);
+        }
+      }
+      
+      // Fill remaining with random numbers if needed
+      while (combination.length < 5) {
+        const randomNum = Math.floor(Math.random() * maxMain) + 1;
+        if (!combination.includes(randomNum)) {
+          combination.push(randomNum);
+        }
+      }
+      
+      combination.sort((a, b) => a - b);
+      combinations.push(combination);
+    }
   }
   
   return combinations;

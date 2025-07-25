@@ -41,19 +41,28 @@ export const ANALYSIS_METHODS = {
 } as const;
 
 export const WHEEL_SYSTEMS = {
-  full: {
-    name: 'Full Wheel',
-    description: 'All possible combinations',
-    ticketsRequired: '126 tickets required'
+  single: {
+    name: 'Single Ticket Wheel',
+    description: 'One optimized ticket using wheel analysis',
+    ticketsRequired: '1 ticket',
+    tickets: 1
   },
   abbreviated: {
     name: 'Abbreviated Wheel',
-    description: 'Optimized coverage',
-    ticketsRequired: '10-15 tickets recommended'
+    description: 'Optimized coverage with fewer tickets',
+    ticketsRequired: '6 tickets',
+    tickets: 6
   },
   key: {
     name: 'Key Number Wheel',
-    description: 'Guaranteed hot number',
-    ticketsRequired: '7-12 tickets required'
+    description: 'Guaranteed hot numbers in every ticket',
+    ticketsRequired: '8 tickets',
+    tickets: 8
+  },
+  full: {
+    name: 'Full Wheel',
+    description: 'Maximum coverage combinations',
+    ticketsRequired: '12 tickets',
+    tickets: 12
   }
 } as const;
