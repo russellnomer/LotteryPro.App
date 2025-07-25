@@ -122,12 +122,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bonusNumber
       });
       
+      // Ensure we have exactly 5 main numbers and 1 bonus = 6 total
+      if (mainNumbers.length !== 5) {
+        return res.status(500).json({ message: "Failed to generate exactly 5 main numbers" });
+      }
+
+      const gameConfig = {
+        powerball: { maxMain: 69, maxBonus: 26 },
+        megamillions: { maxMain: 60, maxBonus: 24 }
+      }[game];
+
       res.json({
         mainNumbers,
         bonusNumber,
         method,
         confidence: method === 'hot' ? 0.75 : method === 'balanced' ? 0.65 : 0.50,
-        ticketId: ticket.id
+        ticketId: ticket.id,
+        totalNumbers: 6, // Explicitly show this is 6 numbers total
+        gameInfo: {
+          name: game,
+          format: `5 from 1-${gameConfig.maxMain} + 1 from 1-${gameConfig.maxBonus}`
+        }
       });
       
     } catch (error: any) {

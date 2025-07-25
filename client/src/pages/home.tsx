@@ -126,7 +126,7 @@ export default function Home() {
                       className="bg-primary hover:bg-blue-700"
                     >
                       <i className="fas fa-sync-alt mr-2"></i>
-                      {selectedMethod === 'hot' ? 'Smart Pick' : 'Quick Pick'}
+                      {isGenerating ? 'Generating...' : 'Generate 6 Numbers'}
                     </Button>
                   </div>
                 </CardTitle>
@@ -135,32 +135,56 @@ export default function Home() {
                 {/* Generated Numbers Display */}
                 {generatedNumbers && (
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Numbers</h3>
-                    <div className="flex flex-wrap gap-3 mb-4">
-                      {/* Main Numbers */}
-                      <div className="flex gap-2">
-                        {generatedNumbers.mainNumbers.map((num, index) => (
-                          <div key={index} className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-lg font-bold text-gray-800 shadow-md">
-                            {num}
-                          </div>
-                        ))}
-                      </div>
-                      {/* Bonus Number */}
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 bg-gray-400 rounded-full mx-2"></div>
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-md ${
-                          selectedGame === 'powerball' ? 'bg-red-600' : 'bg-blue-600'
-                        }`}>
-                          {generatedNumbers.bonusNumber}
-                        </div>
+                    <div className="text-center mb-4">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Your 6 Lucky Numbers</h3>
+                      <div className="text-sm text-gray-600">
+                        {selectedGame === 'powerball' ? 'Powerball' : 'MegaMillions'} • 5 Main + 1 {selectedGame === 'powerball' ? 'Powerball' : 'Mega Ball'}
                       </div>
                     </div>
-                    <div className="flex gap-3 text-sm">
+                    
+                    <div className="flex justify-center items-center gap-3 mb-6">
+                      {/* Main 5 Numbers */}
+                      {generatedNumbers.mainNumbers.map((num, index) => (
+                        <div key={index} className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-xl font-bold text-gray-800 shadow-lg border-2 border-gray-200">
+                          {num}
+                        </div>
+                      ))}
+                      
+                      {/* Visual Separator */}
+                      <div className="flex flex-col items-center mx-3">
+                        <div className="text-gray-400 font-bold text-lg">+</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {selectedGame === 'powerball' ? 'PB' : 'MB'}
+                        </div>
+                      </div>
+                      
+                      {/* Bonus Number */}
+                      <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white shadow-lg border-2 border-white ${
+                        selectedGame === 'powerball' ? 'bg-red-600' : 'bg-blue-600'
+                      }`}>
+                        {generatedNumbers.bonusNumber}
+                      </div>
+                    </div>
+                    
+                    {/* Number Summary */}
+                    <div className="text-center bg-white rounded-lg p-4 mb-4">
+                      <div className="text-lg font-mono font-bold text-gray-800">
+                        {generatedNumbers.mainNumbers.join(' - ')} + {generatedNumbers.bonusNumber}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Complete 6-Number Selection
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center gap-3 text-sm">
                       <Badge variant="secondary">
                         Method: {ANALYSIS_METHODS[generatedNumbers.method as keyof typeof ANALYSIS_METHODS]?.name || generatedNumbers.method}
                       </Badge>
                       <Badge variant="outline">
                         Confidence: {Math.round(generatedNumbers.confidence * 100)}%
+                      </Badge>
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        6 Total Numbers
                       </Badge>
                     </div>
                   </div>
@@ -276,16 +300,32 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     {wheelCombinations.map((combination, index) => (
                       <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600 mb-2">Combination {index + 1}</div>
-                        <div className="flex gap-2">
-                          {combination.map((num, numIndex) => (
-                            <div key={numIndex} className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-sm font-bold text-gray-800 shadow-sm">
+                        <div className="text-sm text-gray-600 mb-3">
+                          Combination {index + 1} • 6 Numbers Total
+                        </div>
+                        <div className="flex items-center gap-2 justify-center">
+                          {/* Main 5 numbers */}
+                          {combination.slice(0, 5).map((num, numIndex) => (
+                            <div key={numIndex} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-sm font-bold text-gray-800 shadow-sm border border-gray-200">
                               {num}
                             </div>
                           ))}
+                          
+                          {/* Separator */}
+                          <div className="text-gray-400 font-bold mx-2">+</div>
+                          
+                          {/* Bonus number - generate random bonus for wheel */}
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${
+                            selectedGame === 'powerball' ? 'bg-red-500' : 'bg-blue-500'
+                          }`}>
+                            {Math.floor(Math.random() * (selectedGame === 'powerball' ? 26 : 24)) + 1}
+                          </div>
+                        </div>
+                        <div className="text-center mt-2 text-xs text-gray-500">
+                          {combination.slice(0, 5).join(' - ')} + Bonus
                         </div>
                       </div>
                     ))}
