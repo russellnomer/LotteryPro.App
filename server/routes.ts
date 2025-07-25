@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/schema";
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -279,6 +280,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/paypal/order/:orderID/capture", async (req, res) => {
     await capturePaypalOrder(req, res);
   });
+
+  // Secure AdSense configuration endpoint - no sensitive data exposed
+  app.get("/api/adsense-config", createAdSenseConfigEndpoint());
 
   const httpServer = createServer(app);
   return httpServer;

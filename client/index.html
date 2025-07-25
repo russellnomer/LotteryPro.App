@@ -5,19 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>LotteryPro - Statistical Lottery Analysis</title>
     
-    <!-- Google AdSense - Replace ca-pub-XXXXXXXXXXXXXXXX with your Publisher ID -->
-    <!-- Note: AdSense script is disabled in development to prevent errors -->
+    <!-- Google AdSense - Loaded securely via server endpoint -->
     <script>
-      // Set AdSense Publisher ID from environment
-      window.ADSENSE_PUBLISHER_ID = 'GOOGLE_ADSENSE_PUBLISHER_ID_PLACEHOLDER';
+      // Secure AdSense loading - no sensitive data exposed to client
+      window.loadAdSense = async function() {
+        if (location.hostname === 'localhost' || location.hostname.includes('replit.dev')) {
+          // Development mode - no ads loaded
+          return;
+        }
+        
+        try {
+          // Fetch AdSense config securely from server
+          const response = await fetch('/api/adsense-config');
+          const config = await response.json();
+          
+          if (config.enabled) {
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = config.scriptUrl;
+            script.crossOrigin = 'anonymous';
+            document.head.appendChild(script);
+          }
+        } catch (error) {
+          console.log('AdSense loading skipped');
+        }
+      };
       
-      // Only load AdSense in production to avoid development errors
-      if (location.hostname !== 'localhost' && !location.hostname.includes('replit.dev')) {
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + window.ADSENSE_PUBLISHER_ID;
-        script.crossOrigin = 'anonymous';
-        document.head.appendChild(script);
+      // Load AdSense when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.loadAdSense);
+      } else {
+        window.loadAdSense();
       }
     </script>
   </head>
