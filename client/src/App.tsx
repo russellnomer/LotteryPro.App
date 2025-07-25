@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import Performance from "@/pages/performance";
 import Subscription from "@/pages/subscription";
+import PrivacyPolicy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/performance" component={Performance} />
       <Route path="/subscription" component={Subscription} />
+      <Route path="/privacy" component={PrivacyPolicy} />
       <Route component={NotFound} />
     </Switch>
   );

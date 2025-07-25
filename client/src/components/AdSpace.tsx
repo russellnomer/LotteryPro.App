@@ -60,6 +60,9 @@ export function GoogleAdSense({
         data-ad-format={adFormat}
         data-full-width-responsive={fullWidthResponsive.toString()}
       />
+      <script>
+        {`(adsbygoogle = window.adsbygoogle || []).push({});`}
+      </script>
     </div>
   );
 }
