@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* Lottery specific colors */
+  --lottery-red: hsl(4, 90%, 58%);
+  --lottery-blue: hsl(207, 90%, 54%);
+  --lottery-orange: hsl(24, 95%, 53%);
+  --lottery-green: hsl(134, 61%, 41%);
+  --lottery-yellow: hsl(43, 89%, 38%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom styles for lottery numbers */
+.lottery-number {
+  @apply w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition-all duration-200;
+}
+
+.lottery-number.main {
+  @apply bg-white text-gray-800;
+}
+
+.lottery-number.powerball {
+  @apply bg-red-600 text-white;
+}
+
+.lottery-number.megaball {
+  @apply bg-blue-600 text-white;
+}
+
+.lottery-number.hot {
+  @apply bg-orange-500 text-white;
+}
+
+.lottery-number.cold {
+  @apply bg-blue-500 text-white;
+}
+
+/* Game tab styling */
+.game-tab {
+  @apply px-6 py-4 rounded-lg font-semibold shadow-lg transition-colors duration-200;
+}
+
+.game-tab.powerball {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.game-tab.megamillions {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.game-tab.inactive {
+  @apply bg-gray-400 text-white;
+}
+
+/* Analysis method cards */
+.analysis-method {
+  @apply bg-gray-50 p-4 rounded-lg border-2 cursor-pointer transition-colors;
+}
+
+.analysis-method.active {
+  @apply border-primary;
+}
+
+.analysis-method.inactive {
+  @apply border-gray-200 hover:border-primary;
+}
+
+/* Frequency chart container */
+.frequency-chart {
+  @apply h-64 w-full;
+}
+
+/* Wheel system cards */
+.wheel-system {
+  @apply p-3 rounded-lg;
+}
+
+.wheel-system.recommended {
+  @apply bg-primary bg-opacity-10 border-2 border-primary;
+}
+
+.wheel-system.standard {
+  @apply bg-gray-50;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .lottery-number {
+    @apply w-10 h-10 text-base;
+  }
+  
+  .game-tab {
+    @apply px-4 py-3 text-sm;
+  }
+}
