@@ -10,6 +10,25 @@ export default function SubscriptionPage() {
 
   const plans = [
     {
+      id: "free",
+      name: "Free",
+      price: "0.00",
+      period: "forever",
+      description: "Get started with basic lottery analysis",
+      features: [
+        "1 number generation per day",
+        "Basic frequency analysis",
+        "Hot & cold number tracking",
+        "Community support"
+      ],
+      badge: null,
+      limitations: [
+        "Includes advertising",
+        "Daily generation limit",
+        "Basic features only"
+      ]
+    },
+    {
       id: "basic",
       name: "Basic",
       price: "9.99",
@@ -17,8 +36,9 @@ export default function SubscriptionPage() {
       description: "Perfect for casual players",
       features: [
         "5 number generations per day",
-        "Basic frequency analysis",
+        "Advanced frequency analysis",
         "Hot & cold number tracking",
+        "No advertisements",
         "Email support"
       ],
       badge: null
@@ -33,6 +53,7 @@ export default function SubscriptionPage() {
         "Unlimited number generations",
         "Advanced wheel systems",
         "Performance tracking & analytics",
+        "No advertisements",
         "Priority support",
         "Early access to new features"
       ],
@@ -50,7 +71,8 @@ export default function SubscriptionPage() {
         "Advanced prediction algorithms",
         "Jackpocket integration",
         "Personal lottery advisor",
-        "Group management tools"
+        "Group management tools",
+        "100% ad-free experience"
       ],
       badge: "Best Value"
     }
@@ -68,7 +90,7 @@ export default function SubscriptionPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-4 gap-6 mb-12">
           {plans.map((plan) => (
             <Card 
               key={plan.id} 
@@ -92,7 +114,7 @@ export default function SubscriptionPage() {
               </CardHeader>
               
               <CardContent>
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-3 mb-4">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -101,23 +123,42 @@ export default function SubscriptionPage() {
                   ))}
                 </ul>
                 
+                {(plan as any).limitations && (
+                  <ul className="space-y-2 mb-6 border-t pt-4">
+                    {(plan as any).limitations.map((limitation: string, index: number) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <div className="h-2 w-2 bg-orange-400 rounded-full flex-shrink-0" />
+                        <span className="text-sm text-orange-600 dark:text-orange-400">{limitation}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                
                 <div className="space-y-3">
-                  <Button 
-                    onClick={() => setSelectedPlan(plan.id)}
-                    className="w-full"
-                    variant={selectedPlan === plan.id ? "default" : "outline"}
-                  >
-                    {selectedPlan === plan.id ? "Selected" : "Select Plan"}
-                  </Button>
-                  
-                  {selectedPlan === plan.id && (
-                    <div className="mt-4">
-                      <PayPalButton 
-                        amount={plan.price}
-                        currency="USD"
-                        intent="CAPTURE"
-                      />
-                    </div>
+                  {plan.id === "free" ? (
+                    <Button className="w-full" onClick={() => window.location.href = "/"}>
+                      Start Free
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        onClick={() => setSelectedPlan(plan.id)}
+                        className="w-full"
+                        variant={selectedPlan === plan.id ? "default" : "outline"}
+                      >
+                        {selectedPlan === plan.id ? "Selected" : "Select Plan"}
+                      </Button>
+                      
+                      {selectedPlan === plan.id && (
+                        <div className="mt-4">
+                          <PayPalButton 
+                            amount={plan.price}
+                            currency="USD"
+                            intent="CAPTURE"
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </CardContent>

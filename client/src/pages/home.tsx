@@ -6,11 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Chart } from "@/components/ui/chart";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { GAME_CONFIG, ANALYSIS_METHODS, WHEEL_SYSTEMS } from "@/lib/lottery-data";
 import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analysis";
 import { apiRequest } from "@/lib/queryClient";
 import { GameType, TicketGeneration } from "@shared/schema";
+import AdSpace from "@/components/AdSpace";
+import { Crown, Lock } from "lucide-react";
 
 export default function Home() {
   const [selectedGame, setSelectedGame] = useState<GameType>('powerball');
@@ -19,9 +22,28 @@ export default function Home() {
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
   const [selectedWheelType, setSelectedWheelType] = useState<string>('single');
+  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium'>('free'); // For demo, assuming free user
+  const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
+  const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check daily usage limits for free users
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const storedUsage = localStorage.getItem(`dailyUsage_${today}`);
+    if (storedUsage) {
+      setDailyGenerationsUsed(parseInt(storedUsage));
+    }
+  }, []);
+
+  const updateDailyUsage = () => {
+    const today = new Date().toDateString();
+    const newUsage = dailyGenerationsUsed + 1;
+    setDailyGenerationsUsed(newUsage);
+    localStorage.setItem(`dailyUsage_${today}`, newUsage.toString());
+  };
 
   // Fetch analysis data for selected game
   const { data: analysis, isLoading: analysisLoading } = useQuery<any>({
@@ -37,6 +59,7 @@ export default function Home() {
     },
     onSuccess: (data) => {
       setGeneratedNumbers(data);
+      updateDailyUsage();
       toast({
         title: "Numbers Generated!",
         description: `Generated ${GAME_CONFIG[selectedGame].name} numbers using ${ANALYSIS_METHODS[selectedMethod as keyof typeof ANALYSIS_METHODS].name} method.`
@@ -52,6 +75,14 @@ export default function Home() {
   });
 
   const handleGenerateNumbers = () => {
+    if (userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "Free users can generate 1 set of numbers per day. Upgrade to remove limits!",
+        variant: "destructive"
+      });
+      return;
+    }
     generateMutation.mutate({ game: selectedGame, method: selectedMethod });
   };
 
@@ -87,12 +118,52 @@ export default function Home() {
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
               <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
               <a href="#" className="text-gray-600 hover:text-primary transition-colors">Help</a>
+              
+              {/* Demo User Tier Switcher (for testing) */}
+              <select 
+                value={userTier} 
+                onChange={(e) => setUserTier(e.target.value as any)}
+                className="px-2 py-1 text-xs border border-gray-300 rounded"
+              >
+                <option value="free">Free</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="premium">Premium</option>
+              </select>
             </nav>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Free Tier Banner Advertisement */}
+        {userTier === 'free' && (
+          <div className="mb-6 flex justify-center">
+            <AdSpace size="leaderboard" position="Header" className="max-w-full" />
+          </div>
+        )}
+
+        {/* Usage Limit Alert for Free Users */}
+        {userTier === 'free' && (
+          <Alert className="mb-6 border-orange-200 bg-orange-50 dark:bg-orange-950">
+            <Crown className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex justify-between items-center">
+                <span>
+                  Free Plan: {dailyGenerationsUsed}/{maxDailyGenerations} daily generations used
+                  {dailyGenerationsUsed >= maxDailyGenerations && (
+                    <span className="text-orange-600 ml-2">• Daily limit reached</span>
+                  )}
+                </span>
+                <Button size="sm" variant="outline" onClick={() => window.location.href = '/subscription'}>
+                  <Crown className="h-4 w-4 mr-1" />
+                  Upgrade
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Game Selector */}
         <div className="mb-8">
           <Tabs value={selectedGame} onValueChange={(value) => setSelectedGame(value as GameType)}>
@@ -128,12 +199,20 @@ export default function Home() {
                   <div className="flex gap-2">
                     <Button 
                       onClick={handleGenerateNumbers}
-                      disabled={isGenerating}
+                      disabled={isGenerating || (userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations)}
                       className="bg-primary hover:bg-blue-700"
                     >
                       <i className="fas fa-sync-alt mr-2"></i>
-                      {isGenerating ? 'Generating...' : 'Generate 6 Numbers'}
+                      {isGenerating ? 'Generating...' : 
+                       userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations ? 
+                       'Daily Limit Reached' : 'Generate 6 Numbers'}
                     </Button>
+                    {userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations && (
+                      <Button variant="outline" onClick={() => window.location.href = '/subscription'}>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Upgrade
+                      </Button>
+                    )}
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -220,11 +299,23 @@ export default function Home() {
               </CardContent>
             </Card>
 
+            {/* Mid-content Advertisement for Free Users */}
+            {userTier === 'free' && (
+              <div className="flex justify-center mb-6">
+                <AdSpace size="rectangle" position="Mid-content" />
+              </div>
+            )}
+
             {/* Frequency Analysis */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <i className="fas fa-chart-bar text-primary mr-2"></i>Frequency Analysis
+                  {userTier === 'free' && (
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      Limited Features
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -420,6 +511,13 @@ export default function Home() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Sidebar Advertisement for Free Users */}
+            {userTier === 'free' && (
+              <div className="flex justify-center">
+                <AdSpace size="square" position="Sidebar Top" />
+              </div>
+            )}
+
             {/* Statistics Panel */}
             <Card>
               <CardHeader>
@@ -528,6 +626,13 @@ export default function Home() {
               </CardContent>
             </Card>
 
+            {/* Mid-sidebar Advertisement for Free Users */}
+            {userTier === 'free' && (
+              <div className="flex justify-center">
+                <AdSpace size="square" position="Sidebar Mid" />
+              </div>
+            )}
+
             {/* Educational Info */}
             <Card className="bg-yellow-50 border-yellow-200">
               <CardHeader>
@@ -543,6 +648,13 @@ export default function Home() {
             </Card>
           </div>
         </div>
+
+        {/* Footer Advertisement for Free Users */}
+        {userTier === 'free' && (
+          <div className="mt-8 mb-6 flex justify-center">
+            <AdSpace size="banner" position="Footer" className="max-w-full" />
+          </div>
+        )}
 
         {/* Disclaimer */}
         <Card className="mt-12 bg-red-50 border-red-200">

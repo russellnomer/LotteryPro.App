@@ -11,8 +11,10 @@ Preferred communication style: Simple, everyday language.
 ## Commercial Development Goals (Russell Nomer)
 
 - Mobile app development for iOS and Android distribution
-- Subscription-based revenue model with community features  
+- ✅ Subscription-based revenue model with community features (implemented)
 - ✅ PayPal payment integration (implemented with sandbox environment)
+- ✅ Freemium model with advertising integration (implemented)
+- ✅ Daily usage limits for free tier users (implemented)
 - CashApp payment integration
 - Jackpocket integration for ticket purchasing
 - Community pooling and resource sharing features
@@ -56,10 +58,16 @@ Preferred communication style: Simple, everyday language.
 - **Performance Analytics**: Statistical analysis for marketing and system improvement
 
 #### Frontend Pages
-- **Home Page**: Main interface with game selection, method selection, and number generation
+- **Home Page**: Main interface with game selection, method selection, number generation, advertising spaces, and daily usage tracking
 - **Performance Page**: Marketing-focused analytics dashboard showing track record and method comparison
-- **Subscription Page**: PayPal-integrated subscription plans with three tiers (Basic, Pro, Premium)
+- **Subscription Page**: PayPal-integrated subscription plans with four tiers (Free, Basic, Pro, Premium) 
 - **Not Found**: 404 error handling
+
+#### Advertising Integration
+- **AdSpace Component**: Flexible advertising component supporting multiple sizes (banner, square, rectangle, leaderboard)
+- **Google AdSense Integration**: Ready-to-deploy AdSense component with customizable ad slots
+- **Strategic Ad Placement**: Header, mid-content, sidebar, and footer advertising spaces for free users
+- **Ad-Free Experience**: Premium users enjoy completely ad-free interface
 
 #### UI Components
 - Complete shadcn/ui component library
@@ -86,6 +94,10 @@ Preferred communication style: Simple, everyday language.
    - Generate method comparison analytics
    - Calculate improvement over random selection
    - Display recent wins and track record for marketing
+6. **User Tier Management**: 
+   - Track daily usage limits for free users
+   - Display advertising content based on subscription level
+   - Enforce feature restrictions and upgrade prompts
 
 ## External Dependencies
 
@@ -127,5 +139,16 @@ Preferred communication style: Simple, everyday language.
 - **Path Aliases**: Configured for clean imports (@/, @shared/, @assets/)
 - **TypeScript**: Strict mode with comprehensive type checking
 - **PostCSS**: Tailwind CSS processing with autoprefixer
+
+## Recent Changes (January 2025)
+
+- ✅ Implemented comprehensive freemium model with advertising integration
+- ✅ Added Free tier (1 generation/day) with strategic advertising placement
+- ✅ Created AdSpace component system for Google AdSense and custom banner ads
+- ✅ Implemented daily usage tracking and limits using localStorage
+- ✅ Added upgrade prompts and subscription conversion funnels
+- ✅ Enhanced subscription page with four tiers including free option
+- ✅ Integrated ad-free experience for all paid tiers
+- ✅ Added tier switcher for testing different user experiences
 
 The application follows a monorepo structure with shared types and schemas, enabling type safety between frontend and backend while maintaining clear separation of concerns.
