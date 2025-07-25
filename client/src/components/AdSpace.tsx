@@ -72,7 +72,7 @@ export function GoogleAdSense({
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your AdSense publisher ID
+        data-ad-client={(window as any).ADSENSE_PUBLISHER_ID || "ca-pub-XXXXXXXXXXXXXXXX"}
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
         data-full-width-responsive={fullWidthResponsive.toString()}
