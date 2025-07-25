@@ -50,6 +50,23 @@ export function GoogleAdSense({
   fullWidthResponsive?: boolean;
   className?: string;
 }) {
+  // In development, show placeholder instead of real ads to prevent errors
+  const isDevelopment = import.meta.env.DEV || 
+                       window.location.hostname === 'localhost' || 
+                       window.location.hostname.includes('replit.dev');
+
+  if (isDevelopment) {
+    return (
+      <div className={className}>
+        <div className="border-2 border-dashed border-blue-300 bg-blue-50 p-4 rounded text-center">
+          <div className="text-blue-600 text-sm font-medium">AdSense Placeholder</div>
+          <div className="text-blue-500 text-xs mt-1">Slot: {adSlot}</div>
+          <div className="text-blue-500 text-xs">Real ads will show in production</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       <ins
@@ -60,9 +77,6 @@ export function GoogleAdSense({
         data-ad-format={adFormat}
         data-full-width-responsive={fullWidthResponsive.toString()}
       />
-      <script>
-        {`(adsbygoogle = window.adsbygoogle || []).push({});`}
-      </script>
     </div>
   );
 }

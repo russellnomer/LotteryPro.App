@@ -6,16 +6,16 @@
     <title>LotteryPro - Statistical Lottery Analysis</title>
     
     <!-- Google AdSense - Replace ca-pub-XXXXXXXXXXXXXXXX with your Publisher ID -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-         crossorigin="anonymous"></script>
-    
-    <!-- Initialize AdSense -->
+    <!-- Note: AdSense script is disabled in development to prevent errors -->
     <script>
-      window.addEventListener('load', function() {
-        if (window.adsbygoogle) {
-          (adsbygoogle = window.adsbygoogle || []).push({});
-        }
-      });
+      // Only load AdSense in production to avoid development errors
+      if (location.hostname !== 'localhost' && !location.hostname.includes('replit.dev')) {
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX';
+        script.crossOrigin = 'anonymous';
+        document.head.appendChild(script);
+      }
     </script>
   </head>
   <body>
