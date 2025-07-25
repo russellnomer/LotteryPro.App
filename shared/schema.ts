@@ -70,6 +70,48 @@ export const userSessions = pgTable("user_sessions", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// VIP codes table for Russell's god-like gifting abilities
+export const vipCodes = pgTable("vip_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // The unique code Russell creates
+  subscriptionTier: text("subscription_tier").notNull(), // 'basic', 'pro', 'premium'
+  createdBy: varchar("created_by").notNull().references(() => userAccounts.id), // russell@russellnomer.com user ID
+  usedBy: varchar("used_by").references(() => userAccounts.id), // Who redeemed it
+  isActive: integer("is_active").notNull().default(1), // 0 = deactivated, 1 = active
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  expiresAt: timestamp("expires_at"), // Optional expiration
+});
+
+// Music content integration for Russell Nomer Music branding
+export const musicContent = pgTable("music_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platform: text("platform").notNull(), // 'spotify', 'soundcloud', 'youtube', 'apple_music', 'unitedmasters'
+  trackTitle: text("track_title").notNull(),
+  trackUrl: text("track_url").notNull(),
+  embedCode: text("embed_code"), // For platforms that support embedding
+  coverImageUrl: text("cover_image_url"),
+  genre: text("genre"),
+  releaseDate: timestamp("release_date"),
+  playCount: integer("play_count").default(0),
+  featured: integer("featured").notNull().default(0), // 0 = regular, 1 = featured track
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// Book recommendations for Russell's gambling strategy books
+export const bookRecommendations = pgTable("book_recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  amazonUrl: text("amazon_url").notNull(),
+  coverImageUrl: text("cover_image_url"),
+  description: text("description"),
+  category: text("category").notNull(), // 'gambling', 'strategy', 'entertainment'
+  displayOrder: integer("display_order").default(0),
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 export const insertDrawSchema = createInsertSchema(lotteryDraws).omit({
   id: true,
 });
@@ -114,6 +156,30 @@ export type UserAccount = typeof userAccounts.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
 export type PerformanceStats = typeof performanceStats.$inferSelect;
+
+// VIP and Music schemas
+export const insertVipCodeSchema = createInsertSchema(vipCodes).omit({
+  id: true,
+  usedAt: true,
+  createdAt: true,
+});
+
+export const insertMusicContentSchema = createInsertSchema(musicContent).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBookRecommendationSchema = createInsertSchema(bookRecommendations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertVipCode = z.infer<typeof insertVipCodeSchema>;
+export type VipCode = typeof vipCodes.$inferSelect;
+export type InsertMusicContent = z.infer<typeof insertMusicContentSchema>;
+export type MusicContent = typeof musicContent.$inferSelect;
+export type InsertBookRecommendation = z.infer<typeof insertBookRecommendationSchema>;
+export type BookRecommendation = typeof bookRecommendations.$inferSelect;
 
 // Analysis types
 export type GameType = 'powerball' | 'megamillions';

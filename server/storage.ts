@@ -11,12 +11,21 @@ import {
   type InsertUserAccount,
   type UserSession,
   type InsertUserSession,
+  type VipCode,
+  type InsertVipCode,
+  type MusicContent,
+  type InsertMusicContent,
+  type BookRecommendation,
+  type InsertBookRecommendation,
   lotteryDraws,
   generatedTickets,
   predictionResults,
   performanceStats,
   userAccounts,
-  userSessions
+  userSessions,
+  vipCodes,
+  musicContent,
+  bookRecommendations
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -50,9 +59,26 @@ export interface IStorage {
   enableUserMFA(userId: string, backupCodes: string[]): Promise<void>;
   updateUserLastLogin(userId: string): Promise<void>;
   
-  // Session management
+  // Session management  
   createUserSession(session: InsertUserSession): Promise<UserSession>;
   getUserSession(sessionToken: string): Promise<UserSession | undefined>;
+  
+  // VIP code management (Russell's god-like powers)
+  createVipCode(vipCode: InsertVipCode): Promise<VipCode>;
+  getVipCodeByCode(code: string): Promise<VipCode | undefined>;
+  redeemVipCode(code: string, userId: string): Promise<VipCode | null>;
+  updateUserSubscriptionTier(userId: string, tier: string): Promise<void>;
+  getUserVipCodes(createdBy: string): Promise<VipCode[]>;
+  deactivateVipCode(codeId: string): Promise<void>;
+  
+  // Music content management
+  getMusicContent(featured?: boolean): Promise<MusicContent[]>;
+  createMusicContent(music: InsertMusicContent): Promise<MusicContent>;
+  updateMusicContent(id: string, updates: Partial<InsertMusicContent>): Promise<void>;
+  
+  // Book recommendations
+  getBookRecommendations(): Promise<BookRecommendation[]>;
+  createBookRecommendation(book: InsertBookRecommendation): Promise<BookRecommendation>;
 }
 
 export class MemStorage implements IStorage {
@@ -491,6 +517,110 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userSessions.sessionToken, sessionToken))
       .limit(1);
     return session;
+  }
+
+  // VIP code management (Russell's god-like powers)
+  async createVipCode(vipCodeData: InsertVipCode): Promise<VipCode> {
+    const [vipCode] = await db.insert(vipCodes)
+      .values(vipCodeData)
+      .returning();
+    return vipCode;
+  }
+
+  async getVipCodeByCode(code: string): Promise<VipCode | undefined> {
+    const [vipCode] = await db.select().from(vipCodes)
+      .where(eq(vipCodes.code, code));
+    return vipCode || undefined;
+  }
+
+  async redeemVipCode(code: string, userId: string): Promise<VipCode | null> {
+    // Find active VIP code
+    const [vipCode] = await db.select().from(vipCodes)
+      .where(and(
+        eq(vipCodes.code, code),
+        eq(vipCodes.isActive, 1),
+        sql`${vipCodes.usedBy} IS NULL`,
+        sql`(${vipCodes.expiresAt} IS NULL OR ${vipCodes.expiresAt} > now())`
+      ));
+
+    if (!vipCode) {
+      return null;
+    }
+
+    // Mark as used
+    await db.update(vipCodes)
+      .set({
+        usedBy: userId,
+        usedAt: sql`now()`
+      })
+      .where(eq(vipCodes.id, vipCode.id));
+
+    return vipCode;
+  }
+
+  async updateUserSubscriptionTier(userId: string, tier: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({
+        subscriptionTier: tier,
+        updatedAt: sql`now()`
+      })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async getUserVipCodes(createdBy: string): Promise<VipCode[]> {
+    return await db.select().from(vipCodes)
+      .where(eq(vipCodes.createdBy, createdBy))
+      .orderBy(desc(vipCodes.createdAt));
+  }
+
+  async deactivateVipCode(codeId: string): Promise<void> {
+    await db.update(vipCodes)
+      .set({ isActive: 0 })
+      .where(eq(vipCodes.id, codeId));
+  }
+
+  // Music content management
+  async getMusicContent(featured?: boolean): Promise<MusicContent[]> {
+    const baseQuery = db.select().from(musicContent)
+      .where(eq(musicContent.isActive, 1));
+    
+    if (featured !== undefined) {
+      return await baseQuery
+        .where(and(
+          eq(musicContent.isActive, 1),
+          eq(musicContent.featured, featured ? 1 : 0)
+        ))
+        .orderBy(desc(musicContent.createdAt));
+    }
+
+    return await baseQuery.orderBy(desc(musicContent.featured), desc(musicContent.createdAt));
+  }
+
+  async createMusicContent(music: InsertMusicContent): Promise<MusicContent> {
+    const [musicTrack] = await db.insert(musicContent)
+      .values(music)
+      .returning();
+    return musicTrack;
+  }
+
+  async updateMusicContent(id: string, updates: Partial<InsertMusicContent>): Promise<void> {
+    await db.update(musicContent)
+      .set(updates)
+      .where(eq(musicContent.id, id));
+  }
+
+  // Book recommendations
+  async getBookRecommendations(): Promise<BookRecommendation[]> {
+    return await db.select().from(bookRecommendations)
+      .where(eq(bookRecommendations.isActive, 1))
+      .orderBy(bookRecommendations.displayOrder, desc(bookRecommendations.createdAt));
+  }
+
+  async createBookRecommendation(book: InsertBookRecommendation): Promise<BookRecommendation> {
+    const [bookRec] = await db.insert(bookRecommendations)
+      .values(book)
+      .returning();
+    return bookRec;
   }
 }
 

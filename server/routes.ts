@@ -6,6 +6,8 @@ import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
+import { createVipCode, getMyVipCodes, redeemVipCode, deactivateVipCode } from "./vipManagement";
+import { seedRussellNomerContent } from "./seedMusicData";
 import { 
   securityHeaders, 
   authRateLimit, 
@@ -20,8 +22,9 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Seed historical data on startup
+  // Seed historical data and Russell Nomer content on startup
   await seedHistoricalData();
+  await seedRussellNomerContent();
   
   // Get historical draws for a specific game
   app.get("/api/draws/:game", async (req, res) => {
@@ -300,6 +303,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", authRateLimit, login);
   app.post("/api/auth/mfa/setup", authRateLimit, setupMFA);
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
+
+  // VIP Code Management Routes (Russell's god-like powers)
+  app.post("/api/vip/create", requireAuth, securityLogger, createVipCode);
+  app.get("/api/vip/my-codes", requireAuth, securityLogger, getMyVipCodes);
+  app.post("/api/vip/redeem", requireAuth, securityLogger, redeemVipCode);
+  app.delete("/api/vip/codes/:codeId", requireAuth, securityLogger, deactivateVipCode);
+
+  // Music Content Routes
+  app.get("/api/music", async (req, res) => {
+    try {
+      const featured = req.query.featured === 'true';
+      const music = await storage.getMusicContent(featured);
+      res.json(music);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Book Recommendations Routes
+  app.get("/api/books", async (req, res) => {
+    try {
+      const books = await storage.getBookRecommendations();
+      res.json(books);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

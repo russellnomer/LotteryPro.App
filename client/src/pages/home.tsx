@@ -13,6 +13,9 @@ import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analys
 import { apiRequest } from "@/lib/queryClient";
 import { GameType, TicketGeneration } from "@shared/schema";
 import AdSpace from "@/components/AdSpace";
+import MusicPlayer from "@/components/MusicPlayer";
+import BookRecommendations from "@/components/BookRecommendations";
+import VipCodeManager from "@/components/VipCodeManager";
 import { Crown, Lock } from "lucide-react";
 
 export default function Home() {
@@ -25,6 +28,7 @@ export default function Home() {
   const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium'>('free'); // For demo, assuming free user
   const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
   const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
+  const [userEmail] = useState<string>("demo@example.com"); // Demo user - replace with actual auth
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -108,10 +112,13 @@ export default function Home() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-primary">
                 <i className="fas fa-chart-line mr-2"></i>LotteryPro
               </h1>
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                By Russell Nomer
+              </Badge>
             </div>
             <nav className="hidden md:flex space-x-8">
               <a href="/" className="text-primary font-semibold transition-colors">Dashboard</a>
@@ -134,6 +141,23 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Russell Nomer Branding Section */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <MusicPlayer featured={true} compact={true} />
+            </div>
+            <div className="lg:col-span-1">
+              <BookRecommendations compact={true} />
+            </div>
+            <div className="lg:col-span-1">
+              <VipCodeManager userEmail={userEmail} />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Free Tier Banner Advertisement */}
