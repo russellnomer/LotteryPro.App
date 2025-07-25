@@ -47,20 +47,55 @@ export default function Performance() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Marketing Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 mb-8 text-white">
+        {/* Statistical Disclaimer Banner */}
+        <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-lg p-8 mb-8 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Our Track Record Speaks for Itself</h2>
+              <h2 className="text-3xl font-bold mb-2">Statistical Analysis Status</h2>
               <p className="text-xl opacity-90">
-                {marketingStats?.overallPerformance.improvementOverRandom}% better than random number selection
+                {marketingStats?.overallPerformance.totalEvaluated || 0} validated results - 
+                {(marketingStats?.overallPerformance.sampleSizeNeeded || 384)} more needed for statistical significance
+              </p>
+              <p className="text-sm opacity-75 mt-2">
+                ⚠️ No performance advantage claims can be validated with current data
               </p>
             </div>
             <div className="text-right">
               <div className="text-4xl font-bold">
                 {marketingStats?.overallPerformance.totalPredictions || 0}
               </div>
-              <div className="text-lg opacity-90">Total Predictions</div>
+              <div className="text-lg opacity-90">Total Generated</div>
+              <div className="text-sm opacity-75">
+                {marketingStats?.overallPerformance.totalEvaluated || 0} Evaluated
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Critical Statistical Disclaimer */}
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <i className="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-lg font-medium text-yellow-800">
+                Important Statistical Disclaimer
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p className="mb-2">
+                  <strong>Current data is insufficient for statistical validation.</strong> Any performance claims require:
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Minimum 384 validated predictions (95% confidence level)</li>
+                  <li>Control group of random selections</li>
+                  <li>6+ months of outcome tracking</li>
+                  <li>Peer-reviewed statistical analysis</li>
+                </ul>
+                <p className="mt-3 font-semibold">
+                  Mathematical fact: Each lottery draw is independent. Past results do not influence future outcomes.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -69,8 +104,8 @@ export default function Performance() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Accuracy</CardTitle>
-              <i className="fas fa-bullseye text-orange-500"></i>
+              <CardTitle className="text-sm font-medium">Generated Predictions</CardTitle>
+              <i className="fas fa-dice text-orange-500"></i>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
