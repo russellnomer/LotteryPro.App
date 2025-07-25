@@ -1,12 +1,21 @@
-# Lottery Number Generator App
+# LotteryPro Commercial Mobile Platform
 
 ## Overview
 
-This is a full-stack web application for generating lottery numbers for Powerball and MegaMillions using statistical analysis. The app performs frequency analysis on historical lottery data, provides multiple generation methods including hot numbers, balanced selection, and wheel systems, and tracks prediction performance against actual lottery results for marketing and improvement purposes.
+This is a full-stack web application for generating lottery numbers for Powerball and MegaMillions using statistical analysis. The project is evolving from a basic prediction tool into a commercial mobile platform with subscription-based community features, revenue generation for Russell Nomer, and potential Jackpocket integration. The system now emphasizes statistical transparency and honest disclaimers following comprehensive analysis of performance claims.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Commercial Development Goals (Russell Nomer)
+
+- Mobile app development for iOS and Android distribution
+- Subscription-based revenue model with community features  
+- PayPal and CashApp payment integration
+- Jackpocket integration for ticket purchasing
+- Community pooling and resource sharing features
+- Administrative fee structure for ongoing revenue generation
 
 ## System Architecture
 
