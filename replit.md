@@ -12,7 +12,8 @@ Preferred communication style: Simple, everyday language.
 
 - Mobile app development for iOS and Android distribution
 - Subscription-based revenue model with community features  
-- PayPal and CashApp payment integration
+- ✅ PayPal payment integration (implemented with sandbox environment)
+- CashApp payment integration
 - Jackpocket integration for ticket purchasing
 - Community pooling and resource sharing features
 - Administrative fee structure for ongoing revenue generation
@@ -57,6 +58,7 @@ Preferred communication style: Simple, everyday language.
 #### Frontend Pages
 - **Home Page**: Main interface with game selection, method selection, and number generation
 - **Performance Page**: Marketing-focused analytics dashboard showing track record and method comparison
+- **Subscription Page**: PayPal-integrated subscription plans with three tiers (Basic, Pro, Premium)
 - **Not Found**: 404 error handling
 
 #### UI Components
@@ -102,6 +104,11 @@ Preferred communication style: Simple, everyday language.
 - **Vite**: Fast development server and build tool
 - **TypeScript**: Type safety across the stack
 - **ESBuild**: Fast JavaScript bundler for production
+
+### Payment Processing
+- **PayPal SDK**: @paypal/paypal-server-sdk for payment processing
+- **Environment**: Sandbox for development, production for live payments
+- **Features**: Order creation, payment capture, client token generation
 
 ## Deployment Strategy
 

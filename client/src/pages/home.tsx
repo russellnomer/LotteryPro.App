@@ -85,7 +85,7 @@ export default function Home() {
             <nav className="hidden md:flex space-x-8">
               <a href="/" className="text-primary font-semibold transition-colors">Dashboard</a>
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">Track Record</a>
+              <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
               <a href="#" className="text-gray-600 hover:text-primary transition-colors">Help</a>
             </nav>
           </div>

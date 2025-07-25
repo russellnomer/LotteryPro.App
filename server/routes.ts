@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/schema";
 import { seedHistoricalData } from "./seedData";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -263,6 +264,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
+  });
+
+  // PayPal routes
+  app.get("/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    // Request body should contain: { intent, amount, currency }
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
   });
 
   const httpServer = createServer(app);
