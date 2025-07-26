@@ -74,8 +74,30 @@ class YouTubeService {
         nextPageToken = playlistResponse.data.nextPageToken || undefined;
       } while (nextPageToken);
 
-      console.log(`✅ Fetched ${allVideos.length} Russell Nomer songs from YouTube`);
-      return allVideos;
+      // Remove duplicates by videoId and clean up titles
+      const uniqueVideos = new Map<string, YouTubeVideo>();
+      
+      for (const video of allVideos) {
+        if (video.videoId && !uniqueVideos.has(video.videoId)) {
+          // Clean up common duplicate patterns in titles
+          let cleanTitle = video.title
+            .replace(/\s+·\s+Russell Nomer.*$/g, '') // Remove "· Russell Nomer · Artist Name" suffixes
+            .replace(/\s+\(.*Russell Nomer.*\)$/g, '') // Remove "(Russell Nomer)" suffixes
+            .replace(/\s+-\s+Russell Nomer.*$/g, '') // Remove "- Russell Nomer" suffixes
+            .replace(/^Russell Nomer\s+-\s+/g, '') // Remove "Russell Nomer - " prefixes
+            .replace(/^Russell Nomer\s+/g, '') // Remove "Russell Nomer " prefixes
+            .trim();
+          
+          uniqueVideos.set(video.videoId, {
+            ...video,
+            title: cleanTitle || video.title // Fallback to original if cleaning results in empty
+          });
+        }
+      }
+
+      const finalVideos = Array.from(uniqueVideos.values());
+      console.log(`✅ Fetched ${finalVideos.length} unique Russell Nomer songs from YouTube (cleaned ${allVideos.length - finalVideos.length} duplicates)`);
+      return finalVideos;
 
     } catch (error) {
       console.error('Error fetching Russell Nomer YouTube videos:', error);
