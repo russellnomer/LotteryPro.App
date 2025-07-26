@@ -16,7 +16,7 @@ import AdSpace from "@/components/AdSpace";
 import MusicPlayer from "@/components/MusicPlayer";
 import BookRecommendations from "@/components/BookRecommendations";
 import VipCodeManager from "@/components/VipCodeManager";
-import CustomerDataCollection from "@/components/CustomerDataCollection";
+import ProfileSetup from "@/components/ProfileSetup";
 import { Crown, Lock, UserPlus } from "lucide-react";
 
 export default function Home() {
@@ -693,13 +693,12 @@ export default function Home() {
             </p>
           </CardHeader>
           <CardContent>
-            <CustomerDataCollection 
-              trigger="profile_update"
+            <ProfileSetup 
               compact={true}
               onComplete={(customerId) => {
                 toast({
-                  title: "Profile Saved",
-                  description: "You'll now receive personalized gambling opportunities and offers!"
+                  title: "Profile Complete",
+                  description: "Your account is now verified! You have full access to all system features and personalized offers."
                 });
               }}
             />

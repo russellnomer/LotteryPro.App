@@ -270,16 +270,36 @@ export type MarketingStats = {
 export const customerProfiles = pgTable("customer_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id"), // Optional link to registered users
+  
+  // Required profile fields for quick setup
   email: varchar("email").notNull(),
   emailHash: varchar("email_hash").notNull(), // Salted hash for privacy
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
+  firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
+  
+  // Full mailing address (required)
+  streetAddress: varchar("street_address").notNull(),
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull(),
+  zipCode: varchar("zip_code").notNull(),
+  country: varchar("country").default("US"),
+  
+  // Mobile number (required)
+  mobileNumber: varchar("mobile_number").notNull(),
+  mobileNumberHash: varchar("mobile_number_hash").notNull(), // Salted hash for privacy
+  
+  // Legacy phone field for compatibility
   phone: varchar("phone"),
   phoneHash: varchar("phone_hash"), // Salted hash for privacy
+  
+  // Verification status - must verify email OR mobile to access system
+  emailVerified: boolean("email_verified").default(false),
+  mobileVerified: boolean("mobile_verified").default(false),
+  isProfileComplete: boolean("is_profile_complete").default(false),
+  accountApproved: boolean("account_approved").default(false), // Requires verification to access system
+  
+  // Additional profile data
   dateOfBirth: date("date_of_birth"),
-  zipCode: varchar("zip_code"),
-  state: varchar("state"),
-  country: varchar("country").default("US"),
   subscriptionTier: varchar("subscription_tier").default("free"),
   totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0.00"),
   lifetimeValue: decimal("lifetime_value", { precision: 10, scale: 2 }).default("0.00"),
@@ -295,6 +315,30 @@ export const customerProfiles = pgTable("customer_profiles", {
   riskScore: integer("risk_score").default(0), // compliance risk scoring
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Email verification codes table
+export const emailVerificationCodes = pgTable("email_verification_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull(),
+  emailHash: varchar("email_hash").notNull(),
+  verificationCode: varchar("verification_code", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").default(false),
+  attempts: integer("attempts").default(0), // Track verification attempts
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// SMS verification codes table
+export const smsVerificationCodes = pgTable("sms_verification_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mobileNumber: varchar("mobile_number").notNull(),
+  mobileNumberHash: varchar("mobile_number_hash").notNull(),
+  verificationCode: varchar("verification_code", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").default(false),
+  attempts: integer("attempts").default(0), // Track verification attempts
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Customer activity tracking for analytics and compliance
@@ -375,3 +419,9 @@ export type InsertMarketingCampaign = typeof marketingCampaigns.$inferInsert;
 
 export type CustomerSegment = typeof customerSegments.$inferSelect;
 export type InsertCustomerSegment = typeof customerSegments.$inferInsert;
+
+export type EmailVerificationCode = typeof emailVerificationCodes.$inferSelect;
+export type InsertEmailVerificationCode = typeof emailVerificationCodes.$inferInsert;
+
+export type SmsVerificationCode = typeof smsVerificationCodes.$inferSelect;
+export type InsertSmsVerificationCode = typeof smsVerificationCodes.$inferInsert;

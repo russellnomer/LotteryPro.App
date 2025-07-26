@@ -20,6 +20,7 @@ import {
 } from "./middleware/security";
 import { customerDataService } from "./customerDataService";
 import customerDataRoutes from "./routes/customerData";
+import profileSetupRoutes from "./routes/profileSetup";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -335,6 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Customer data collection and analytics routes
   app.use('/api/customer', customerDataRoutes);
+  app.use('/api/customer', profileSetupRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -1,0 +1,214 @@
+import express, { Router } from 'express';
+import { customerDataService } from '../customerDataService';
+import { storage } from '../storage';
+import type { Request, Response } from 'express';
+import crypto from 'crypto';
+
+const router = Router();
+
+// Create customer profile with comprehensive data
+router.post('/profile', async (req: Request, res: Response) => {
+  try {
+    const { 
+      email, 
+      firstName, 
+      lastName, 
+      streetAddress, 
+      city, 
+      state, 
+      zipCode, 
+      mobileNumber, 
+      preferredVerification,
+      marketingOptIn 
+    } = req.body;
+
+    // Validate required fields
+    const requiredFields = { email, firstName, lastName, streetAddress, city, state, zipCode, mobileNumber };
+    const missing = Object.entries(requiredFields)
+      .filter(([key, value]) => !value)
+      .map(([key]) => key);
+    
+    if (missing.length > 0) {
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missing.join(', ')}` 
+      });
+    }
+
+    // Create customer profile
+    const profileData = {
+      email,
+      firstName,
+      lastName,
+      streetAddress,
+      city,
+      state,
+      zipCode,
+      mobileNumber,
+      marketingOptIn: marketingOptIn || false,
+      registrationSource: 'web',
+      interests: {
+        lotteryGames: ['powerball', 'megamillions'],
+        casinoInterest: true,
+        cruiseInterest: true,
+        gamblingEducationInterest: true
+      },
+      demographics: {
+        source: 'lottery_player',
+        registrationDate: new Date().toISOString()
+      }
+    };
+
+    const profile = await customerDataService.createOrUpdateCustomerProfile(profileData);
+    
+    // Send verification code immediately
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    if (preferredVerification === 'email') {
+      // Store email verification code
+      await storage.createEmailVerificationCode({
+        email,
+        emailHash: customerDataService.createHash(email),
+        verificationCode,
+        expiresAt,
+        isUsed: false,
+        attempts: 0
+      });
+      
+      // In a real app, send email here
+      console.log(`Email verification code for ${email}: ${verificationCode}`);
+    } else {
+      // Store SMS verification code
+      await storage.createSmsVerificationCode({
+        mobileNumber,
+        mobileNumberHash: customerDataService.createHash(mobileNumber),
+        verificationCode,
+        expiresAt,
+        isUsed: false,
+        attempts: 0
+      });
+      
+      // In a real app, send SMS here
+      console.log(`SMS verification code for ${mobileNumber}: ${verificationCode}`);
+    }
+
+    res.json({ 
+      success: true, 
+      customerId: profile.id,
+      message: `Verification code sent via ${preferredVerification}`
+    });
+
+  } catch (error: any) {
+    console.error('Profile creation error:', error);
+    res.status(500).json({ message: error.message || 'Failed to create profile' });
+  }
+});
+
+// Send verification code
+router.post('/send-verification', async (req: Request, res: Response) => {
+  try {
+    const { customerId, method } = req.body;
+    
+    const profile = await storage.getCustomerProfile(customerId);
+    if (!profile) {
+      return res.status(404).json({ message: 'Customer profile not found' });
+    }
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    if (method === 'email') {
+      await storage.createEmailVerificationCode({
+        email: profile.email,
+        emailHash: profile.emailHash,
+        verificationCode,
+        expiresAt,
+        isUsed: false,
+        attempts: 0
+      });
+      
+      console.log(`Email verification code for ${profile.email}: ${verificationCode}`);
+    } else {
+      await storage.createSmsVerificationCode({
+        mobileNumber: profile.mobileNumber,
+        mobileNumberHash: profile.mobileNumberHash,
+        verificationCode,
+        expiresAt,
+        isUsed: false,
+        attempts: 0
+      });
+      
+      console.log(`SMS verification code for ${profile.mobileNumber}: ${verificationCode}`);
+    }
+
+    res.json({ success: true, message: `Verification code sent via ${method}` });
+
+  } catch (error: any) {
+    console.error('Send verification error:', error);
+    res.status(500).json({ message: error.message || 'Failed to send verification code' });
+  }
+});
+
+// Verify code and approve account
+router.post('/verify', async (req: Request, res: Response) => {
+  try {
+    const { customerId, code, method } = req.body;
+    
+    const profile = await storage.getCustomerProfile(customerId);
+    if (!profile) {
+      return res.status(404).json({ message: 'Customer profile not found' });
+    }
+
+    let isValid = false;
+    
+    if (method === 'email') {
+      const verificationRecord = await storage.getEmailVerificationCode(profile.emailHash, code);
+      if (verificationRecord && !verificationRecord.isUsed && verificationRecord.expiresAt > new Date()) {
+        isValid = true;
+        await storage.markEmailVerificationAsUsed(verificationRecord.id);
+        await storage.updateCustomerProfile(customerId, {
+          emailVerified: true,
+          accountApproved: true,
+          isProfileComplete: true
+        });
+      }
+    } else {
+      const verificationRecord = await storage.getSmsVerificationCode(profile.mobileNumberHash, code);
+      if (verificationRecord && !verificationRecord.isUsed && verificationRecord.expiresAt > new Date()) {
+        isValid = true;
+        await storage.markSmsVerificationAsUsed(verificationRecord.id);
+        await storage.updateCustomerProfile(customerId, {
+          mobileVerified: true,
+          accountApproved: true,
+          isProfileComplete: true
+        });
+      }
+    }
+
+    if (!isValid) {
+      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+
+    // Track successful verification activity
+    await customerDataService.trackActivity({
+      customerId,
+      activityType: 'account_verified',
+      activityData: {
+        verificationMethod: method,
+        verifiedAt: new Date().toISOString()
+      },
+      req
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Account verified and approved for full system access' 
+    });
+
+  } catch (error: any) {
+    console.error('Verification error:', error);
+    res.status(500).json({ message: error.message || 'Failed to verify code' });
+  }
+});
+
+export default router;

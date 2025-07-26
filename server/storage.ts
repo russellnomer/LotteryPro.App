@@ -678,6 +678,70 @@ export class DatabaseStorage implements IStorage {
   async getCustomersBySegment(criteria: any): Promise<CustomerProfile[]> {
     return await db.select().from(customerProfiles);
   }
+
+  // Verification code management
+  async createEmailVerificationCode(data: any): Promise<any> {
+    const [record] = await db
+      .insert(emailVerificationCodes)
+      .values(data)
+      .returning();
+    return record;
+  }
+
+  async createSmsVerificationCode(data: any): Promise<any> {
+    const [record] = await db
+      .insert(smsVerificationCodes)
+      .values(data)
+      .returning();
+    return record;
+  }
+
+  async getEmailVerificationCode(emailHash: string, code: string): Promise<any> {
+    const [record] = await db
+      .select()
+      .from(emailVerificationCodes)
+      .where(and(eq(emailVerificationCodes.emailHash, emailHash), eq(emailVerificationCodes.verificationCode, code)));
+    return record;
+  }
+
+  async getSmsVerificationCode(mobileHash: string, code: string): Promise<any> {
+    const [record] = await db
+      .select()
+      .from(smsVerificationCodes)
+      .where(and(eq(smsVerificationCodes.mobileNumberHash, mobileHash), eq(smsVerificationCodes.verificationCode, code)));
+    return record;
+  }
+
+  async markEmailVerificationAsUsed(id: string): Promise<void> {
+    await db
+      .update(emailVerificationCodes)
+      .set({ isUsed: true })
+      .where(eq(emailVerificationCodes.id, id));
+  }
+
+  async markSmsVerificationAsUsed(id: string): Promise<void> {
+    await db
+      .update(smsVerificationCodes)
+      .set({ isUsed: true })
+      .where(eq(smsVerificationCodes.id, id));
+  }
+
+  async getCustomerProfile(id: string): Promise<CustomerProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(customerProfiles)
+      .where(eq(customerProfiles.id, id));
+    return profile;
+  }
+
+  async updateCustomerProfile(id: string, updates: any): Promise<CustomerProfile> {
+    const [profile] = await db
+      .update(customerProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerProfiles.id, id))
+      .returning();
+    return profile;
+  }
 }
 
 export const storage = new DatabaseStorage();
