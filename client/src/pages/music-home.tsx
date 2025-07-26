@@ -33,8 +33,8 @@ export default function MusicHome() {
               </Badge>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="/" className="text-primary font-semibold transition-colors">Music</a>
-              <a href="/lottery" className="text-gray-600 hover:text-primary transition-colors">Lottery Pro</a>
+              <a href="/" className="text-gray-600 hover:text-primary transition-colors">AI Lottery Pro</a>
+              <a href="/music" className="text-primary font-semibold transition-colors">Russell's Music</a>
               <a href="/books" className="text-gray-600 hover:text-primary transition-colors">Books</a>
               <a href="/fan-contest" className="text-gray-600 hover:text-primary transition-colors">Fan Contest</a>
               <a href="/support" className="text-gray-600 hover:text-primary transition-colors">Support Russell</a>
@@ -162,10 +162,10 @@ export default function MusicHome() {
                   <Button 
                     size="lg" 
                     className="bg-primary hover:bg-primary/90"
-                    onClick={() => window.location.href = '/lottery'}
+                    onClick={() => window.location.href = '/'}
                   >
                     <Star className="h-4 w-4 mr-2" />
-                    Launch LotteryPro Platform
+                    Launch AI LotteryPro
                   </Button>
                   <div className="mt-4 text-sm text-gray-500">
                     Advanced analytics • Historical data • Multiple generation methods
@@ -225,7 +225,7 @@ export default function MusicHome() {
                     size="sm" 
                     variant="outline" 
                     className="w-full border-orange-600 text-orange-600"
-                    onClick={() => window.location.href = '/lottery'}
+                    onClick={() => window.location.href = '/'}
                   >
                     <Star className="h-4 w-4 mr-2" />
                     Generate Numbers

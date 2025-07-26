@@ -21,7 +21,7 @@ import AstrologicalFeatures from "@/components/AstrologicalFeatures";
 import RussellBiography from "@/components/RussellBiography";
 import RussellMusicPlayer from "@/components/RussellMusicPlayer";
 import ProfileSetup from "@/components/ProfileSetup";
-import { Crown, Lock, UserPlus } from "lucide-react";
+import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign } from "lucide-react";
 
 export default function Home() {
   const [selectedGame, setSelectedGame] = useState<GameType>('powerball');
@@ -119,15 +119,15 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-primary">
-                <i className="fas fa-chart-line mr-2"></i>LotteryPro
+                <i className="fas fa-robot mr-2"></i>AI LotteryPro
               </h1>
               <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                 By Russell Nomer
               </Badge>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="/" className="text-gray-600 hover:text-primary transition-colors">Music Home</a>
-              <a href="/lottery" className="text-primary font-semibold transition-colors">Lottery Pro</a>
+              <a href="/" className="text-primary font-semibold transition-colors">AI Lottery Pro</a>
+              <a href="/music" className="text-gray-600 hover:text-primary transition-colors">Russell's Music</a>
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
               <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
               <a href="#" className="text-gray-600 hover:text-primary transition-colors">Help</a>
@@ -152,10 +152,24 @@ export default function Home() {
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold mb-2">Russell's LotteryPro Platform</h2>
+            <h2 className="text-3xl font-bold mb-2">🤖 AI-Powered Lottery Analytics</h2>
             <p className="text-purple-100 text-lg">
-              Statistical lottery analysis powered by Russell Nomer's expertise
+              Advanced machine learning algorithms generate statistically optimized lottery numbers
             </p>
+            <div className="mt-4 flex justify-center gap-4">
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                <Target className="h-4 w-4 mr-2" />
+                AI Analysis
+              </Badge>
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Statistical Edge
+              </Badge>
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                <Star className="h-4 w-4 mr-2" />
+                Smart Predictions
+              </Badge>
+            </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
@@ -166,10 +180,10 @@ export default function Home() {
                 <CardContent>
                   <Button 
                     className="w-full bg-white text-purple-600 hover:bg-gray-100"
-                    onClick={() => window.location.href = '/'}
+                    onClick={() => window.location.href = '/music'}
                   >
                     <Music className="h-4 w-4 mr-2" />
-                    Visit Music Platform
+                    Russell's Music
                   </Button>
                 </CardContent>
               </Card>
