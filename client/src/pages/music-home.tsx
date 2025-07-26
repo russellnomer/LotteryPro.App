@@ -34,6 +34,7 @@ export default function MusicHome() {
             </div>
             <nav className="hidden md:flex space-x-8">
               <a href="/" className="text-primary font-semibold transition-colors">Music</a>
+              <a href="/lottery" className="text-gray-600 hover:text-primary transition-colors">Lottery Pro</a>
               <a href="/books" className="text-gray-600 hover:text-primary transition-colors">Books</a>
               <a href="/fan-contest" className="text-gray-600 hover:text-primary transition-colors">Fan Contest</a>
               <a href="/support" className="text-gray-600 hover:text-primary transition-colors">Support Russell</a>
@@ -100,23 +101,137 @@ export default function MusicHome() {
           </div>
         )}
 
-        {/* Main Content Grid */}
+        {/* Platform Features Tabs */}
+        <Tabs defaultValue="music" className="mb-8">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="music" className="flex items-center gap-2">
+              <Music className="h-4 w-4" />
+              Music
+            </TabsTrigger>
+            <TabsTrigger value="lottery" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Lottery Pro
+            </TabsTrigger>
+            <TabsTrigger value="books" className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Books
+            </TabsTrigger>
+            <TabsTrigger value="contest" className="flex items-center gap-2">
+              <Crown className="h-4 w-4" />
+              Fan Contest
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="music">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                {/* Russell's Authentic Music Player */}
+                <div className="mb-8">
+                  <RussellMusicPlayer />
+                </div>
+                {/* Russell's Story & Biography */}
+                <div className="mb-8">
+                  <RussellBiography />
+                </div>
+              </div>
+              <div className="space-y-6">
+                <VipCodeManager userEmail={userEmail} />
+                {userTier === 'free' && (
+                  <div className="flex justify-center">
+                    <AdSpace size="square" position="Sidebar Mid" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="lottery">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Star className="h-5 w-5 mr-2 text-primary" />
+                  Russell's LotteryPro - Statistical Analysis Platform
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <p className="text-lg text-gray-600 mb-6">
+                    Access Russell's advanced lottery number generation system using statistical analysis, 
+                    frequency patterns, and wheel combinations for Powerball and MegaMillions.
+                  </p>
+                  <Button 
+                    size="lg" 
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => window.location.href = '/lottery'}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Launch LotteryPro Platform
+                  </Button>
+                  <div className="mt-4 text-sm text-gray-500">
+                    Advanced analytics • Historical data • Multiple generation methods
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="books">
+            <BookRecommendations />
+          </TabsContent>
+
+          <TabsContent value="contest">
+            <FanLoyaltyContest />
+          </TabsContent>
+        </Tabs>
+
+        {/* Main Content Grid for Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content - Music Player */}
           <div className="lg:col-span-2">
-            {/* Russell's Authentic Music Player */}
-            <div className="mb-8">
-              <RussellMusicPlayer />
-            </div>
+            {/* Cross-platform features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Quick Access Cards */}
+              <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-purple-800">
+                    <Music className="h-5 w-5 mr-2" />
+                    Music Streaming
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">
+                  <p className="text-purple-700 mb-3">
+                    438 authentic Russell Nomer songs with direct YouTube integration. 
+                    Support Russell's recovery through streaming royalties.
+                  </p>
+                  <Button size="sm" variant="outline" className="w-full border-purple-600 text-purple-600">
+                    <Music className="h-4 w-4 mr-2" />
+                    Browse Music Catalog
+                  </Button>
+                </CardContent>
+              </Card>
 
-            {/* Russell's Story & Biography */}
-            <div className="mb-8">
-              <RussellBiography />
-            </div>
-
-            {/* Book Recommendations */}
-            <div className="mb-8">
-              <BookRecommendations />
+              <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-orange-800">
+                    <Star className="h-5 w-5 mr-2" />
+                    Lottery Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">
+                  <p className="text-orange-700 mb-3">
+                    Statistical analysis for Powerball and MegaMillions using frequency patterns, 
+                    hot/cold numbers, and wheel systems.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full border-orange-600 text-orange-600"
+                    onClick={() => window.location.href = '/lottery'}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Generate Numbers
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
 

@@ -126,7 +126,8 @@ export default function Home() {
               </Badge>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="/" className="text-primary font-semibold transition-colors">Dashboard</a>
+              <a href="/" className="text-gray-600 hover:text-primary transition-colors">Music Home</a>
+              <a href="/lottery" className="text-primary font-semibold transition-colors">Lottery Pro</a>
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
               <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
               <a href="#" className="text-gray-600 hover:text-primary transition-colors">Help</a>
@@ -150,9 +151,28 @@ export default function Home() {
       {/* Russell Nomer Branding Section */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold mb-2">Russell's LotteryPro Platform</h2>
+            <p className="text-purple-100 text-lg">
+              Statistical lottery analysis powered by Russell Nomer's expertise
+            </p>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              {/* Replaced with RussellMusicPlayer below - showing authentic YouTube songs */}
+              <Card className="bg-white/10 border-white/20 text-white">
+                <CardHeader>
+                  <CardTitle className="text-white">Quick Access</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    className="w-full bg-white text-purple-600 hover:bg-gray-100"
+                    onClick={() => window.location.href = '/'}
+                  >
+                    <Music className="h-4 w-4 mr-2" />
+                    Visit Music Platform
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
             <div className="lg:col-span-1">
               <BookRecommendations compact={true} />
