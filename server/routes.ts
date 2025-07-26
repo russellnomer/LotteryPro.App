@@ -21,6 +21,7 @@ import {
 import { customerDataService } from "./customerDataService";
 import customerDataRoutes from "./routes/customerData";
 import profileSetupRoutes from "./routes/profileSetup";
+import fanContestRoutes from "./routes/fanContest";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -337,6 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer data collection and analytics routes
   app.use('/api/customer', customerDataRoutes);
   app.use('/api/customer', profileSetupRoutes);
+  app.use('/api/fan-contest', fanContestRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

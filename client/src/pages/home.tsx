@@ -13,9 +13,10 @@ import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analys
 import { apiRequest } from "@/lib/queryClient";
 import { GameType, TicketGeneration } from "@shared/schema";
 import AdSpace from "@/components/AdSpace";
-import MusicPlayer from "@/components/MusicPlayer";
+import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer";
 import BookRecommendations from "@/components/BookRecommendations";
 import VipCodeManager from "@/components/VipCodeManager";
+import FanLoyaltyContest from "@/components/FanLoyaltyContest";
 import ProfileSetup from "@/components/ProfileSetup";
 import { Crown, Lock, UserPlus } from "lucide-react";
 
@@ -148,7 +149,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <MusicPlayer featured={true} compact={true} />
+              <EnhancedMusicPlayer featured={true} compact={true} />
             </div>
             <div className="lg:col-span-1">
               <BookRecommendations compact={true} />
@@ -725,6 +726,11 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Fan Loyalty Contest Section */}
+      <div className="mb-8">
+        <FanLoyaltyContest compact={false} />
       </div>
     </div>
   );

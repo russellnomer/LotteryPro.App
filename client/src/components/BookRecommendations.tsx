@@ -43,21 +43,27 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <BookOpenIcon className="h-4 w-4 text-green-600" />
-          Russell's Gambling Strategy Books
+    <Card className="w-full border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-yellow-50 shadow-lg">
+      <CardHeader className="pb-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-t-lg">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold">
+          <BookOpenIcon className="h-5 w-5" />
+          🎯 Russell's Gambling Strategy Books
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Master casino strategies with expert insights
+        <p className="text-orange-100 font-medium">
+          ⚡ Master casino strategies with proven expert insights
         </p>
+        <div className="mt-2 p-2 bg-yellow-100 rounded border border-yellow-400">
+          <p className="text-yellow-800 text-xs font-medium">
+            💰 <strong>Support Independent Artists:</strong> Book purchases directly support Russell's music career! 
+            Streaming pays artists only $0.003-0.013 per play.
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {books.map((book) => (
           <div 
             key={book.id}
-            className="p-3 rounded-lg border bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-800/30 dark:hover:to-emerald-800/30 transition-all"
+            className="p-4 rounded-xl border-2 border-orange-300 bg-white hover:border-orange-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <div className="flex justify-between items-start gap-3">
               <div className="flex-1">
@@ -78,11 +84,11 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
                   </Badge>
                   <Button
                     size="sm"
-                    className="h-7 px-3 text-xs bg-amazon-orange hover:bg-amazon-orange/90 text-white"
+                    className="h-8 px-4 text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                     onClick={() => window.open(book.amazonUrl, '_blank')}
                   >
                     <ShoppingCartIcon className="h-3 w-3 mr-1" />
-                    Buy on Amazon
+                    🛒 Buy & Support Russell!
                   </Button>
                 </div>
               </div>
@@ -90,12 +96,16 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
           </div>
         ))}
         
-        <div className="pt-2 border-t text-xs text-center text-muted-foreground">
-          <p>📚 Available exclusively on Amazon</p>
-          <p className="mt-1">
-            <span className="font-medium text-green-600">Russell Nomer</span> - 
-            Casino Strategy Expert & Lottery Analyst
-          </p>
+        <div className="mt-4 p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border border-blue-200">
+          <h4 className="font-semibold text-blue-800 mb-2 flex items-center text-sm">
+            <BookOpenIcon className="h-3 w-3 mr-1" />
+            Why Support Independent Authors & Musicians?
+          </h4>
+          <div className="text-xs text-blue-700 space-y-1">
+            <p>🎵 <strong>Streaming Reality:</strong> Artists earn $0.003-0.013 per stream (need 250,000+ plays for $1,000)</p>
+            <p>📚 <strong>Book Sales:</strong> Direct support that funds new research, music production, and content creation</p>
+            <p>🎯 <strong>Your Impact:</strong> Every purchase helps Russell continue developing winning strategies and music</p>
+          </div>
         </div>
       </CardContent>
     </Card>
