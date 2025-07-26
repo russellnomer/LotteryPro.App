@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import MusicHome from "@/pages/music-home";
+import Books from "@/pages/books";
 import Performance from "@/pages/performance";
 import Subscription from "@/pages/subscription";
 import Auth from "@/pages/auth";
@@ -17,6 +18,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/music" component={MusicHome} />
+      <Route path="/books" component={Books} />
       <Route path="/performance" component={Performance} />
       <Route path="/subscription" component={Subscription} />
       <Route path="/auth" component={Auth} />
