@@ -22,7 +22,9 @@ app.use(securityHeaders);
 app.use(securityLogger);
 app.use(sessionSecurity);
 app.use(sanitizeInput);
-app.use(apiRateLimit);
+
+// Only apply rate limiting to API routes, not static assets
+app.use('/api', apiRateLimit);
 
 app.use(express.json({ limit: '10mb' })); // DoS protection
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));

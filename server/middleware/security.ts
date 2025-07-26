@@ -61,16 +61,20 @@ export const authRateLimit = rateLimit({
   }
 });
 
-// General API rate limiting
+// General API rate limiting - only for API routes
 export const apiRateLimit = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // 100 requests per minute
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // Higher limit for development
   message: {
     error: 'Rate limit exceeded. Please slow down your requests.',
     retryAfter: '1 minute'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for development environment
+    return process.env.NODE_ENV === 'development';
+  }
 });
 
 // Input sanitization middleware - OWASP A03:2021
