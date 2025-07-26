@@ -11,6 +11,7 @@ import Subscription from "@/pages/subscription";
 import Auth from "@/pages/auth";
 import Admin from "@/pages/admin";
 import PrivacyPolicy from "@/pages/privacy";
+import SocialMarketing from "@/pages/social-marketing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/admin" component={Admin} />
       <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/social-marketing" component={SocialMarketing} />
       <Route component={NotFound} />
     </Switch>
   );
