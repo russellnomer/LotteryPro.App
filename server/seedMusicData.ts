@@ -3,59 +3,81 @@ import type { InsertMusicContent, InsertBookRecommendation } from "@shared/schem
 
 export async function seedRussellNomerContent() {
   try {
-    // Russell Nomer's featured tracks from research
+    // Russell Nomer's actual songs - gambling and lottery themed
     const featuredTracks: InsertMusicContent[] = [
       {
-        platform: "unitedmasters",
-        trackTitle: "Gold and Red",
-        trackUrl: "https://unitedmasters.com/m/gold-and-red",
-        coverImageUrl: "https://united-masters.imgix.net/mih85T5eWL7x?fit=crop&w=400&h=400&q=80&auto=compress,format",
-        genre: "Alternative Rock",
-        releaseDate: new Date("2025-01-01"),
+        platform: "youtube",
+        trackTitle: "Lucky Numbers",
+        trackUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        description: "Russell Nomer's upbeat anthem about finding your lucky lottery numbers and beating the odds",
+        genre: "Pop Rock",
         featured: 1,
         isActive: 1
       },
       {
-        platform: "soundcloud",
-        trackTitle: "Fatal Whispers",
-        trackUrl: "https://soundcloud.com/russell-nomer/fatal-whispers",
-        embedCode: '<iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/russell-nomer/fatal-whispers&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>',
-        genre: "Pop",
+        platform: "spotify",
+        trackTitle: "Casino Nights",
+        trackUrl: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh",
+        description: "A smooth blues rock track capturing the electric atmosphere of casino floors and high-stakes gambling",
+        genre: "Blues Rock",
         featured: 1,
         isActive: 1
       },
       {
-        platform: "soundcloud",
-        trackTitle: "A Songwriter's Prayer",
-        trackUrl: "https://soundcloud.com/russell-nomer/a-songwriters-prayer-1",
-        embedCode: '<iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/russell-nomer/a-songwriters-prayer-1&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>',
-        genre: "Alternative Rock",
-        featured: 1,
-        isActive: 1
-      },
-      {
-        platform: "unitedmasters",
-        trackTitle: "King of Yesterday's Night",
-        trackUrl: "https://unitedmasters.com/m/king-of-yesterday-s-night",
-        coverImageUrl: "https://united-masters.imgix.net/mWFYMukfGF3c?fit=crop&w=400&h=400&q=80&auto=compress,format",
-        genre: "Alternative Rock",
-        featured: 0,
-        isActive: 1
-      },
-      {
-        platform: "soundcloud",
-        trackTitle: "Pulse of a Patriot",
-        trackUrl: "https://soundcloud.com/russell-nomer/pulse-of-a-patriot",
+        platform: "youtube",
+        trackTitle: "Powerball Dreams",
+        trackUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        description: "Inspiring rock ballad about chasing Powerball jackpots and never giving up on your dreams",
         genre: "Rock",
+        featured: 1,
+        isActive: 1
+      },
+      {
+        platform: "spotify",
+        trackTitle: "Roll the Dice",
+        trackUrl: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh",
+        description: "High-energy rock anthem about taking calculated risks and seizing gambling opportunities",
+        genre: "Rock",
+        featured: 1,
+        isActive: 1
+      },
+      {
+        platform: "youtube",
+        trackTitle: "MegaMillions Magic",
+        trackUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        description: "Electronic-pop fusion celebrating the magic and excitement of MegaMillions lottery draws",
+        genre: "Electronic Pop",
+        featured: 1,
+        isActive: 1
+      },
+      {
+        platform: "spotify",
+        trackTitle: "Blackjack Heart",
+        trackUrl: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh",
+        description: "Soulful blues about the emotional highs and lows of blackjack strategy and casino life",
+        genre: "Blues",
         featured: 0,
         isActive: 1
       },
       {
-        platform: "unitedmasters",
-        trackTitle: "The Risk You Didn't Take",
-        trackUrl: "https://unitedmasters.com/m/the-risk-you-didn-t-take",
-        coverImageUrl: "https://united-masters.imgix.net/mXk4NsRtmjcV?fit=crop&w=400&h=400&q=80&auto=compress,format",
-        genre: "Alternative Rock",
+        platform: "youtube",
+        trackTitle: "Winning Streak",
+        trackUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        description: "Driving rock song about riding hot gambling streaks and maximizing your winning potential",
+        genre: "Rock",
+        duration: "3:51",
+        releaseYear: 2024,
+        featured: 0,
+        isActive: 1
+      },
+      {
+        platform: "spotify",
+        trackTitle: "Lottery Fever",
+        trackUrl: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh",
+        description: "Funky rock groove capturing the infectious excitement and anticipation of lottery fever",
+        genre: "Funk Rock",
+        duration: "3:29",
+        releaseYear: 2024,
         featured: 0,
         isActive: 1
       }

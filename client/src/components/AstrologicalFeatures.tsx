@@ -312,16 +312,19 @@ export default function AstrologicalFeatures({ compact = false }: AstrologicalFe
               </Card>
             </div>
 
-            {/* Astrology Book Recommendation */}
+            {/* Gambling-Focused Astrology Resources */}
             <Alert className="bg-gradient-to-r from-orange-100 to-yellow-100 border-orange-300">
               <Sun className="h-4 w-4" />
               <AlertDescription>
                 <div className="flex justify-between items-center">
                   <div>
-                    <strong>📖 Enhance Your Cosmic Lottery Strategy!</strong>
+                    <strong>🎯 Professional Gambling Astrology Guides</strong>
                     <p className="text-sm mt-1">
-                      Discover advanced astrological techniques for gambling and lottery success with professional astrology resources.
+                      Planetary timing guides, lucky number calculations, and casino astrology specifically for serious gamblers and lottery players.
                     </p>
+                    <div className="text-xs text-orange-700 mt-2">
+                      ⭐ Planetary casino timing • 🎲 Zodiac gambling strategies • 📅 Lucky day calculators • 🎰 Moon phase betting guides
+                    </div>
                   </div>
                   <Button
                     size="sm"
@@ -329,7 +332,7 @@ export default function AstrologicalFeatures({ compact = false }: AstrologicalFe
                     onClick={() => window.open('https://amzn.to/46tfENm', '_blank')}
                   >
                     <ShoppingCart className="h-3 w-3 mr-1" />
-                    Shop Astrology
+                    Shop Gambling Astrology
                     <ExternalLink className="h-3 w-3 ml-1" />
                   </Button>
                 </div>

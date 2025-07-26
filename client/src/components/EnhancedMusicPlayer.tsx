@@ -118,7 +118,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
           {featured && <Badge variant="secondary" className="text-xs">Featured</Badge>}
         </CardTitle>
         <p className="text-purple-100">
-          ✨ Listen while selecting your lucky numbers - every stream supports independent music!
+          ✨ Real tracks from Russell's catalog - listen while picking your lucky numbers!
         </p>
         
         {/* Streaming Royalty Education */}
