@@ -22,6 +22,7 @@ import { customerDataService } from "./customerDataService";
 import customerDataRoutes from "./routes/customerData";
 import profileSetupRoutes from "./routes/profileSetup";
 import fanContestRoutes from "./routes/fanContest";
+import ascapNetworkingRoutes from "./routes/ascapNetworking";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -339,6 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/customer', customerDataRoutes);
   app.use('/api/customer', profileSetupRoutes);
   app.use('/api/fan-contest', fanContestRoutes);
+  app.use('/api/ascap', ascapNetworkingRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

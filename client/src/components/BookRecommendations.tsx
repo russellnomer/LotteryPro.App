@@ -102,7 +102,7 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
             Why Support Independent Authors & Musicians?
           </h4>
           <div className="text-xs text-blue-700 space-y-1">
-            <p>🎵 <strong>Streaming Reality:</strong> Artists earn $0.003-0.013 per stream (need 250,000+ plays for $1,000)</p>
+            <p>🎵 <strong>ASCAP Streaming Reality:</strong> Apple Music pays best at $0.00735/stream (ASCAP members can't use TIDAL)</p>
             <p>📚 <strong>Book Sales:</strong> Direct support that funds new research, music production, and content creation</p>
             <p>🎯 <strong>Your Impact:</strong> Every purchase helps Russell continue developing winning strategies and music</p>
           </div>

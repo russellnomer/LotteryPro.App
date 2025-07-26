@@ -8,6 +8,13 @@ This is a full-stack web application for generating lottery numbers for Powerbal
 
 Preferred communication style: Simple, everyday language.
 
+**ASCAP Membership Requirements:**
+- Russell Nomer is an ASCAP member (Performance Rights Organization)
+- Cannot use TIDAL streaming platform due to ASCAP restrictions
+- Must leverage ASCAP membership for entertainment industry networking
+- Focus on connecting with show runners, producers, decision makers for music placement opportunities
+- Preferred streaming platforms: Apple Music (best payout), Spotify, YouTube Russell Nomer Topic Channel
+
 ## Commercial Development Goals (Russell Nomer)
 
 - Mobile app development for iOS and Android distribution
@@ -164,5 +171,10 @@ Preferred communication style: Simple, everyday language.
 - ✅ **SECURE DEVELOPMENT ADS**: AdSense configured for both development and production testing
 - ✅ **INDUSTRY COMPLIANCE**: Full compliance with OWASP, CIS, ISACA, Security Forum, and NIST frameworks
 - ✅ **COMPREHENSIVE SECURITY HARDENING**: Defense-in-depth implementation with security headers, rate limiting, input sanitization, and audit logging
+- ✅ **ENHANCED BOOK VISIBILITY**: Bold orange gradients and prominent "Support Russell!" buttons with streaming royalty education
+- ✅ **EMBEDDED MUSIC PLAYER**: YouTube & Spotify iframe embeds play directly in app (no external links)
+- ✅ **FAN LOYALTY CONTEST SYSTEM**: VIP code rewards for music sharing, book reviews, fan stories, social posts
+- ✅ **ASCAP INTEGRATION**: Removed TIDAL (PRO restriction), added ASCAP networking features for industry connections
+- ✅ **ASTROLOGICAL FEATURES**: Complete zodiac system with lucky numbers, horoscopes, and Amazon astrology affiliate link
 
 The application follows a monorepo structure with shared types and schemas, enabling type safety between frontend and backend while maintaining clear separation of concerns.

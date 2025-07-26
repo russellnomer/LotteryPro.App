@@ -17,6 +17,7 @@ import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer";
 import BookRecommendations from "@/components/BookRecommendations";
 import VipCodeManager from "@/components/VipCodeManager";
 import FanLoyaltyContest from "@/components/FanLoyaltyContest";
+import AstrologicalFeatures from "@/components/AstrologicalFeatures";
 import ProfileSetup from "@/components/ProfileSetup";
 import { Crown, Lock, UserPlus } from "lucide-react";
 
@@ -728,6 +729,11 @@ export default function Home() {
         </Card>
       </div>
       
+      {/* Astrological Features Section */}
+      <div className="mb-8">
+        <AstrologicalFeatures compact={false} />
+      </div>
+
       {/* Fan Loyalty Contest Section */}
       <div className="mb-8">
         <FanLoyaltyContest compact={false} />

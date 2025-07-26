@@ -125,7 +125,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
         <Alert className="mt-3 bg-yellow-100 border-yellow-400">
           <DollarSign className="h-4 w-4" />
           <AlertDescription className="text-yellow-800 text-sm">
-            <strong>💰 Streaming Reality Check:</strong> TIDAL pays artists $0.0125/stream vs Spotify's $0.004. 
+            <strong>💰 ASCAP Member Streaming Reality:</strong> Apple Music pays $0.00735/stream vs Spotify's $0.004. 
             YouTube pays $0.0007/stream. <strong>Like, share & buy books to truly support Russell!</strong>
           </AlertDescription>
         </Alert>
@@ -247,12 +247,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
               <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-green-600">TIDAL (Best)</div>
-                <div>$0.0125 per stream</div>
-                <div className="text-gray-600">Need ~80,000 streams for $1,000</div>
-              </div>
-              <div className="bg-white p-3 rounded border">
-                <div className="font-semibold text-blue-600">Apple Music</div>
+                <div className="font-semibold text-blue-600">Apple Music (Best for ASCAP)</div>
                 <div>$0.00735 per stream</div>
                 <div className="text-gray-600">Need ~136,000 streams for $1,000</div>
               </div>
@@ -260,6 +255,23 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
                 <div className="font-semibold text-purple-600">Spotify</div>
                 <div>$0.00437 per stream</div>
                 <div className="text-gray-600">Need ~230,000 streams for $1,000</div>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <div className="font-semibold text-red-600">YouTube Music</div>
+                <div>$0.0007 per stream</div>
+                <div className="text-gray-600">Need ~1.4M streams for $1,000</div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-gradient-to-r from-green-100 to-blue-100 rounded border border-green-300">
+              <h5 className="font-semibold text-green-800 mb-2 flex items-center text-sm">
+                🎼 ASCAP Member Benefits & Networking
+              </h5>
+              <div className="text-xs text-green-700 space-y-1">
+                <p>📺 <strong>TV/Film Placement:</strong> Russell's ASCAP membership enables music licensing for shows, commercials, films</p>
+                <p>🎬 <strong>Industry Networking:</strong> Connect with show runners, producers, music supervisors for placement opportunities</p>
+                <p>💰 <strong>Performance Royalties:</strong> ASCAP collects and distributes royalties from broadcast, streaming, live performances</p>
+                <p>🎵 <strong>Music Sync Opportunities:</strong> Lottery/gambling themes perfect for casino scenes, sports betting content</p>
               </div>
             </div>
           </div>
