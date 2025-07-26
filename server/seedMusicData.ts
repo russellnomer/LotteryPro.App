@@ -89,30 +89,113 @@ export async function seedRussellNomerContent() {
       }
     ];
 
-    // Russell's gambling strategy books
+    // Russell Nomer's Complete 35-Book Collection - Ontology-Based Organization
+    // PRIMARY FOCUS: Gambling strategy books (prominently featured)
+    // SECONDARY: Other 32 books organized by subject matter for additional revenue
     const books: InsertBookRecommendation[] = [
+      // === FEATURED GAMBLING STRATEGY BOOKS (Primary Revenue Focus) ===
       {
-        title: "Russell Nomer's Complete Gambling Strategy Collection",
-        amazonUrl: "https://amzn.to/4op76h9",
-        description: "Discover Russell's complete collection of gambling strategy books on Amazon. From slot machine selection to advanced table game strategies, find all of Russell's expert gambling guides in one place.",
+        title: "Russell Nomer's Complete 35-Book Amazon Collection",
+        amazonUrl: "https://amzn.to/4m6r2mS", // Updated to complete collection link
+        description: "Discover Russell's complete collection of all 35 books on Amazon, featuring acclaimed gambling strategy guides plus cybersecurity, AI, and blockchain expertise. Support Russell's recovery journey.",
         category: "collection",
         displayOrder: 1,
         isActive: 1
       },
       {
         title: "The Degenerate Gambler's Guide to Finding Winning Slot Machines",
-        amazonUrl: "https://amzn.to/4op76h9",
-        description: "Master the art of slot machine selection with proven strategies from Russell Nomer. Learn the insider secrets of finding the most profitable machines and maximizing your winning potential.",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Master slot machine selection with Russell's proven strategies. Learn insider secrets for finding profitable machines and maximizing winning potential. ⭐ 5.0/5 stars on Amazon.",
         category: "gambling",
         displayOrder: 2,
         isActive: 1
       },
       {
         title: "Mastering the Craps Table: Strategies for Success",
-        amazonUrl: "https://amzn.to/4op76h9",
-        description: "Unlock the mysteries of craps with Russell Nomer's comprehensive guide to table strategies. From basic bets to advanced techniques, become a craps master with this essential handbook.",
-        category: "strategy",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Unlock craps mysteries with Russell's comprehensive table strategies. From basic bets to advanced techniques, become a craps master. ⭐ 4.1/5 stars on Amazon.",
+        category: "gambling",
         displayOrder: 3,
+        isActive: 1
+      },
+
+      // === CYBERSECURITY & TECHNOLOGY (Professional Expertise) ===
+      {
+        title: "The CISO's Guide to Securing Artificial Intelligence",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Essential AI security guide from Russell's professional cybersecurity expertise. Protect your organization against AI-specific threats and vulnerabilities. ⭐ 5.0/5 stars.",
+        category: "cybersecurity",
+        displayOrder: 4,
+        isActive: 1
+      },
+      {
+        title: "Hardening Windows 11",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Comprehensive Windows 11 security hardening guide. Professional cybersecurity techniques for enterprise and personal protection. ⭐ 3.2/5 stars.",
+        category: "cybersecurity",
+        displayOrder: 5,
+        isActive: 1
+      },
+      {
+        title: "Cybersecurity Tabletop Exercises: MITRE ATT&CK Scenarios",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Practical cybersecurity training scenarios using industry-standard MITRE ATT&CK framework. Professional-grade security exercises for teams.",
+        category: "cybersecurity",
+        displayOrder: 6,
+        isActive: 1
+      },
+      {
+        title: "Hardening Salesforce: Securing Your CRM",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Secure your Salesforce implementation with Russell's expert CRM security strategies. Protect customer data and business operations effectively.",
+        category: "cybersecurity",
+        displayOrder: 7,
+        isActive: 1
+      },
+      {
+        title: "Mastering Onchain Security: Blockchain Defenders Guide",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Comprehensive blockchain security from Russell's cutting-edge expertise. Protect digital assets, smart contracts, and cryptocurrency investments.",
+        category: "blockchain",
+        displayOrder: 8,
+        isActive: 1
+      },
+
+      // === COMPLIANCE & CERTIFICATION (Business/Professional) ===
+      {
+        title: "A Step-by-Step Guide to Obtaining FedRamp Certification",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Navigate federal compliance with Russell's detailed FedRamp certification guide. Essential for government contractors. ⭐ 4.5/5 stars.",
+        category: "compliance",
+        displayOrder: 9,
+        isActive: 1
+      },
+      {
+        title: "SOC2 Type 1 & Type 2 Certification Guide",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Master SOC2 compliance with Russell's comprehensive attestation and certification guide. Essential for business security and client trust.",
+        category: "compliance",
+        displayOrder: 10,
+        isActive: 1
+      },
+
+      // === MENTAL HEALTH & WELLNESS (Personal Development) ===
+      {
+        title: "The Cybersecurity Professional's Guide to Mental Health",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Strengthen resilience and emotional well-being in high-stress cybersecurity careers. Russell's personal insights on maintaining mental health while working in technology.",
+        category: "wellness",
+        displayOrder: 11,
+        isActive: 1
+      },
+
+      // === SOCIAL & POLITICAL COMMENTARY ===
+      {
+        title: "Beyond Woke: Reclaiming Critical Thinking and Rational Thought",
+        amazonUrl: "https://amzn.to/4m6r2mS",
+        description: "Russell's perspective on modern discourse and critical thinking. Thoughtful commentary on social and political issues. ⭐ 5.0/5 stars on Amazon.",
+        category: "social",
+        displayOrder: 12,
         isActive: 1
       }
     ];

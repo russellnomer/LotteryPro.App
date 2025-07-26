@@ -128,10 +128,10 @@ export default function Books() {
               <Button
                 size="lg"
                 className="bg-white text-orange-600 hover:bg-gray-100 font-bold"
-                onClick={() => window.open('https://amzn.to/4op76h9', '_blank')}
+                onClick={() => window.open('https://amzn.to/4m6r2mS', '_blank')}
               >
                 <ExternalLinkIcon className="h-4 w-4 mr-2" />
-                View All Books on Amazon
+                View All 35 Books on Amazon
               </Button>
             </div>
           </div>
@@ -165,52 +165,117 @@ export default function Books() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Books Grid */}
+          {/* Books Grid - Ontology-Based Organization */}
           <div className="lg:col-span-3">
             {books && books.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {books.map((book) => (
-                  <Card 
-                    key={book.id} 
-                    className="border-2 border-orange-300 bg-white hover:border-orange-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                  >
-                    <CardHeader className="bg-gradient-to-r from-orange-100 to-red-100">
-                      <CardTitle className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-800 leading-tight">
-                            {book.title}
-                          </h3>
-                          <Badge 
-                            variant="outline" 
-                            className="mt-2 text-xs px-2 py-1 capitalize border-orange-400 text-orange-700"
-                          >
-                            {book.category}
-                          </Badge>
-                        </div>
-                        <BookOpenIcon className="h-6 w-6 text-orange-600 flex-shrink-0 ml-2" />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      {book.description && (
-                        <p className="text-gray-600 mb-4 leading-relaxed">
-                          {book.description}
-                        </p>
-                      )}
-                      <div className="space-y-3">
-                        <Button
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                          onClick={() => window.open(book.amazonUrl, '_blank')}
-                        >
-                          <ShoppingCartIcon className="h-4 w-4 mr-2" />
-                          🛒 Buy & Support Russell!
-                        </Button>
-                        <p className="text-xs text-center text-gray-500">
-                          Secure purchase through Amazon
-                        </p>
+              <div className="space-y-8">
+                {/* Primary Featured Section - Gambling Strategy Books */}
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <Target className="h-6 w-6 text-red-600" />
+                    <h3 className="text-2xl font-bold text-gray-800">🎯 Featured Gambling Strategy Guides</h3>
+                    <Badge className="bg-red-600 text-white">PRIMARY FOCUS</Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {books.filter(book => book.category === 'collection' || book.category === 'gambling').map((book) => (
+                      <Card 
+                        key={book.id} 
+                        className="border-3 border-red-400 bg-gradient-to-br from-red-50 to-orange-50 hover:border-red-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+                      >
+                        <CardHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white">
+                          <CardTitle className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-bold leading-tight">
+                                {book.title}
+                              </h3>
+                              <Badge 
+                                variant="secondary" 
+                                className="mt-2 text-xs px-2 py-1 capitalize bg-white/20 text-white border-white/30"
+                              >
+                                {book.category === 'collection' ? '35 Books' : 'Gambling Strategy'}
+                              </Badge>
+                            </div>
+                            <Target className="h-6 w-6 flex-shrink-0 ml-2" />
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          {book.description && (
+                            <p className="text-gray-700 mb-4 leading-relaxed font-medium">
+                              {book.description}
+                            </p>
+                          )}
+                          <div className="space-y-3">
+                            <Button
+                              className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg py-3"
+                              onClick={() => window.open(book.amazonUrl, '_blank')}
+                            >
+                              <ShoppingCartIcon className="h-5 w-5 mr-2" />
+                              🎯 GET STRATEGY GUIDE
+                            </Button>
+                            <p className="text-xs text-center text-gray-500">
+                              Direct support for Russell's recovery
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Secondary Sections - Other Subject Areas */}
+                {['cybersecurity', 'blockchain', 'compliance', 'wellness', 'social'].map(category => {
+                  const categoryBooks = books.filter(book => book.category === category);
+                  if (categoryBooks.length === 0) return null;
+                  
+                  const categoryInfo = {
+                    cybersecurity: { icon: '🔒', title: 'Cybersecurity & Technology', color: 'blue' },
+                    blockchain: { icon: '⛓️', title: 'Blockchain & Digital Assets', color: 'purple' },
+                    compliance: { icon: '📋', title: 'Business Compliance', color: 'green' },
+                    wellness: { icon: '🧠', title: 'Mental Health & Wellness', color: 'teal' },
+                    social: { icon: '🗣️', title: 'Social Commentary', color: 'indigo' }
+                  }[category];
+
+                  return (
+                    <div key={category}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">{categoryInfo?.icon}</span>
+                        <h3 className="text-xl font-semibold text-gray-700">{categoryInfo?.title}</h3>
+                        <Badge variant="outline" className={`border-${categoryInfo?.color}-400 text-${categoryInfo?.color}-700`}>
+                          {categoryBooks.length} book{categoryBooks.length > 1 ? 's' : ''}
+                        </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {categoryBooks.map((book) => (
+                          <Card 
+                            key={book.id} 
+                            className={`border-2 border-${categoryInfo?.color}-200 bg-white hover:border-${categoryInfo?.color}-300 hover:shadow-lg transition-all duration-300`}
+                          >
+                            <CardHeader className={`bg-${categoryInfo?.color}-50`}>
+                              <CardTitle className="text-sm font-semibold text-gray-800 leading-tight">
+                                {book.title}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                              {book.description && (
+                                <p className="text-gray-600 mb-3 text-sm leading-relaxed">
+                                  {book.description.slice(0, 120)}...
+                                </p>
+                              )}
+                              <Button
+                                size="sm"
+                                className={`w-full bg-${categoryInfo?.color}-500 hover:bg-${categoryInfo?.color}-600 text-white`}
+                                onClick={() => window.open(book.amazonUrl, '_blank')}
+                              >
+                                <ShoppingCartIcon className="h-3 w-3 mr-1" />
+                                Buy on Amazon
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <Card className="text-center p-8">
