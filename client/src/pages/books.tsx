@@ -107,7 +107,7 @@ export default function Books() {
             <p className="text-orange-100 text-lg mb-6">
               Master casino strategies with proven expert insights from an experienced gambling strategist
             </p>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-4 mb-6">
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <Target className="h-4 w-4 mr-2" />
                 Strategy Expert
@@ -120,6 +120,19 @@ export default function Books() {
                 <Heart className="h-4 w-4 mr-2" />
                 Support Russell
               </Badge>
+            </div>
+            <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+              <p className="text-orange-100 text-sm mb-3">
+                Browse Russell's complete collection on Amazon
+              </p>
+              <Button
+                size="lg"
+                className="bg-white text-orange-600 hover:bg-gray-100 font-bold"
+                onClick={() => window.open('https://amzn.to/4op76h9', '_blank')}
+              >
+                <ExternalLinkIcon className="h-4 w-4 mr-2" />
+                View All Books on Amazon
+              </Button>
             </div>
           </div>
         </div>

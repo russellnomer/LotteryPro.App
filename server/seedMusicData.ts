@@ -92,19 +92,27 @@ export async function seedRussellNomerContent() {
     // Russell's gambling strategy books
     const books: InsertBookRecommendation[] = [
       {
-        title: "The Degenerate Gambler's Guide to Finding Winning Slot Machines",
-        amazonUrl: "https://amzn.to/46yqulj",
-        description: "Master the art of slot machine selection with proven strategies from Russell Nomer. Learn the insider secrets of finding the most profitable machines and maximizing your winning potential.",
-        category: "gambling",
+        title: "Russell Nomer's Complete Gambling Strategy Collection",
+        amazonUrl: "https://amzn.to/4op76h9",
+        description: "Discover Russell's complete collection of gambling strategy books on Amazon. From slot machine selection to advanced table game strategies, find all of Russell's expert gambling guides in one place.",
+        category: "collection",
         displayOrder: 1,
         isActive: 1
       },
       {
+        title: "The Degenerate Gambler's Guide to Finding Winning Slot Machines",
+        amazonUrl: "https://amzn.to/4op76h9",
+        description: "Master the art of slot machine selection with proven strategies from Russell Nomer. Learn the insider secrets of finding the most profitable machines and maximizing your winning potential.",
+        category: "gambling",
+        displayOrder: 2,
+        isActive: 1
+      },
+      {
         title: "Mastering the Craps Table: Strategies for Success",
-        amazonUrl: "https://amzn.to/4lPKy7t",
+        amazonUrl: "https://amzn.to/4op76h9",
         description: "Unlock the mysteries of craps with Russell Nomer's comprehensive guide to table strategies. From basic bets to advanced techniques, become a craps master with this essential handbook.",
         category: "strategy",
-        displayOrder: 2,
+        displayOrder: 3,
         isActive: 1
       }
     ];
