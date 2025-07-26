@@ -19,6 +19,7 @@ import VipCodeManager from "@/components/VipCodeManager";
 import FanLoyaltyContest from "@/components/FanLoyaltyContest";
 import AstrologicalFeatures from "@/components/AstrologicalFeatures";
 import RussellBiography from "@/components/RussellBiography";
+import RussellMusicPlayer from "@/components/RussellMusicPlayer";
 import ProfileSetup from "@/components/ProfileSetup";
 import { Crown, Lock, UserPlus } from "lucide-react";
 
@@ -735,9 +736,9 @@ export default function Home() {
         <RussellBiography />
       </div>
 
-      {/* Enhanced Music Player Section */}
+      {/* Russell's Authentic Music Player Section */}
       <div className="mb-8">
-        <EnhancedMusicPlayer featured={true} />
+        <RussellMusicPlayer />
       </div>
 
       {/* Book Recommendations Section */}

@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import youtubeRoutes from "./routes/youtube";
+import youtubeService from "./youtubeService";
 import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/schema";
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
@@ -315,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/vip/redeem", requireAuth, securityLogger, redeemVipCode);
   app.delete("/api/vip/codes/:codeId", requireAuth, securityLogger, deactivateVipCode);
 
-  // Music Content Routes
+  // Music Content Routes - Russell Nomer's authentic songs
   app.get("/api/music", async (req, res) => {
     try {
       const featured = req.query.featured === 'true';
@@ -323,6 +325,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(music);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Russell Nomer's live YouTube catalog
+  app.get("/api/russell-music", async (req, res) => {
+    try {
+      const songs = await youtubeService.getRussellNomerSongs();
+      res.json({
+        success: true,
+        artist: "Russell Nomer",
+        channelId: "UCAiOa4F7HAyxgHaDlRPw6vA",
+        count: songs.length,
+        songs: songs
+      });
+    } catch (error: any) {
+      console.error('Error fetching Russell Nomer songs:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Could not fetch Russell Nomer's songs from YouTube",
+        message: error.message 
+      });
     }
   });
 
@@ -341,6 +364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/customer', profileSetupRoutes);
   app.use('/api/fan-contest', fanContestRoutes);
   app.use('/api/ascap', ascapNetworkingRoutes);
+  
+  // YouTube API Routes for Russell Nomer's authentic music
+  app.use('/api/youtube', youtubeRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

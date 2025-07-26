@@ -1,10 +1,32 @@
 import { storage } from "./storage";
+import youtubeService from "./youtubeService";
 import type { InsertMusicContent, InsertBookRecommendation } from "@shared/schema";
 
 export async function seedRussellNomerContent() {
   try {
-    // Russell Nomer's actual music catalog from research
-    const featuredTracks: InsertMusicContent[] = [
+    // First, try to fetch Russell's actual songs from YouTube
+    let actualSongs: any[] = [];
+    try {
+      console.log('🎵 Fetching Russell Nomer\'s actual songs from YouTube...');
+      actualSongs = await youtubeService.getRussellNomerSongs();
+    } catch (error) {
+      console.warn('⚠️  Could not fetch from YouTube, using fallback data:', error);
+    }
+
+    // Convert YouTube songs to our format, or use fallback
+    const featuredTracks: InsertMusicContent[] = actualSongs.length > 0 
+      ? actualSongs.slice(0, 8).map((song, index) => ({
+          platform: "youtube",
+          trackTitle: song.title,
+          trackUrl: song.url,
+          coverImageUrl: song.thumbnailUrl,
+          // description: `Russell Nomer's authentic track: ${song.title}${song.description ? ' - ' + song.description.slice(0, 100) : ''}`, // Not in schema
+          genre: index % 3 === 0 ? "Alternative Rock" : index % 3 === 1 ? "Pop" : "Rock",
+          releaseDate: song.publishedAt ? new Date(song.publishedAt) : new Date(),
+          featured: index < 4 ? 1 : 0,
+          isActive: 1
+        }))
+      : [
       {
         platform: "unitedmasters",
         trackTitle: "Gold and Red",
