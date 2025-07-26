@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Performance from "@/pages/performance";
 import Subscription from "@/pages/subscription";
 import Auth from "@/pages/auth";
+import Admin from "@/pages/admin";
 import PrivacyPolicy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/performance" component={Performance} />
       <Route path="/subscription" component={Subscription} />
       <Route path="/auth" component={Auth} />
+      <Route path="/admin" component={Admin} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route component={NotFound} />
     </Switch>

@@ -16,7 +16,8 @@ import AdSpace from "@/components/AdSpace";
 import MusicPlayer from "@/components/MusicPlayer";
 import BookRecommendations from "@/components/BookRecommendations";
 import VipCodeManager from "@/components/VipCodeManager";
-import { Crown, Lock } from "lucide-react";
+import CustomerDataCollection from "@/components/CustomerDataCollection";
+import { Crown, Lock, UserPlus } from "lucide-react";
 
 export default function Home() {
   const [selectedGame, setSelectedGame] = useState<GameType>('powerball');
@@ -679,6 +680,31 @@ export default function Home() {
             <AdSpace size="banner" position="Footer" className="max-w-full" />
           </div>
         )}
+
+        {/* Customer Data Collection for Marketing Leads */}
+        <Card className="mt-8 bg-blue-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-800">
+              <UserPlus className="h-5 w-5 mr-2" />
+              Get Personalized Casino & Gambling Offers
+            </CardTitle>
+            <p className="text-sm text-blue-700">
+              Complete your profile to receive exclusive casino deals, cruise offers, and gambling education opportunities tailored for lottery players.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <CustomerDataCollection 
+              trigger="profile_update"
+              compact={true}
+              onComplete={(customerId) => {
+                toast({
+                  title: "Profile Saved",
+                  description: "You'll now receive personalized gambling opportunities and offers!"
+                });
+              }}
+            />
+          </CardContent>
+        </Card>
 
         {/* Disclaimer */}
         <Card className="mt-12 bg-red-50 border-red-200">

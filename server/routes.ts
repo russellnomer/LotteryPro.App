@@ -18,6 +18,8 @@ import {
   secureErrorHandler,
   validateDependencyIntegrity
 } from "./middleware/security";
+import { customerDataService } from "./customerDataService";
+import customerDataRoutes from "./routes/customerData";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -330,6 +332,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // Customer data collection and analytics routes
+  app.use('/api/customer', customerDataRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

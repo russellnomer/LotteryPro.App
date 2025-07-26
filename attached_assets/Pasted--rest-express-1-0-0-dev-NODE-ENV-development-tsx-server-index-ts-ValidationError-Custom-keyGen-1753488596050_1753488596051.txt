@@ -1,0 +1,57 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+ValidationError: Custom keyGenerator appears to use request IP without calling the ipKeyGenerator helper function for IPv6 addresses. This could allow IPv6 users to bypass limits. See https://express-rate-limit.github.io/ERR_ERL_KEY_GEN_IPV6/ for more information.
+    at Object.keyGeneratorIpFallback (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:549:13)
+    at wrappedValidations.<computed> [as keyGeneratorIpFallback] (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:577:22)
+    at parseOptions (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:646:16)
+    at rateLimit (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:724:18)
+    at <anonymous> (/home/runner/workspace/server/middleware/security.ts:48:30)
+    at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  code: 'ERR_ERL_KEY_GEN_IPV6',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_KEY_GEN_IPV6/'
+}
+SECURITY_CHECK - Dependency integrity validated
+Historical data already seeded
+✅ Russell Nomer Music content and book recommendations ready!
+12:08:57 AM [express] serving on port 5000
+ValidationError: The 'X-Forwarded-For' header is set but the Express 'trust proxy' setting is false (default). This could indicate a misconfiguration which would prevent express-rate-limit from accurately identifying users. See https://express-rate-limit.github.io/ERR_ERL_UNEXPECTED_X_FORWARDED_FOR/ for more information.
+    at Object.xForwardedForHeader (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:335:13)
+    at wrappedValidations.<computed> [as xForwardedForHeader] (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:577:22)
+    at Object.keyGenerator (file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:679:20)
+    at file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:737:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///home/runner/workspace/node_modules/express-rate-limit/dist/index.mjs:718:5 {
+  code: 'ERR_ERL_UNEXPECTED_X_FORWARDED_FOR',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_UNEXPECTED_X_FORWARDED_FOR/'
+}
+Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+12:09:00 AM [express] GET /api/adsense-config 200 in 2ms :: {"enabled":false,"message":"Invalid AdSen…
+12:09:00 AM [express] GET /api/music 200 in 66ms :: [{"id":"dec5128d-cb74-4ee8-b48f-e8bad3756a45","pl…
+12:09:00 AM [express] GET /api/books 200 in 66ms :: [{"id":"ccc41466-6a04-49be-8488-98c00b72e58c","ti…
+12:09:00 AM [express] GET /api/analysis/powerball 304 in 297ms :: {"hotNumbers":[8,28,33,69,25],"cold…
+12:09:35 AM [vite] hmr update /src/App.tsx?v=6IUY_PqObtXFsrZUyxJN2, /src/index.css?v=6IUY_PqObtXFsrZUyxJN2
+12:09:38 AM [vite] hmr update /src/App.tsx?v=6IUY_PqObtXFsrZUyxJN2, /src/index.css?v=6IUY_PqObtXFsrZUyxJN2 (x2)
+12:09:39 AM [vite] Internal server error: Failed to resolve import "@/hooks/useAuth" from "client/src/pages/admin.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/client/src/pages/admin.tsx:1:41
+  16 |  }
+  17 |  var _s = $RefreshSig$();
+  18 |  import { useAuth } from "@/hooks/useAuth";
+     |                           ^
+  19 |  import AdminDashboard from "@/components/AdminDashboard";
+  20 |  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+      at TransformPluginContext._formatError (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49258:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49253:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64291:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64423:39)
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:64350:7)
+      at async PluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)

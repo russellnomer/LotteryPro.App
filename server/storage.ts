@@ -622,6 +622,62 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return bookRec;
   }
+
+  // Customer data operations for marketing and compliance
+  async upsertCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> {
+    const [customer] = await db
+      .insert(customerProfiles)
+      .values(profile)
+      .onConflictDoUpdate({
+        target: customerProfiles.email,
+        set: {
+          ...profile,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return customer;
+  }
+
+  async createCustomerActivity(activity: InsertCustomerActivity): Promise<CustomerActivity> {
+    const [record] = await db
+      .insert(customerActivity)
+      .values(activity)
+      .returning();
+    return record;
+  }
+
+  async createAdminAccessLog(log: InsertAdminAccessLog): Promise<AdminAccessLog> {
+    const [record] = await db
+      .insert(adminAccessLogs)
+      .values(log)
+      .returning();
+    return record;
+  }
+
+  async getAllCustomers(): Promise<CustomerProfile[]> {
+    return await db.select().from(customerProfiles);
+  }
+
+  async getCustomersWithFilters(filters?: any): Promise<CustomerProfile[]> {
+    return await db.select().from(customerProfiles);
+  }
+
+  async getCustomerActivities(filters?: any): Promise<CustomerActivity[]> {
+    return await db.select().from(customerActivity);
+  }
+
+  async getAllCustomerActivities(): Promise<CustomerActivity[]> {
+    return await db.select().from(customerActivity);
+  }
+
+  async getAdminAccessLogs(): Promise<AdminAccessLog[]> {
+    return await db.select().from(adminAccessLogs);
+  }
+
+  async getCustomersBySegment(criteria: any): Promise<CustomerProfile[]> {
+    return await db.select().from(customerProfiles);
+  }
 }
 
 export const storage = new DatabaseStorage();

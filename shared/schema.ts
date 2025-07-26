@@ -1,5 +1,16 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { 
+  pgTable, 
+  text, 
+  varchar, 
+  integer, 
+  timestamp, 
+  jsonb, 
+  decimal,
+  boolean,
+  date,
+  index
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -254,3 +265,113 @@ export type MarketingStats = {
     date: string;
   }>;
 };
+
+// Customer data collection for marketing and compliance
+export const customerProfiles = pgTable("customer_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Optional link to registered users
+  email: varchar("email").notNull(),
+  emailHash: varchar("email_hash").notNull(), // Salted hash for privacy
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  phone: varchar("phone"),
+  phoneHash: varchar("phone_hash"), // Salted hash for privacy
+  dateOfBirth: date("date_of_birth"),
+  zipCode: varchar("zip_code"),
+  state: varchar("state"),
+  country: varchar("country").default("US"),
+  subscriptionTier: varchar("subscription_tier").default("free"),
+  totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0.00"),
+  lifetimeValue: decimal("lifetime_value", { precision: 10, scale: 2 }).default("0.00"),
+  lastActivity: timestamp("last_activity").defaultNow(),
+  registrationSource: varchar("registration_source"), // web, mobile, referral
+  referralCode: varchar("referral_code"),
+  marketingOptIn: boolean("marketing_opt_in").default(true),
+  smsOptIn: boolean("sms_opt_in").default(false),
+  interests: jsonb("interests"), // gambling preferences, casino interest, etc.
+  demographics: jsonb("demographics"), // age group, income range, etc.
+  behaviorData: jsonb("behavior_data"), // usage patterns, preferences
+  complianceFlags: jsonb("compliance_flags"), // any compliance notes
+  riskScore: integer("risk_score").default(0), // compliance risk scoring
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Customer activity tracking for analytics and compliance
+export const customerActivity = pgTable("customer_activity", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").references(() => customerProfiles.id),
+  activityType: varchar("activity_type").notNull(), // login, generation, purchase, etc.
+  activityData: jsonb("activity_data"), // specific details
+  gameType: varchar("game_type"), // powerball, megamillions
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0.00"),
+  ipAddress: varchar("ip_address"),
+  ipHash: varchar("ip_hash"), // Salted hash for privacy
+  userAgent: text("user_agent"),
+  sessionId: varchar("session_id"),
+  deviceFingerprint: varchar("device_fingerprint"),
+  location: jsonb("location"), // geo data if available
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Administrative access logs for compliance and transparency
+export const adminAccessLogs = pgTable("admin_access_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminEmail: varchar("admin_email").notNull(),
+  adminId: varchar("admin_id"),
+  action: varchar("action").notNull(),
+  targetCustomerId: varchar("target_customer_id"),
+  queryParameters: jsonb("query_parameters"),
+  resultCount: integer("result_count"),
+  justification: text("justification"), // reason for access
+  ipAddress: varchar("ip_address"),
+  sessionId: varchar("session_id"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Marketing campaigns tracking
+export const marketingCampaigns = pgTable("marketing_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  type: varchar("type").notNull(), // email, sms, social, casino_partnership
+  targetAudience: jsonb("target_audience"), // demographics, behavior filters
+  content: jsonb("content"), // campaign content and assets
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  budget: decimal("budget", { precision: 10, scale: 2 }),
+  spent: decimal("spent", { precision: 10, scale: 2 }).default("0.00"),
+  impressions: integer("impressions").default(0),
+  clicks: integer("clicks").default(0),
+  conversions: integer("conversions").default(0),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0.00"),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Lead scoring and segmentation
+export const customerSegments = pgTable("customer_segments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  criteria: jsonb("criteria"), // segmentation rules
+  customerCount: integer("customer_count").default(0),
+  averageLTV: decimal("average_ltv", { precision: 10, scale: 2 }),
+  conversionRate: decimal("conversion_rate", { precision: 5, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type CustomerProfile = typeof customerProfiles.$inferSelect;
+export type InsertCustomerProfile = typeof customerProfiles.$inferInsert;
+
+export type CustomerActivity = typeof customerActivity.$inferSelect;
+export type InsertCustomerActivity = typeof customerActivity.$inferInsert;
+
+export type AdminAccessLog = typeof adminAccessLogs.$inferSelect;
+export type InsertAdminAccessLog = typeof adminAccessLogs.$inferInsert;
+
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect;
+export type InsertMarketingCampaign = typeof marketingCampaigns.$inferInsert;
+
+export type CustomerSegment = typeof customerSegments.$inferSelect;
+export type InsertCustomerSegment = typeof customerSegments.$inferInsert;
