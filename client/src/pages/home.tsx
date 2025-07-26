@@ -13,7 +13,7 @@ import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analys
 import { apiRequest } from "@/lib/queryClient";
 import { GameType, TicketGeneration } from "@shared/schema";
 import AdSpace from "@/components/AdSpace";
-import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer";
+// import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer"; // Replaced with RussellMusicPlayer
 import BookRecommendations from "@/components/BookRecommendations";
 import VipCodeManager from "@/components/VipCodeManager";
 import FanLoyaltyContest from "@/components/FanLoyaltyContest";
@@ -152,7 +152,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <EnhancedMusicPlayer featured={true} compact={true} />
+              {/* Replaced with RussellMusicPlayer below - showing authentic YouTube songs */}
             </div>
             <div className="lg:col-span-1">
               <BookRecommendations compact={true} />
@@ -736,10 +736,12 @@ export default function Home() {
         <RussellBiography />
       </div>
 
-      {/* Russell's Authentic Music Player Section */}
+      {/* Russell's Authentic Music Player Section - Replaces old music player */}
       <div className="mb-8">
         <RussellMusicPlayer />
       </div>
+      
+      {/* Remove old Enhanced Music Player to prevent confusion */}
 
       {/* Book Recommendations Section */}
       <div className="mb-8">
