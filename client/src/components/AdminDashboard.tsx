@@ -1,523 +1,596 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
-  BarChart3Icon, 
-  UsersIcon, 
-  DollarSignIcon, 
-  TrendingUpIcon,
-  ShieldCheckIcon,
-  DownloadIcon,
-  SearchIcon,
-  FilterIcon,
-  EyeIcon
+  Shield, 
+  Users, 
+  Key, 
+  Clock, 
+  AlertTriangle, 
+  CheckCircle,
+  RefreshCw,
+  Copy,
+  Eye,
+  EyeOff,
+  UserCheck,
+  TrendingUp,
+  Activity,
+  Lock,
+  Calendar,
+  Settings,
+  Download
 } from "lucide-react";
 
-interface AdminDashboardProps {
-  adminEmail: string;
+interface VipCodeGeneration {
+  targetEmail: string;
+  currentTier: string;
+  targetTier: string;
+  adminNotes?: string;
 }
 
-export default function AdminDashboard({ adminEmail }: AdminDashboardProps) {
-  const [selectedDateRange, setSelectedDateRange] = useState("30");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSegment, setSelectedSegment] = useState("all");
-  const [complianceJustification, setComplianceJustification] = useState("");
+interface UserAccount {
+  id: string;
+  email: string;
+  subscriptionTier: string;
+  subscriptionStatus: string;
+  mfaEnabled: number;
+  lastLogin: string | null;
+  createdAt: string;
+}
+
+interface VipCode {
+  id: string;
+  targetEmail: string;
+  currentTier: string;
+  targetTier: string;
+  isUsed: number;
+  createdAt: string;
+  usedAt: string | null;
+  expiresAt: string;
+  adminNotes: string | null;
+}
+
+interface AdminLog {
+  id: string;
+  adminEmail: string;
+  action: string;
+  targetEmail: string | null;
+  details: any;
+  ipAddress: string | null;
+  timestamp: string;
+}
+
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "logs">("generate");
+  const [vipForm, setVipForm] = useState<VipCodeGeneration>({
+    targetEmail: "",
+    currentTier: "free",
+    targetTier: "basic",
+    adminNotes: "",
+  });
+  const [generatedCode, setGeneratedCode] = useState<string>("");
+  const [showCode, setShowCode] = useState(false);
+  const [totpToken, setTotpToken] = useState<string>("");
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Check if user has admin privileges
-  const isRussellAdmin = adminEmail === "russell@russellnomer.com";
-  const isAuthorizedAdmin = isRussellAdmin || adminEmail.endsWith("@lotteryproapp.com");
-
-  // Customer analytics query
-  const { data: analytics, isLoading: analyticsLoading } = useQuery({
-    queryKey: [`/api/admin/analytics`, selectedDateRange, selectedSegment],
-    enabled: isAuthorizedAdmin
+  // Fetch current TOTP info
+  const { data: totpInfo } = useQuery({
+    queryKey: ['/api/admin/totp-info'],
+    refetchInterval: 5000, // Update every 5 seconds
   });
 
-  // Customer segments query
-  const { data: segments, isLoading: segmentsLoading } = useQuery({
-    queryKey: [`/api/admin/segments`],
-    enabled: isAuthorizedAdmin
+  // Fetch user accounts
+  const { data: users, isLoading: usersLoading } = useQuery<UserAccount[]>({
+    queryKey: ['/api/admin/users'],
   });
 
-  // Customer search query
-  const { data: searchResults, isLoading: searchLoading } = useQuery({
-    queryKey: [`/api/admin/customers/search`, searchQuery],
-    enabled: isAuthorizedAdmin && searchQuery.length > 2
+  // Fetch VIP codes
+  const { data: vipCodes, isLoading: codesLoading } = useQuery<VipCode[]>({
+    queryKey: ['/api/admin/vip-codes'],
   });
 
-  // Compliance report generation
-  const complianceReportMutation = useMutation({
-    mutationFn: async (justification: string) => {
-      const response = await fetch('/api/admin/compliance-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ justification }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate compliance report');
-      }
-      
-      return response.blob();
+  // Fetch admin logs
+  const { data: adminLogs, isLoading: logsLoading } = useQuery<AdminLog[]>({
+    queryKey: ['/api/admin/logs'],
+  });
+
+  // Generate VIP code mutation
+  const generateCodeMutation = useMutation({
+    mutationFn: async (data: VipCodeGeneration) => {
+      const response = await apiRequest('POST', '/api/admin/generate-vip-code', data);
+      return response.json();
     },
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `compliance-report-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+    onSuccess: (data) => {
+      setGeneratedCode(data.vipCode);
+      setShowCode(true);
       toast({
-        title: "Compliance Report Generated",
-        description: "Report has been downloaded to your device."
+        title: "VIP Code Generated!",
+        description: `Secure VIP code created for ${vipForm.targetEmail}`,
       });
-    }
-  });
-
-  // Customer export mutation
-  const exportCustomersMutation = useMutation({
-    mutationFn: async (filters: any) => {
-      const response = await fetch('/api/admin/customers/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filters, justification: complianceJustification }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to export customer data');
-      }
-      
-      return response.blob();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vip-codes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/logs'] });
     },
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `customer-data-export-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    }
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate VIP code",
+        variant: "destructive",
+      });
+    },
   });
 
-  if (!isAuthorizedAdmin) {
-    return (
-      <Card className="w-full max-w-md mx-auto mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center text-red-600">
-            <ShieldCheckIcon className="h-5 w-5 mr-2" />
-            Access Denied
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">
-            Administrative access is restricted to authorized personnel only.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Contact russell@russellnomer.com for access requests.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Update user tier mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ email, tier }: { email: string; tier: string }) => {
+      const response = await apiRequest('POST', '/api/admin/update-user-tier', { email, tier });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Updated",
+        description: "User tier updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/logs'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update TOTP info
+  useEffect(() => {
+    if (totpInfo && typeof totpInfo === 'object') {
+      setTotpToken((totpInfo as any).token || "");
+      setTimeRemaining((totpInfo as any).timeRemaining || 0);
+    }
+  }, [totpInfo]);
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied!",
+        description: "VIP code copied to clipboard",
+      });
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
+  const handleGenerateCode = () => {
+    if (!vipForm.targetEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter a target email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    generateCodeMutation.mutate(vipForm);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case 'premium': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'pro': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'basic': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'create_vip_code': return 'bg-green-100 text-green-800';
+      case 'vip_code_redeemed': return 'bg-blue-100 text-blue-800';
+      case 'vip_code_failed_redemption': return 'bg-red-100 text-red-800';
+      case 'update_user_tier': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Administrative Dashboard
-          </h1>
           <div className="flex items-center justify-between">
-            <p className="text-gray-600">
-              Secure customer data management and compliance reporting
-            </p>
-            <Badge variant={isRussellAdmin ? "default" : "secondary"}>
-              {isRussellAdmin ? "Super Admin" : "Admin"} • {adminEmail}
-            </Badge>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <Shield className="h-8 w-8 mr-3 inline text-red-600" />
+                Russell's Admin Dashboard
+              </h1>
+              <p className="text-gray-600">Secure VIP code management with Nomerati + Google Authenticator</p>
+            </div>
+            <div className="text-right">
+              <Badge variant="outline" className="mb-2">
+                <Activity className="h-4 w-4 mr-2" />
+                System Active
+              </Badge>
+              <p className="text-sm text-gray-500">Logged in as admin</p>
+            </div>
           </div>
         </div>
 
-        <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
-            <TabsTrigger value="segments">Segments</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          </TabsList>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Customer Analytics</h2>
-              <div className="flex items-center space-x-4">
-                <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7">Last 7 days</SelectItem>
-                    <SelectItem value="30">Last 30 days</SelectItem>
-                    <SelectItem value="90">Last 90 days</SelectItem>
-                    <SelectItem value="365">Last year</SelectItem>
-                  </SelectContent>
-                </Select>
+        {/* TOTP Status */}
+        <Card className="mb-6 border-2 border-blue-300 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-800">
+              <Lock className="h-5 w-5 mr-2" />
+              Google Authenticator Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <Label className="text-sm text-blue-700">Current TOTP Token</Label>
+                <div className="text-2xl font-mono font-bold text-blue-900 mt-1">
+                  {totpToken || "------"}
+                </div>
+              </div>
+              <div className="text-center">
+                <Label className="text-sm text-blue-700">Time Remaining</Label>
+                <div className="text-xl font-bold text-blue-900 mt-1">
+                  <Clock className="h-4 w-4 inline mr-1" />
+                  {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                </div>
+              </div>
+              <div className="text-center">
+                <Label className="text-sm text-blue-700">Security Level</Label>
+                <Badge className="bg-green-600 text-white mt-1">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Maximum Security
+                </Badge>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {analyticsLoading ? (
-              <div className="text-center py-8">Loading analytics...</div>
-            ) : analytics ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                    <UsersIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics.totalCustomers}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {analytics.activeCustomers} active this month
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                    <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      ${Object.values(analytics.revenueByTier).reduce((a: number, b: number) => a + b, 0).toFixed(2)}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Average LTV: ${analytics.ltv.toFixed(2)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-                    <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics.conversionFunnel.conversionRate.toFixed(1)}%</div>
-                    <p className="text-xs text-muted-foreground">
-                      {analytics.conversionFunnel.paidUsers} paid subscribers
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Churn Rate</CardTitle>
-                    <BarChart3Icon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics.churnRate.toFixed(1)}%</div>
-                    <p className="text-xs text-muted-foreground">
-                      Last 30 days
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : null}
-
-            {/* Subscription Breakdown */}
-            {analytics && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Subscription Tier Breakdown</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(analytics.subscriptionBreakdown).map(([tier, count]) => (
-                      <div key={tier} className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className="text-2xl font-bold capitalize">{count as number}</div>
-                        <div className="text-sm text-gray-600 capitalize">{tier}</div>
-                        <div className="text-xs text-gray-500">
-                          ${(analytics.revenueByTier[tier] || 0).toFixed(2)} revenue
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Customers Tab */}
-          <TabsContent value="customers" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Customer Management</h2>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search customers..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64"
-                  />
-                </div>
-                <Button 
-                  onClick={() => exportCustomersMutation.mutate({ segment: selectedSegment })}
-                  variant="outline"
-                  disabled={!complianceJustification}
+        {/* Navigation Tabs */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {[
+                { id: "generate", label: "Generate VIP Code", icon: Key },
+                { id: "users", label: "Manage Users", icon: Users },
+                { id: "codes", label: "VIP Codes", icon: Shield },
+                { id: "logs", label: "Admin Logs", icon: Activity },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
                 >
-                  <DownloadIcon className="h-4 w-4 mr-2" />
-                  Export Data
-                </Button>
-              </div>
-            </div>
+                  <tab.icon className="h-4 w-4 mr-2" />
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Export Justification</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Administrative access and data exports are logged for compliance. Please provide justification.
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Enter business justification for accessing customer data..."
-                  value={complianceJustification}
-                  onChange={(e) => setComplianceJustification(e.target.value)}
-                  className="min-h-20"
-                />
-              </CardContent>
-            </Card>
-
-            {searchResults && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Search Results</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Tier</TableHead>
-                        <TableHead>Total Spent</TableHead>
-                        <TableHead>Last Activity</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {searchResults.map((customer: any) => (
-                        <TableRow key={customer.id}>
-                          <TableCell>
-                            {customer.firstName} {customer.lastName}
-                          </TableCell>
-                          <TableCell>{customer.email}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {customer.subscriptionTier}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>${customer.totalSpent}</TableCell>
-                          <TableCell>
-                            {new Date(customer.lastActivity).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <Button size="sm" variant="outline">
-                              <EyeIcon className="h-3 w-3" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Customer Segments Tab */}
-          <TabsContent value="segments" className="space-y-6">
-            <h2 className="text-2xl font-semibold">Customer Segments</h2>
-            
-            {segmentsLoading ? (
-              <div className="text-center py-8">Loading segments...</div>
-            ) : segments ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Object.entries(segments).map(([segmentName, customers]) => (
-                  <Card key={segmentName}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="capitalize">{segmentName.replace(/([A-Z])/g, ' $1')}</span>
-                        <Badge variant="secondary">
-                          {(customers as any[]).length} customers
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Total Revenue:</span>
-                          <span className="font-semibold">
-                            ${(customers as any[]).reduce((sum, c) => sum + parseFloat(c.totalSpent || '0'), 0).toFixed(2)}
-                          </span>
+        {/* Tab Content */}
+        {activeTab === "generate" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Key className="h-5 w-5 mr-2 text-green-600" />
+                Generate Secure VIP Code
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="targetEmail">Target User Email</Label>
+                    <Input
+                      id="targetEmail"
+                      type="email"
+                      value={vipForm.targetEmail}
+                      onChange={(e) => setVipForm({ ...vipForm, targetEmail: e.target.value })}
+                      placeholder="user@example.com"
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="currentTier">Current Tier</Label>
+                      <Select value={vipForm.currentTier} onValueChange={(value) => setVipForm({ ...vipForm, currentTier: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">Free</SelectItem>
+                          <SelectItem value="basic">Basic</SelectItem>
+                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="targetTier">Target Tier</Label>
+                      <Select value={vipForm.targetTier} onValueChange={(value) => setVipForm({ ...vipForm, targetTier: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Basic</SelectItem>
+                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="adminNotes">Admin Notes (Optional)</Label>
+                    <Textarea
+                      id="adminNotes"
+                      value={vipForm.adminNotes}
+                      onChange={(e) => setVipForm({ ...vipForm, adminNotes: e.target.value })}
+                      placeholder="Reason for upgrade, special instructions, etc."
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleGenerateCode}
+                    disabled={generateCodeMutation.isPending}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {generateCodeMutation.isPending ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Key className="h-4 w-4 mr-2" />
+                    )}
+                    Generate Secure VIP Code
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <Alert className="border-yellow-200 bg-yellow-50">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800">
+                      <strong>Security Features:</strong>
+                      <ul className="mt-2 space-y-1 text-sm">
+                        <li>• Uses "Nomerati" prefix for brand security</li>
+                        <li>• Google Authenticator TOTP integration</li>
+                        <li>• Account-specific email hash binding</li>
+                        <li>• 5-minute expiration window</li>
+                        <li>• Cannot be hacked or reused</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                  
+                  {generatedCode && (
+                    <Alert className="border-green-200 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-green-800">VIP Code Generated!</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowCode(!showCode)}
+                          >
+                            {showCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Avg. LTV:</span>
-                          <span className="font-semibold">
-                            ${((customers as any[]).reduce((sum, c) => sum + parseFloat(c.totalSpent || '0'), 0) / Math.max((customers as any[]).length, 1)).toFixed(2)}
-                          </span>
+                        {showCode && (
+                          <div className="mt-3">
+                            <div className="bg-white p-3 rounded border border-green-200 mb-2">
+                              <code className="text-lg font-mono break-all">{generatedCode}</code>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => copyToClipboard(generatedCode)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copy Code
+                            </Button>
+                          </div>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "users" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Users className="h-5 w-5 mr-2 text-blue-600" />
+                User Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                  <p className="text-gray-500 mt-2">Loading users...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {users?.map((user) => (
+                    <div key={user.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{user.email}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge className={getTierColor(user.subscriptionTier)}>
+                              {user.subscriptionTier}
+                            </Badge>
+                            <Badge variant="outline">
+                              {user.mfaEnabled ? "MFA Enabled" : "MFA Disabled"}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Joined: {formatDate(user.createdAt)}
+                            {user.lastLogin && ` • Last login: ${formatDate(user.lastLogin)}`}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Select 
+                            value={user.subscriptionTier} 
+                            onValueChange={(tier) => updateUserMutation.mutate({ email: user.email, tier })}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">Free</SelectItem>
+                              <SelectItem value="basic">Basic</SelectItem>
+                              <SelectItem value="pro">Pro</SelectItem>
+                              <SelectItem value="premium">Premium</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
-                      <Button 
-                        className="w-full mt-4" 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => setSelectedSegment(segmentName)}
-                      >
-                        View Segment Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : null}
-          </TabsContent>
-
-          {/* Marketing Campaigns Tab */}
-          <TabsContent value="campaigns" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Marketing Campaigns</h2>
-              <Button>Create Campaign</Button>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Recommended Campaign Targets</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold text-green-700">Casino Cross-Sell</h3>
-                    <p className="text-sm text-gray-600">Target lottery players with casino interest</p>
-                    <Badge variant="secondary" className="mt-2">High Conversion</Badge>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold text-blue-700">Free Tier Conversion</h3>
-                    <p className="text-sm text-gray-600">Upgrade active free users to paid tiers</p>
-                    <Badge variant="secondary" className="mt-2">Revenue Growth</Badge>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold text-purple-700">Cruise Partnerships</h3>
-                    <p className="text-sm text-gray-600">Casino cruise packages for premium users</p>
-                    <Badge variant="secondary" className="mt-2">Premium LTV</Badge>
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Compliance Tab */}
-          <TabsContent value="compliance" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Compliance & Transparency</h2>
-              <Button 
-                onClick={() => complianceReportMutation.mutate(complianceJustification)}
-                disabled={!complianceJustification || complianceReportMutation.isPending}
-              >
-                <DownloadIcon className="h-4 w-4 mr-2" />
-                {complianceReportMutation.isPending ? 'Generating...' : 'Generate Report'}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <ShieldCheckIcon className="h-5 w-5 mr-2" />
-                    Data Protection
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Encryption Status:</span>
-                    <Badge variant="secondary">✓ Active</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Data Hashing:</span>
-                    <Badge variant="secondary">✓ Salted</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Access Logging:</span>
-                    <Badge variant="secondary">✓ Enabled</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Consent Tracking:</span>
-                    <Badge variant="secondary">✓ Compliant</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audit Trail</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    All administrative actions are logged for regulatory compliance and transparency.
-                  </p>
-                  <div className="space-y-2">
-                    <div className="text-sm">
-                      <strong>Data Retention:</strong> 7 years (regulatory requirement)
+        {activeTab === "codes" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Shield className="h-5 w-5 mr-2 text-purple-600" />
+                VIP Code History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {codesLoading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                  <p className="text-gray-500 mt-2">Loading VIP codes...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {vipCodes?.map((code) => (
+                    <div key={code.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{code.targetEmail}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge className={getTierColor(code.currentTier)}>
+                              {code.currentTier} → {code.targetTier}
+                            </Badge>
+                            <Badge variant={code.isUsed ? "default" : "outline"}>
+                              {code.isUsed ? "Used" : "Unused"}
+                            </Badge>
+                          </div>
+                          {code.adminNotes && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Note: {code.adminNotes}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right text-sm text-gray-500">
+                          <p>Created: {formatDate(code.createdAt)}</p>
+                          <p>Expires: {formatDate(code.expiresAt)}</p>
+                          {code.usedAt && (
+                            <p className="text-green-600">Used: {formatDate(code.usedAt)}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm">
-                      <strong>Export Tracking:</strong> All data exports logged with justification
-                    </div>
-                    <div className="text-sm">
-                      <strong>Access Controls:</strong> Role-based permissions enforced
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Compliance Report Justification</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Enter justification for generating compliance report (required for audit trail)..."
-                  value={complianceJustification}
-                  onChange={(e) => setComplianceJustification(e.target.value)}
-                  className="min-h-24"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  This justification will be included in the audit log and compliance report.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {activeTab === "logs" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Activity className="h-5 w-5 mr-2 text-orange-600" />
+                Admin Activity Logs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {logsLoading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                  <p className="text-gray-500 mt-2">Loading logs...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {adminLogs?.map((log) => (
+                    <div key={log.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getActionColor(log.action)}>
+                              {log.action.replace(/_/g, ' ').toUpperCase()}
+                            </Badge>
+                            <span className="font-medium">{log.adminEmail}</span>
+                          </div>
+                          {log.targetEmail && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Target: {log.targetEmail}
+                            </p>
+                          )}
+                          {log.details && (
+                            <div className="text-sm text-gray-500 mt-1">
+                              <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                                {JSON.stringify(log.details, null, 2)}
+                              </code>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right text-sm text-gray-500">
+                          <p>{formatDate(log.timestamp)}</p>
+                          {log.ipAddress && (
+                            <p className="text-xs">IP: {log.ipAddress}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -68,8 +68,10 @@ export interface IStorage {
   getVipCodeByCode(code: string): Promise<VipCode | undefined>;
   redeemVipCode(code: string, userId: string): Promise<VipCode | null>;
   updateUserSubscriptionTier(userId: string, tier: string): Promise<void>;
+  updateUserTier(email: string, tier: string): Promise<void>;
   getUserVipCodes(createdBy: string): Promise<VipCode[]>;
   deactivateVipCode(codeId: string): Promise<void>;
+  getAllUsers(): Promise<UserAccount[]>;
   
   // Music content management
   getMusicContent(featured?: boolean): Promise<MusicContent[]>;
@@ -575,8 +577,22 @@ export class DatabaseStorage implements IStorage {
 
   async deactivateVipCode(codeId: string): Promise<void> {
     await db.update(vipCodes)
-      .set({ isActive: 0 })
+      .set({ isUsed: 1 })
       .where(eq(vipCodes.id, codeId));
+  }
+
+  async getAllUsers(): Promise<UserAccount[]> {
+    return await db.select().from(userAccounts)
+      .orderBy(desc(userAccounts.createdAt));
+  }
+
+  async updateUserTier(email: string, tier: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({ 
+        subscriptionTier: tier,
+        updatedAt: new Date()
+      })
+      .where(eq(userAccounts.email, email));
   }
 
   // Music content management

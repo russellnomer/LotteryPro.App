@@ -81,17 +81,31 @@ export const userSessions = pgTable("user_sessions", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
-// VIP codes table for Russell's god-like gifting abilities
+// Enhanced VIP codes table with Nomerati + Google Authenticator security
 export const vipCodes = pgTable("vip_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  code: text("code").notNull().unique(), // The unique code Russell creates
-  subscriptionTier: text("subscription_tier").notNull(), // 'basic', 'pro', 'premium'
-  createdBy: varchar("created_by").notNull().references(() => userAccounts.id), // russell@russellnomer.com user ID
-  usedBy: varchar("used_by").references(() => userAccounts.id), // Who redeemed it
-  isActive: integer("is_active").notNull().default(1), // 0 = deactivated, 1 = active
-  usedAt: timestamp("used_at"),
+  codeHash: text("code_hash").notNull().unique(), // SHA-256 hash of Nomerati + TOTP + email
+  targetEmail: text("target_email").notNull(), // Account this code is designated for
+  currentTier: text("current_tier").notNull(), // User's current tier
+  targetTier: text("target_tier").notNull(), // Tier to upgrade to
+  isUsed: integer("is_used").notNull().default(0), // 0 = unused, 1 = used
+  createdBy: varchar("created_by").notNull().references(() => userAccounts.id), // Admin who created
   createdAt: timestamp("created_at").default(sql`now()`),
-  expiresAt: timestamp("expires_at"), // Optional expiration
+  usedAt: timestamp("used_at"),
+  expiresAt: timestamp("expires_at").notNull(), // TOTP-based expiration (5 minutes)
+  adminNotes: text("admin_notes"), // Admin notes about the upgrade
+});
+
+// Admin access logs for security auditing
+export const adminLogs = pgTable("admin_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminEmail: text("admin_email").notNull(),
+  action: text("action").notNull(), // create_vip_code, upgrade_user, view_users, etc.
+  targetEmail: text("target_email"), // User affected by action
+  details: jsonb("details"), // Additional action details
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").default(sql`now()`),
 });
 
 // Music content integration for Russell Nomer Music branding
@@ -185,8 +199,15 @@ export const insertBookRecommendationSchema = createInsertSchema(bookRecommendat
   createdAt: true,
 });
 
+export const insertAdminLogSchema = createInsertSchema(adminLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
 export type InsertVipCode = z.infer<typeof insertVipCodeSchema>;
 export type VipCode = typeof vipCodes.$inferSelect;
+export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
+export type AdminLog = typeof adminLogs.$inferSelect;
 export type InsertMusicContent = z.infer<typeof insertMusicContentSchema>;
 export type MusicContent = typeof musicContent.$inferSelect;
 export type InsertBookRecommendation = z.infer<typeof insertBookRecommendationSchema>;

@@ -131,6 +131,7 @@ export default function Home() {
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
               <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
               <a href="/social-marketing" className="text-gray-600 hover:text-primary transition-colors">Social Marketing</a>
+              <a href="/admin" className="text-red-600 hover:text-red-700 transition-colors font-semibold">🔑 Admin</a>
               
               {/* Demo User Tier Switcher (for testing) */}
               <select 

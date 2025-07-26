@@ -1,215 +1,338 @@
-import { Request, Response } from "express";
-import { storage } from "./storage";
-import { z } from "zod";
+import * as crypto from 'crypto';
+import * as speakeasy from 'speakeasy';
+import { db } from './db';
+import { vipCodes, adminLogs, userAccounts } from '@shared/schema';
+import { eq, and, desc, lt } from 'drizzle-orm';
+import type { InsertVipCode, InsertAdminLog } from '@shared/schema';
 
-// Russell Nomer's god-like admin email
-const RUSSELL_EMAIL = "russell@russellnomer.com";
+// Master TOTP secret for VIP code generation (Russell's admin secret)
+const ADMIN_TOTP_SECRET = process.env.ADMIN_TOTP_SECRET || speakeasy.generateSecret({
+  name: 'Russell Nomer Admin',
+  issuer: 'LotteryPro Admin'
+}).base32;
 
-// VIP code creation schema
-const createVipCodeSchema = z.object({
-  code: z.string().min(1, "Code is required").max(50, "Code too long"),
-  subscriptionTier: z.enum(["basic", "pro", "premium"], {
-    required_error: "Invalid subscription tier"
-  }),
-  expiresAt: z.string().optional().transform(str => str ? new Date(str) : undefined)
-});
+export interface VipCodeGeneration {
+  targetEmail: string;
+  currentTier: string;
+  targetTier: string;
+  adminNotes?: string;
+}
 
-// VIP code redemption schema
-const redeemVipCodeSchema = z.object({
-  code: z.string().min(1, "Code is required")
-});
+export interface VipCodeRedemption {
+  code: string;
+  userEmail: string;
+}
 
-// Extend Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email: string;
-        subscriptionTier: string;
-      };
-    }
+/**
+ * Generate secure VIP code using Nomerati + Google Authenticator TOTP + target email
+ * Format: Nomerati + TOTP(6-digit) + SHA256(email)
+ */
+export async function generateSecureVipCode(
+  generation: VipCodeGeneration, 
+  adminEmail: string,
+  ipAddress?: string,
+  userAgent?: string
+): Promise<{ vipCode: string; expiresAt: Date; codeId: string }> {
+  
+  // Generate current TOTP token
+  const totpToken = speakeasy.totp({
+    secret: ADMIN_TOTP_SECRET,
+    encoding: 'base32',
+    time: Date.now(),
+    step: 300, // 5 minutes
+  });
+
+  // Create email hash for account-specific binding
+  const emailHash = crypto.createHash('sha256')
+    .update(generation.targetEmail.toLowerCase())
+    .digest('hex')
+    .substring(0, 8); // First 8 characters
+
+  // Construct the VIP code: Nomerati + TOTP + EmailHash
+  const vipCode = `Nomerati${totpToken}${emailHash}`;
+  
+  // Create secure hash for database storage
+  const codeHash = crypto.createHash('sha256')
+    .update(`${vipCode}:${generation.targetEmail}`)
+    .digest('hex');
+
+  // Expiration: 5 minutes from now (TOTP window)
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  // Get admin user ID
+  const [admin] = await db.select()
+    .from(userAccounts)
+    .where(eq(userAccounts.email, adminEmail))
+    .limit(1);
+
+  if (!admin) {
+    throw new Error('Admin user not found');
   }
-}
 
-// Check if user is Russell (god-mode)
-function isRussellNomer(userEmail: string): boolean {
-  return userEmail.toLowerCase() === RUSSELL_EMAIL.toLowerCase();
-}
-
-// Russell's VIP code creation endpoint (god-like powers)
-export async function createVipCode(req: Request, res: Response) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    // Only Russell can create VIP codes
-    if (!isRussellNomer(req.user.email)) {
-      console.warn('SECURITY_LOG - Unauthorized VIP code creation attempt:', {
-        timestamp: new Date().toISOString(),
-        email: req.user.email,
-        ip: req.ip,
-        reason: 'Not Russell Nomer'
-      });
-      return res.status(403).json({ error: "Insufficient privileges" });
-    }
-
-    const { code, subscriptionTier, expiresAt } = createVipCodeSchema.parse(req.body);
-
-    // Check if code already exists
-    const existingCode = await storage.getVipCodeByCode(code);
-    if (existingCode) {
-      return res.status(400).json({ error: "Code already exists" });
-    }
-
-    const vipCode = await storage.createVipCode({
-      code,
-      subscriptionTier,
-      createdBy: req.user.id,
+  // Store VIP code in database
+  const [vipCodeRecord] = await db.insert(vipCodes)
+    .values({
+      codeHash,
+      targetEmail: generation.targetEmail,
+      currentTier: generation.currentTier,
+      targetTier: generation.targetTier,
+      createdBy: admin.id,
       expiresAt,
-      isActive: 1
-    });
+      adminNotes: generation.adminNotes,
+    })
+    .returning();
 
-    console.log('VIP_LOG - Russell created new VIP code:', {
-      timestamp: new Date().toISOString(),
-      code: code,
-      tier: subscriptionTier,
-      createdBy: req.user.email,
-      expiresAt
-    });
+  // Log admin action
+  await logAdminAction({
+    adminEmail,
+    action: 'create_vip_code',
+    targetEmail: generation.targetEmail,
+    details: {
+      currentTier: generation.currentTier,
+      targetTier: generation.targetTier,
+      expiresAt: expiresAt.toISOString(),
+      notes: generation.adminNotes,
+    },
+    ipAddress,
+    userAgent,
+  });
 
-    res.json({
-      success: true,
-      message: `VIP code '${code}' created for ${subscriptionTier} tier`,
-      vipCode: {
-        id: vipCode.id,
-        code: vipCode.code,
-        subscriptionTier: vipCode.subscriptionTier,
-        expiresAt: vipCode.expiresAt,
-        createdAt: vipCode.createdAt
-      }
-    });
-
-  } catch (error: any) {
-    console.error("Error creating VIP code:", error);
-    if (error.issues) {
-      return res.status(400).json({ error: error.issues[0]?.message || "Invalid input" });
-    }
-    res.status(500).json({ error: "Failed to create VIP code" });
-  }
+  return {
+    vipCode,
+    expiresAt,
+    codeId: vipCodeRecord.id,
+  };
 }
 
-// Get Russell's created VIP codes
-export async function getMyVipCodes(req: Request, res: Response) {
+/**
+ * Redeem VIP code with comprehensive security validation
+ */
+export async function redeemVipCode(
+  redemption: VipCodeRedemption,
+  ipAddress?: string,
+  userAgent?: string
+): Promise<{ success: boolean; newTier?: string; message: string }> {
+  
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
+    // Extract components from VIP code
+    if (!redemption.code.startsWith('Nomerati') || redemption.code.length !== 22) {
+      return { success: false, message: 'Invalid VIP code format' };
     }
 
-    // Only Russell can view his VIP codes
-    if (!isRussellNomer(req.user.email)) {
-      return res.status(403).json({ error: "Insufficient privileges" });
-    }
+    const totpPart = redemption.code.substring(8, 14); // 6 digits after "Nomerati"
+    const emailHashPart = redemption.code.substring(14); // 8 characters
 
-    const vipCodes = await storage.getUserVipCodes(req.user.id);
+    // Verify email hash matches
+    const expectedEmailHash = crypto.createHash('sha256')
+      .update(redemption.userEmail.toLowerCase())
+      .digest('hex')
+      .substring(0, 8);
 
-    res.json({
-      success: true,
-      vipCodes: vipCodes.map(code => ({
-        id: code.id,
-        code: code.code,
-        subscriptionTier: code.subscriptionTier,
-        isActive: code.isActive,
-        usedBy: code.usedBy,
-        usedAt: code.usedAt,
-        expiresAt: code.expiresAt,
-        createdAt: code.createdAt
-      }))
-    });
-
-  } catch (error) {
-    console.error("Error fetching VIP codes:", error);
-    res.status(500).json({ error: "Failed to fetch VIP codes" });
-  }
-}
-
-// Redeem a VIP code (available to all users)
-export async function redeemVipCode(req: Request, res: Response) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    const { code } = redeemVipCodeSchema.parse(req.body);
-
-    const vipCode = await storage.redeemVipCode(code, req.user.id);
-
-    if (!vipCode) {
-      console.warn('VIP_LOG - Invalid VIP code redemption attempt:', {
-        timestamp: new Date().toISOString(),
-        code: code,
-        user: req.user.email,
-        ip: req.ip
+    if (emailHashPart !== expectedEmailHash) {
+      await logAdminAction({
+        adminEmail: 'system',
+        action: 'vip_code_failed_redemption',
+        targetEmail: redemption.userEmail,
+        details: {
+          reason: 'email_hash_mismatch',
+          providedCode: redemption.code.substring(0, 10) + '***',
+        },
+        ipAddress,
+        userAgent,
       });
-      return res.status(400).json({ error: "Invalid or expired VIP code" });
+      return { success: false, message: 'This VIP code is not valid for your account' };
     }
 
-    // Update user's subscription tier
-    await storage.updateUserSubscriptionTier(req.user.id, vipCode.subscriptionTier);
-
-    console.log('VIP_LOG - Successful VIP code redemption:', {
-      timestamp: new Date().toISOString(),
-      code: code,
-      user: req.user.email,
-      newTier: vipCode.subscriptionTier,
-      createdBy: vipCode.createdBy
+    // Verify TOTP is within valid window (current or previous 5-minute window)
+    const currentTime = Date.now();
+    const isValidTotp = speakeasy.totp.verify({
+      secret: ADMIN_TOTP_SECRET,
+      encoding: 'base32',
+      token: totpPart,
+      time: currentTime,
+      step: 300,
+      window: 1, // Allow previous window for clock skew
     });
 
-    res.json({
+    if (!isValidTotp) {
+      await logAdminAction({
+        adminEmail: 'system',
+        action: 'vip_code_failed_redemption',
+        targetEmail: redemption.userEmail,
+        details: {
+          reason: 'invalid_totp',
+          providedCode: redemption.code.substring(0, 10) + '***',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return { success: false, message: 'VIP code has expired or is invalid' };
+    }
+
+    // Create hash for database lookup
+    const codeHash = crypto.createHash('sha256')
+      .update(`${redemption.code}:${redemption.userEmail}`)
+      .digest('hex');
+
+    // Find and validate VIP code in database
+    const [vipCodeRecord] = await db.select()
+      .from(vipCodes)
+      .where(
+        and(
+          eq(vipCodes.codeHash, codeHash),
+          eq(vipCodes.targetEmail, redemption.userEmail),
+          eq(vipCodes.isUsed, 0),
+          lt(vipCodes.expiresAt, new Date()) // Not expired
+        )
+      )
+      .limit(1);
+
+    if (!vipCodeRecord) {
+      await logAdminAction({
+        adminEmail: 'system',
+        action: 'vip_code_failed_redemption',
+        targetEmail: redemption.userEmail,
+        details: {
+          reason: 'code_not_found_or_used',
+          providedCode: redemption.code.substring(0, 10) + '***',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return { success: false, message: 'VIP code not found, already used, or expired' };
+    }
+
+    // Get user account
+    const [user] = await db.select()
+      .from(userAccounts)
+      .where(eq(userAccounts.email, redemption.userEmail))
+      .limit(1);
+
+    if (!user) {
+      return { success: false, message: 'User account not found' };
+    }
+
+    // Upgrade user tier
+    await db.update(userAccounts)
+      .set({
+        subscriptionTier: vipCodeRecord.targetTier,
+        updatedAt: new Date(),
+      })
+      .where(eq(userAccounts.id, user.id));
+
+    // Mark VIP code as used
+    await db.update(vipCodes)
+      .set({
+        isUsed: 1,
+        usedAt: new Date(),
+      })
+      .where(eq(vipCodes.id, vipCodeRecord.id));
+
+    // Log successful redemption
+    await logAdminAction({
+      adminEmail: 'system',
+      action: 'vip_code_redeemed',
+      targetEmail: redemption.userEmail,
+      details: {
+        fromTier: vipCodeRecord.currentTier,
+        toTier: vipCodeRecord.targetTier,
+        codeId: vipCodeRecord.id,
+      },
+      ipAddress,
+      userAgent,
+    });
+
+    return {
       success: true,
-      message: `Congratulations! You now have ${vipCode.subscriptionTier} access`,
-      subscriptionTier: vipCode.subscriptionTier
-    });
+      newTier: vipCodeRecord.targetTier,
+      message: `Successfully upgraded to ${vipCodeRecord.targetTier} tier!`,
+    };
 
-  } catch (error: any) {
-    console.error("Error redeeming VIP code:", error);
-    if (error.issues) {
-      return res.status(400).json({ error: error.issues[0]?.message || "Invalid input" });
-    }
-    res.status(500).json({ error: "Failed to redeem VIP code" });
+  } catch (error) {
+    console.error('VIP code redemption error:', error);
+    return { success: false, message: 'Internal error processing VIP code' };
   }
 }
 
-// Deactivate a VIP code (Russell only)
-export async function deactivateVipCode(req: Request, res: Response) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
+/**
+ * Clean up expired VIP codes
+ */
+export async function cleanupExpiredVipCodes(): Promise<number> {
+  const now = new Date();
+  const result = await db.delete(vipCodes)
+    .where(
+      and(
+        eq(vipCodes.isUsed, 0),
+        lt(vipCodes.expiresAt, now)
+      )
+    );
+  
+  return Array.isArray(result) ? result.length : 0;
+}
 
-    // Only Russell can deactivate VIP codes
-    if (!isRussellNomer(req.user.email)) {
-      return res.status(403).json({ error: "Insufficient privileges" });
-    }
+/**
+ * Get admin activity logs
+ */
+export async function getAdminLogs(limit: number = 50): Promise<any[]> {
+  return await db.select()
+    .from(adminLogs)
+    .orderBy(desc(adminLogs.timestamp))
+    .limit(limit);
+}
 
-    const { codeId } = req.params;
+/**
+ * Get VIP codes created by admin
+ */
+export async function getVipCodesByAdmin(adminEmail: string, limit: number = 50): Promise<any[]> {
+  const [admin] = await db.select()
+    .from(userAccounts)
+    .where(eq(userAccounts.email, adminEmail))
+    .limit(1);
 
-    await storage.deactivateVipCode(codeId);
+  if (!admin) return [];
 
-    console.log('VIP_LOG - Russell deactivated VIP code:', {
-      timestamp: new Date().toISOString(),
-      codeId: codeId,
-      deactivatedBy: req.user.email
-    });
+  return await db.select({
+    id: vipCodes.id,
+    targetEmail: vipCodes.targetEmail,
+    currentTier: vipCodes.currentTier,
+    targetTier: vipCodes.targetTier,
+    isUsed: vipCodes.isUsed,
+    createdAt: vipCodes.createdAt,
+    usedAt: vipCodes.usedAt,
+    expiresAt: vipCodes.expiresAt,
+    adminNotes: vipCodes.adminNotes,
+  })
+    .from(vipCodes)
+    .where(eq(vipCodes.createdBy, admin.id))
+    .orderBy(desc(vipCodes.createdAt))
+    .limit(limit);
+}
 
-    res.json({
-      success: true,
-      message: "VIP code deactivated successfully"
-    });
+/**
+ * Log admin action for security auditing
+ */
+async function logAdminAction(log: InsertAdminLog): Promise<void> {
+  await db.insert(adminLogs).values(log);
+}
 
-  } catch (error) {
-    console.error("Error deactivating VIP code:", error);
-    res.status(500).json({ error: "Failed to deactivate VIP code" });
-  }
+/**
+ * Get current TOTP token for admin interface display
+ */
+export function getCurrentTotpToken(): string {
+  return speakeasy.totp({
+    secret: ADMIN_TOTP_SECRET,
+    encoding: 'base32',
+    time: Date.now(),
+    step: 300,
+  });
+}
+
+/**
+ * Get time remaining for current TOTP token
+ */
+export function getTotpTimeRemaining(): number {
+  const currentTime = Math.floor(Date.now() / 1000);
+  const step = 300; // 5 minutes
+  const timeInStep = currentTime % step;
+  return step - timeInStep;
 }

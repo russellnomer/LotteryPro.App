@@ -8,7 +8,7 @@ import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
-import { createVipCode, getMyVipCodes, redeemVipCode, deactivateVipCode } from "./vipManagement";
+// VIP management functions will be imported dynamically
 import { seedRussellNomerContent } from "./seedMusicData";
 import { 
   securityHeaders, 
@@ -236,6 +236,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add new draw and evaluate predictions
+  // Admin routes for VIP code management
+  app.get('/api/admin/totp-info', async (req, res) => {
+    try {
+      const { getCurrentTotpToken, getTotpTimeRemaining } = await import('./vipManagement');
+      
+      res.json({
+        token: getCurrentTotpToken(),
+        timeRemaining: getTotpTimeRemaining(),
+      });
+    } catch (error) {
+      console.error('Error getting TOTP info:', error);
+      res.status(500).json({ message: 'Failed to get TOTP info' });
+    }
+  });
+
+  app.get('/api/admin/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  app.get('/api/admin/vip-codes', async (req, res) => {
+    try {
+      const { getVipCodesByAdmin } = await import('./vipManagement');
+      const adminEmail = 'russell@russellnomer.com'; // Default admin
+      const codes = await getVipCodesByAdmin(adminEmail);
+      res.json(codes);
+    } catch (error) {
+      console.error('Error fetching VIP codes:', error);
+      res.status(500).json({ message: 'Failed to fetch VIP codes' });
+    }
+  });
+
+  app.get('/api/admin/logs', async (req, res) => {
+    try {
+      const { getAdminLogs } = await import('./vipManagement');
+      const logs = await getAdminLogs(50);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching admin logs:', error);
+      res.status(500).json({ message: 'Failed to fetch admin logs' });
+    }
+  });
+
+  app.post('/api/admin/generate-vip-code', async (req, res) => {
+    try {
+      const { generateSecureVipCode } = await import('./vipManagement');
+      const { targetEmail, currentTier, targetTier, adminNotes } = req.body;
+      
+      if (!targetEmail || !currentTier || !targetTier) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const adminEmail = 'russell@russellnomer.com'; // Default admin
+      const ipAddress = req.ip;
+      const userAgent = req.get('User-Agent');
+
+      const result = await generateSecureVipCode(
+        { targetEmail, currentTier, targetTier, adminNotes },
+        adminEmail,
+        ipAddress,
+        userAgent
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error generating VIP code:', error);
+      res.status(500).json({ message: 'Failed to generate VIP code' });
+    }
+  });
+
+  app.post('/api/admin/update-user-tier', async (req, res) => {
+    try {
+      const { email, tier } = req.body;
+      
+      if (!email || !tier) {
+        return res.status(400).json({ message: 'Email and tier are required' });
+      }
+
+      await storage.updateUserTier(email, tier);
+      
+      // Log the admin action
+      const { db } = await import('./db');
+      const { adminLogs } = await import('@shared/schema');
+      await db.insert(adminLogs).values({
+        adminEmail: 'russell@russellnomer.com',
+        action: 'update_user_tier',
+        targetEmail: email,
+        details: { newTier: tier },
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating user tier:', error);
+      res.status(500).json({ message: 'Failed to update user tier' });
+    }
+  });
+
+  app.post('/api/redeem-vip-code', async (req, res) => {
+    try {
+      const { redeemVipCode } = await import('./vipManagement');
+      const { code, userEmail } = req.body;
+      
+      if (!code || !userEmail) {
+        return res.status(400).json({ message: 'Code and user email are required' });
+      }
+
+      const ipAddress = req.ip;
+      const userAgent = req.get('User-Agent');
+
+      const result = await redeemVipCode(
+        { code, userEmail },
+        ipAddress,
+        userAgent
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error redeeming VIP code:', error);
+      res.status(500).json({ message: 'Failed to redeem VIP code' });
+    }
+  });
+
   app.post("/api/draws", async (req, res) => {
     try {
       const drawData = insertDrawSchema.parse(req.body);
@@ -311,11 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/mfa/setup", authRateLimit, setupMFA);
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
 
-  // VIP Code Management Routes (Russell's god-like powers)
-  app.post("/api/vip/create", requireAuth, securityLogger, createVipCode);
-  app.get("/api/vip/my-codes", requireAuth, securityLogger, getMyVipCodes);
-  app.post("/api/vip/redeem", requireAuth, securityLogger, redeemVipCode);
-  app.delete("/api/vip/codes/:codeId", requireAuth, securityLogger, deactivateVipCode);
+  // VIP Code Management Routes moved to admin endpoints above
 
   // Music Content Routes - Russell Nomer's authentic songs
   app.get("/api/music", async (req, res) => {
