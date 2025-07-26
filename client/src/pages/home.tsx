@@ -18,6 +18,7 @@ import BookRecommendations from "@/components/BookRecommendations";
 import VipCodeManager from "@/components/VipCodeManager";
 import FanLoyaltyContest from "@/components/FanLoyaltyContest";
 import AstrologicalFeatures from "@/components/AstrologicalFeatures";
+import RussellBiography from "@/components/RussellBiography";
 import ProfileSetup from "@/components/ProfileSetup";
 import { Crown, Lock, UserPlus } from "lucide-react";
 
@@ -729,6 +730,21 @@ export default function Home() {
         </Card>
       </div>
       
+      {/* Russell Biography Section - Personal story and mission */}
+      <div className="mb-8">
+        <RussellBiography />
+      </div>
+
+      {/* Enhanced Music Player Section */}
+      <div className="mb-8">
+        <EnhancedMusicPlayer featured={true} />
+      </div>
+
+      {/* Book Recommendations Section */}
+      <div className="mb-8">
+        <BookRecommendations />
+      </div>
+
       {/* Astrological Features Section */}
       <div className="mb-8">
         <AstrologicalFeatures compact={false} />
