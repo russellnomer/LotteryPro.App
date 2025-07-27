@@ -235,6 +235,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // VIP Code redemption route
+  app.post('/api/redeem-vip-code', async (req, res) => {
+    try {
+      const { redeemVipCode } = await import('./vipManagement');
+      const { code, userEmail } = req.body;
+      
+      if (!code || !userEmail) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'VIP code and email are required' 
+        });
+      }
+
+      const ipAddress = req.ip;
+      const userAgent = req.get('User-Agent');
+
+      const result = await redeemVipCode(
+        { code: code.trim(), userEmail: userEmail.trim() },
+        ipAddress,
+        userAgent
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error redeeming VIP code:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to redeem VIP code',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   // Add new draw and evaluate predictions
   // Admin routes for VIP code management
   app.get('/api/admin/totp-info', async (req, res) => {
@@ -284,10 +317,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/generate-vip-code', async (req, res) => {
+  app.post('/api/admin/generate-vip', async (req, res) => {
     try {
       const { generateSecureVipCode } = await import('./vipManagement');
       const { targetEmail, currentTier, targetTier, adminNotes } = req.body;
+      
+      console.log('VIP Generation Request:', { targetEmail, currentTier, targetTier, adminNotes });
       
       if (!targetEmail || !currentTier || !targetTier) {
         return res.status(400).json({ message: 'Missing required fields' });
@@ -304,10 +339,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userAgent
       );
 
+      console.log('VIP Generation Success:', result);
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating VIP code:', error);
-      res.status(500).json({ message: 'Failed to generate VIP code' });
+      res.status(500).json({ 
+        message: 'Failed to generate VIP code',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 

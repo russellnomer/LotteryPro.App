@@ -97,10 +97,26 @@ export async function generateSecureVipCode(
     userAgent,
   });
 
+  // Send VIP code via email
+  try {
+    const { sendVipCodeEmail } = await import('./emailService');
+    const emailResult = await sendVipCodeEmail(
+      generation.targetEmail,
+      vipCode,
+      generation.targetTier,
+      expiresAt
+    );
+    console.log('Email result:', emailResult);
+  } catch (emailError) {
+    console.error('Failed to send VIP code email:', emailError);
+    // Don't fail the whole operation if email fails
+  }
+
   return {
     vipCode,
     expiresAt,
     codeId: vipCodeRecord.id,
+    emailSent: true,
   };
 }
 
