@@ -72,6 +72,15 @@ interface AdminLog {
   timestamp: string;
 }
 
+interface CreateUserForm {
+  email: string;
+  firstName: string;
+  lastName: string;
+  subscriptionTier: string;
+  sendVipCode: boolean;
+  adminNotes: string;
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs">("generate");
   const [vipForm, setVipForm] = useState<VipCodeGeneration>({
@@ -84,6 +93,14 @@ export default function AdminDashboard() {
   const [showCode, setShowCode] = useState(false);
   const [totpToken, setTotpToken] = useState<string>("");
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [createUserForm, setCreateUserForm] = useState<CreateUserForm>({
+    email: "",
+    firstName: "",
+    lastName: "",
+    subscriptionTier: "basic",
+    sendVipCode: true,
+    adminNotes: "",
+  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -107,6 +124,37 @@ export default function AdminDashboard() {
   // Fetch admin logs
   const { data: adminLogs, isLoading: logsLoading } = useQuery<AdminLog[]>({
     queryKey: ['/api/admin/logs'],
+  });
+
+  // Create new user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: CreateUserForm) => {
+      const response = await apiRequest('POST', '/api/admin/create-user', userData);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "User Created Successfully!",
+        description: `User account created${data.vipCode ? ' and VIP code sent' : ''}${data.emailSent ? ' via email' : ''}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/logs'] });
+      setCreateUserForm({
+        email: "",
+        firstName: "",
+        lastName: "",
+        subscriptionTier: "basic",
+        sendVipCode: true,
+        adminNotes: "",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "User Creation Failed",
+        description: error.message || "Failed to create user account",
+        variant: "destructive",
+      });
+    },
   });
 
   // Generate VIP code mutation
@@ -187,6 +235,18 @@ export default function AdminDashboard() {
       return;
     }
     generateCodeMutation.mutate(vipForm);
+  };
+
+  const handleCreateUser = () => {
+    if (!createUserForm.email) {
+      toast({
+        title: "Error",
+        description: "Please enter a user email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    createUserMutation.mutate(createUserForm);
   };
 
   const formatDate = (dateString: string) => {
@@ -299,6 +359,172 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tab Content */}
+        {activeTab === "users" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Create New User */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2 text-blue-600" />
+                  Create New User
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="createEmail">Email Address</Label>
+                      <Input
+                        id="createEmail"
+                        type="email"
+                        value={createUserForm.email}
+                        onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                        placeholder="user@example.com"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="createTier">Subscription Tier</Label>
+                      <Select
+                        value={createUserForm.subscriptionTier}
+                        onValueChange={(value) => setCreateUserForm({ ...createUserForm, subscriptionTier: value })}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">Free</SelectItem>
+                          <SelectItem value="basic">Basic</SelectItem>
+                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="createFirstName">First Name (Optional)</Label>
+                      <Input
+                        id="createFirstName"
+                        value={createUserForm.firstName}
+                        onChange={(e) => setCreateUserForm({ ...createUserForm, firstName: e.target.value })}
+                        placeholder="John"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="createLastName">Last Name (Optional)</Label>
+                      <Input
+                        id="createLastName"
+                        value={createUserForm.lastName}
+                        onChange={(e) => setCreateUserForm({ ...createUserForm, lastName: e.target.value })}
+                        placeholder="Doe"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="createNotes">Admin Notes (Optional)</Label>
+                    <Textarea
+                      id="createNotes"
+                      value={createUserForm.adminNotes}
+                      onChange={(e) => setCreateUserForm({ ...createUserForm, adminNotes: e.target.value })}
+                      placeholder="Notes about this user creation..."
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="sendVipCode"
+                      checked={createUserForm.sendVipCode}
+                      onChange={(e) => setCreateUserForm({ ...createUserForm, sendVipCode: e.target.checked })}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="sendVipCode" className="text-sm">
+                      Send VIP code and welcome email
+                    </Label>
+                  </div>
+
+                  <Button
+                    onClick={handleCreateUser}
+                    disabled={createUserMutation.isPending}
+                    className="w-full bg-blue-500 hover:bg-blue-600"
+                  >
+                    {createUserMutation.isPending ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Creating User...
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Create User Account
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Existing Users List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2 text-green-600" />
+                  Existing Users
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {usersLoading ? (
+                  <div className="text-center py-8">
+                    <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                    <p className="text-gray-500 mt-2">Loading users...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {users?.map((user) => (
+                      <div key={user.id} className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{user.email}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge className={getTierColor(user.subscriptionTier)}>
+                                {user.subscriptionTier.toUpperCase()}
+                              </Badge>
+                              {user.mfaEnabled ? (
+                                <Badge className="bg-green-100 text-green-800">
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  MFA
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-yellow-100 text-yellow-800">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  No MFA
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right text-sm text-gray-500">
+                            <p>{formatDate(user.createdAt)}</p>
+                            {user.lastLogin && (
+                              <p className="text-xs">Last: {formatDate(user.lastLogin)}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {activeTab === "generate" && (
           <Card>
             <CardHeader>

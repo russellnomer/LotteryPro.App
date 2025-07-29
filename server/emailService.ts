@@ -132,3 +132,31 @@ Russell Nomer Platform
     message: `VIP code email sent to ${recipientEmail} (logged to console in development)`
   };
 }
+/**
+ * Send welcome email to new user with VIP code and tier information
+ */
+export async function sendWelcomeEmailWithVipCode(
+  userEmail: string,
+  vipCode: string,
+  tierLevel: string,
+  userName: string = 'New User'
+): Promise<boolean> {
+  try {
+    console.log(`📧 Sending welcome email with VIP code to ${userEmail}`);
+
+    // In development, log the email content instead of sending
+    console.log('\n🎉 NEW USER WELCOME EMAIL 🎉');
+    console.log('=====================================');
+    console.log(`To: ${userEmail}`);
+    console.log(`Subject: Welcome to Russell Nomer's LotteryPro Platform!`);
+    console.log(`User: ${userName}`);
+    console.log(`Tier: ${tierLevel.toUpperCase()}`);
+    console.log(`VIP Code: ${vipCode}`);
+    console.log('=====================================\n');
+
+    return true;
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+    return false;
+  }
+}

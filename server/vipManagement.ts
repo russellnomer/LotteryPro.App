@@ -116,7 +116,6 @@ export async function generateSecureVipCode(
     vipCode,
     expiresAt,
     codeId: vipCodeRecord.id,
-    emailSent: true,
   };
 }
 
@@ -351,4 +350,92 @@ export function getTotpTimeRemaining(): number {
   const step = 300; // 5 minutes
   const timeInStep = currentTime % step;
   return step - timeInStep;
+}
+
+/**
+ * Create new user account with automatic VIP code generation and email notification
+ */
+export async function createNewUser(userData: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  subscriptionTier: string;
+  sendVipCode?: boolean;
+  adminEmail?: string;
+  adminNotes?: string;
+}): Promise<{ user: any; vipCode?: string; emailSent?: boolean }> {
+  try {
+    // Check if user already exists
+    const existingUser = await db.select().from(userAccounts).where(eq(userAccounts.email, userData.email)).limit(1);
+    
+    if (existingUser.length > 0) {
+      throw new Error(`User with email ${userData.email} already exists`);
+    }
+
+    // Create new user account
+    const newUser = await db.insert(userAccounts).values({
+      email: userData.email,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      subscriptionTier: userData.subscriptionTier as 'free' | 'basic' | 'pro' | 'premium',
+      subscriptionStatus: 'active',
+      mfaEnabled: false,
+      passwordHash: '', // User will need to set password on first login
+      dailyUsageCount: 0,
+    }).returning();
+
+    let vipCode: string | undefined;
+    let emailSent = false;
+
+    // Generate VIP code if requested
+    if (userData.sendVipCode) {
+      const vipCodeData = await generateSecureVipCode(
+        {
+          targetEmail: userData.email,
+          currentTier: 'free',
+          targetTier: userData.subscriptionTier,
+          adminNotes: userData.adminNotes || `User created by admin and granted ${userData.subscriptionTier} tier access`,
+        },
+        null, // ipAddress
+        null  // userAgent
+      );
+
+      vipCode = vipCodeData.vipCode;
+
+      // Send welcome email with VIP code
+      const { sendWelcomeEmailWithVipCode } = await import('./emailService');
+      emailSent = await sendWelcomeEmailWithVipCode(
+        userData.email,
+        vipCode,
+        userData.subscriptionTier,
+        userData.firstName || 'New User'
+      );
+    }
+
+    // Log admin action
+    if (userData.adminEmail) {
+      await logAdminAction({
+        adminEmail: userData.adminEmail,
+        action: 'create_new_user',
+        targetEmail: userData.email,
+        details: {
+          tier: userData.subscriptionTier,
+          vipCodeSent: !!vipCode,
+          emailSent,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+        },
+        ipAddress: null,
+      });
+    }
+
+    return {
+      user: newUser[0],
+      vipCode,
+      emailSent,
+    };
+  } catch (error) {
+    console.error('Error creating new user:', error);
+    throw error;
+  }
 }

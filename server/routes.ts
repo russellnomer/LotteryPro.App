@@ -359,6 +359,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin route for creating new users
+  app.post('/api/admin/create-user', async (req, res) => {
+    try {
+      const { createNewUser } = await import('./vipManagement');
+      const userData = {
+        ...req.body,
+        adminEmail: 'admin@russell-nomer.com', // Russell's admin email
+      };
+      
+      const result = await createNewUser(userData);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: error.message || 'Failed to create user' });
+    }
+  });
+
   // Add new draw and evaluate predictions
   // Admin routes for VIP code management
   app.get('/api/admin/totp-info', async (req, res) => {
