@@ -28,8 +28,10 @@ import {
   Lock,
   Calendar,
   Settings,
-  Download
+  Download,
+  Monitor
 } from "lucide-react";
+import AdManagementDashboard from "./AdManagementDashboard";
 
 interface VipCodeGeneration {
   targetEmail: string;
@@ -71,7 +73,7 @@ interface AdminLog {
 }
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "logs">("generate");
+  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs">("generate");
   const [vipForm, setVipForm] = useState<VipCodeGeneration>({
     targetEmail: "",
     currentTier: "free",
@@ -276,6 +278,7 @@ export default function AdminDashboard() {
                 { id: "generate", label: "Generate VIP Code", icon: Key },
                 { id: "users", label: "Manage Users", icon: Users },
                 { id: "codes", label: "VIP Codes", icon: Shield },
+                { id: "ads", label: "Advertisement", icon: Monitor },
                 { id: "logs", label: "Admin Logs", icon: Activity },
               ].map((tab) => (
                 <button
@@ -590,6 +593,13 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Advertisement Management Tab */}
+        {activeTab === "ads" && (
+          <div>
+            <AdManagementDashboard />
+          </div>
         )}
       </div>
     </div>

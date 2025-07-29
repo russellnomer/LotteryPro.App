@@ -268,6 +268,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advertisement Management Routes
+  app.get('/api/admin/campaigns', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const campaigns = await adManager.getAllCampaigns();
+      res.json(campaigns);
+    } catch (error: any) {
+      console.error('Error fetching campaigns:', error);
+      res.status(500).json({ message: 'Failed to fetch campaigns' });
+    }
+  });
+
+  app.post('/api/admin/campaigns', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const campaign = await adManager.createCampaign(req.body);
+      res.json(campaign);
+    } catch (error: any) {
+      console.error('Error creating campaign:', error);
+      res.status(500).json({ message: 'Failed to create campaign' });
+    }
+  });
+
+  app.patch('/api/admin/campaigns/:id', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const campaign = await adManager.updateCampaign(req.params.id, req.body);
+      res.json(campaign);
+    } catch (error: any) {
+      console.error('Error updating campaign:', error);
+      res.status(500).json({ message: 'Failed to update campaign' });
+    }
+  });
+
+  app.delete('/api/admin/campaigns/:id', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      await adManager.deleteCampaign(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting campaign:', error);
+      res.status(500).json({ message: 'Failed to delete campaign' });
+    }
+  });
+
+  app.get('/api/admin/ad-revenue', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const report = await adManager.getRevenueReport();
+      res.json(report);
+    } catch (error: any) {
+      console.error('Error fetching revenue report:', error);
+      res.status(500).json({ message: 'Failed to fetch revenue report' });
+    }
+  });
+
+  app.post('/api/ad-view/:campaignId', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const { placement, userTier } = req.body;
+      await adManager.recordAdView(req.params.campaignId, placement, userTier);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error recording ad view:', error);
+      res.status(500).json({ message: 'Failed to record ad view' });
+    }
+  });
+
+  app.post('/api/ad-click/:campaignId', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const { placement } = req.body;
+      await adManager.recordAdClick(req.params.campaignId, placement);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error recording ad click:', error);
+      res.status(500).json({ message: 'Failed to record ad click' });
+    }
+  });
+
+  app.get('/api/ads/:placement', async (req, res) => {
+    try {
+      const { adManager } = await import('./adManagement');
+      const ad = await adManager.selectAdForRotation(req.params.placement);
+      res.json(ad);
+    } catch (error: any) {
+      console.error('Error selecting ad:', error);
+      res.status(500).json({ message: 'Failed to select ad' });
+    }
+  });
+
   // Add new draw and evaluate predictions
   // Admin routes for VIP code management
   app.get('/api/admin/totp-info', async (req, res) => {

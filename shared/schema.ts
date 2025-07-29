@@ -213,6 +213,9 @@ export type MusicContent = typeof musicContent.$inferSelect;
 export type InsertBookRecommendation = z.infer<typeof insertBookRecommendationSchema>;
 export type BookRecommendation = typeof bookRecommendations.$inferSelect;
 
+// Export advertisement schemas
+export * from "./adSchema";
+
 // Analysis types
 export type GameType = 'powerball' | 'megamillions';
 
