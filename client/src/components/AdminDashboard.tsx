@@ -101,6 +101,8 @@ export default function AdminDashboard() {
     sendVipCode: true,
     adminNotes: "",
   });
+  const [autoUpgradeEmail, setAutoUpgradeEmail] = useState("");
+  const [autoUpgradeTier, setAutoUpgradeTier] = useState("premium");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -124,6 +126,43 @@ export default function AdminDashboard() {
   // Fetch admin logs
   const { data: adminLogs, isLoading: logsLoading } = useQuery<AdminLog[]>({
     queryKey: ['/api/admin/logs'],
+  });
+
+  // Automated VIP allocation mutation
+  const autoUpgradeMutation = useMutation({
+    mutationFn: async ({ email, tier }: { email: string; tier: string }) => {
+      // First generate VIP code
+      const vipResponse = await apiRequest('POST', '/api/admin/generate-vip', {
+        targetEmail: email,
+        currentTier: "free",
+        targetTier: tier,
+        adminNotes: `Automated upgrade to ${tier} tier`
+      });
+      const vipData = await vipResponse.json();
+      
+      // Then auto-redeem the code
+      const redeemResponse = await apiRequest('POST', '/api/vip/redeem', {
+        code: vipData.vipCode,
+        userEmail: email
+      });
+      return redeemResponse.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "User Upgraded Successfully!",
+        description: `User has been automatically upgraded to ${autoUpgradeTier} tier`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/logs'] });
+      setAutoUpgradeEmail("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Auto Upgrade Failed",
+        description: error.message || "Failed to automatically upgrade user",
+        variant: "destructive",
+      });
+    },
   });
 
   // Create new user mutation
@@ -255,6 +294,7 @@ export default function AdminDashboard() {
 
   const getTierColor = (tier: string) => {
     switch (tier) {
+      case 'unlimited': return 'bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-900 border-orange-300';
       case 'premium': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'pro': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'basic': return 'bg-green-100 text-green-800 border-green-200';
@@ -361,6 +401,60 @@ export default function AdminDashboard() {
         {/* Tab Content */}
         {activeTab === "users" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Automated User Upgrade */}
+            <Card className="border-2 border-orange-300 bg-orange-50">
+              <CardHeader>
+                <CardTitle className="flex items-center text-orange-800">
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Automated User Upgrade
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Email Address</Label>
+                  <Input
+                    type="email"
+                    placeholder="user@example.com"
+                    value={autoUpgradeEmail}
+                    onChange={(e) => setAutoUpgradeEmail(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Target Tier</Label>
+                  <Select value={autoUpgradeTier} onValueChange={setAutoUpgradeTier}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="basic">Basic</SelectItem>
+                      <SelectItem value="pro">Pro</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="unlimited">Unlimited</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  onClick={() => autoUpgradeMutation.mutate({ email: autoUpgradeEmail, tier: autoUpgradeTier })}
+                  disabled={!autoUpgradeEmail || autoUpgradeMutation.isPending}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                  data-testid="button-auto-upgrade"
+                >
+                  {autoUpgradeMutation.isPending ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                  )}
+                  Auto-Upgrade User
+                </Button>
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    Instantly generates VIP code and redeems it for the user
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+
             {/* Create New User */}
             <Card>
               <CardHeader>

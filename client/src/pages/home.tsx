@@ -30,10 +30,10 @@ export default function Home() {
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
   const [selectedWheelType, setSelectedWheelType] = useState<string>('single');
-  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium'>('free'); // For demo, assuming free user
+  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium' | 'unlimited'>('free'); // For demo, assuming free user
   const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
   const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
-  const [userEmail] = useState<string>("demo@example.com"); // Demo user - replace with actual auth
+  const [userEmail] = useState<string>("russell@russellnomer.com"); // Russell's account for testing unlimited access
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -48,6 +48,11 @@ export default function Home() {
   }, []);
 
   const updateDailyUsage = () => {
+    // Don't track usage for unlimited users or Russell
+    if (userTier === 'unlimited' || userEmail === 'russell@russellnomer.com') {
+      return;
+    }
+    
     const today = new Date().toDateString();
     const newUsage = dailyGenerationsUsed + 1;
     setDailyGenerationsUsed(newUsage);
@@ -84,6 +89,13 @@ export default function Home() {
   });
 
   const handleGenerateNumbers = () => {
+    // Unlimited users and Russell bypass all limits
+    if (userTier === 'unlimited' || userEmail === 'russell@russellnomer.com') {
+      generateMutation.mutate({ game: selectedGame, method: selectedMethod });
+      return;
+    }
+    
+    // Check daily limits for other users
     if (userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations) {
       toast({
         title: "Daily Limit Reached",
@@ -143,6 +155,7 @@ export default function Home() {
                 <option value="basic">Basic</option>
                 <option value="pro">Pro</option>
                 <option value="premium">Premium</option>
+                <option value="unlimited">Unlimited (Russell)</option>
               </select>
             </nav>
           </div>

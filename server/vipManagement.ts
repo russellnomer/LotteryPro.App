@@ -56,8 +56,8 @@ export async function generateSecureVipCode(
     .update(`${vipCode}:${generation.targetEmail}`)
     .digest('hex');
 
-  // Expiration: 5 minutes from now (TOTP window)
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  // Expiration: 30 minutes from now (extended window for easier redemption)
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
   // Get admin user ID
   const [admin] = await db.select()
@@ -158,7 +158,7 @@ export async function redeemVipCode(
       return { success: false, message: 'This VIP code is not valid for your account' };
     }
 
-    // Verify TOTP is within valid window (current or previous 5-minute window)
+    // Verify TOTP is within valid window (current or previous 5-minute window, plus 30 minute grace period)
     const currentTime = Date.now();
     const isValidTotp = speakeasy.totp.verify({
       secret: ADMIN_TOTP_SECRET,
@@ -166,7 +166,7 @@ export async function redeemVipCode(
       token: totpPart,
       time: currentTime,
       step: 300,
-      window: 1, // Allow previous window for clock skew
+      window: 6, // Allow 6 windows (30 minutes) for extended validity
     });
 
     if (!isValidTotp) {
