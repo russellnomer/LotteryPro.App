@@ -19,7 +19,7 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
 
   const redeemMutation = useMutation({
     mutationFn: async ({ code, email }: { code: string; email: string }) => {
-      const response = await apiRequest('POST', '/api/redeem-vip-code', { 
+      const response = await apiRequest('POST', '/api/vip/redeem', { 
         code: code.trim(), 
         userEmail: email.trim() 
       });

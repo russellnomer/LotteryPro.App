@@ -487,28 +487,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/redeem-vip-code', async (req, res) => {
+  // VIP Code redemption routes (multiple endpoints for compatibility)
+  app.post('/api/vip/redeem', async (req, res) => {
     try {
       const { redeemVipCode } = await import('./vipManagement');
       const { code, userEmail } = req.body;
       
       if (!code || !userEmail) {
-        return res.status(400).json({ message: 'Code and user email are required' });
+        return res.status(400).json({ 
+          success: false, 
+          message: 'VIP code and email are required' 
+        });
       }
 
       const ipAddress = req.ip;
       const userAgent = req.get('User-Agent');
 
       const result = await redeemVipCode(
-        { code, userEmail },
+        { code: code.trim(), userEmail: userEmail.trim() },
         ipAddress,
         userAgent
       );
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error redeeming VIP code:', error);
-      res.status(500).json({ message: 'Failed to redeem VIP code' });
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to redeem VIP code',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post('/api/redeem-vip-code', async (req, res) => {
+    try {
+      const { redeemVipCode } = await import('./vipManagement');
+      const { code, userEmail } = req.body;
+      
+      if (!code || !userEmail) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'VIP code and email are required' 
+        });
+      }
+
+      const ipAddress = req.ip;
+      const userAgent = req.get('User-Agent');
+
+      const result = await redeemVipCode(
+        { code: code.trim(), userEmail: userEmail.trim() },
+        ipAddress,
+        userAgent
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error redeeming VIP code:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to redeem VIP code',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 
