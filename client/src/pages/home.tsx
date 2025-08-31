@@ -30,7 +30,7 @@ export default function Home() {
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
   const [selectedWheelType, setSelectedWheelType] = useState<string>('single');
-  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium' | 'unlimited'>('free'); // For demo, assuming free user
+  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium' | 'unlimited'>('unlimited'); // Russell's unlimited access
   const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
   const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
   const [userEmail] = useState<string>("russell@russellnomer.com"); // Russell's account for testing unlimited access
