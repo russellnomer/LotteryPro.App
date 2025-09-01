@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `${draws[draws.length - 1].drawDate.toLocaleDateString()} - ${draws[0].drawDate.toLocaleDateString()}` :
         'No data';
       
-      const isStatisticallySignificant = draws.length >= 100; // Maximum statistical confidence requirement
+      const isStatisticallySignificant = draws.length >= 200; // Ultra-maximum statistical confidence requirement
       
       const analysis = {
         hotNumbers,
