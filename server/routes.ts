@@ -691,6 +691,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // YouTube API Routes for Russell Nomer's authentic music
   app.use('/api/youtube', youtubeRoutes);
 
+  // Advanced lottery strategies
+  app.get('/api/advanced-strategies/:game', async (req, res) => {
+    try {
+      const { game } = req.params;
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ error: 'Invalid game type' });
+      }
+
+      const { advancedStrategies } = await import('./advancedLotteryStrategies');
+      const predictions = await advancedStrategies.generateAdvancedPredictions(game as any, 10);
+      
+      res.json({
+        success: true,
+        game,
+        strategies: predictions,
+        totalStrategies: predictions.length,
+        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length
+      });
+    } catch (error) {
+      console.error('Error generating advanced strategies:', error);
+      res.status(500).json({ error: 'Failed to generate advanced strategies' });
+    }
+  });
+
+  // Wheeling systems
+  app.get('/api/wheeling-systems/:game', async (req, res) => {
+    try {
+      const { game } = req.params;
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ error: 'Invalid game type' });
+      }
+
+      const { advancedStrategies } = await import('./advancedLotteryStrategies');
+      const wheelSystems = await advancedStrategies.generateWheelingSystems(game as any);
+      
+      res.json({
+        success: true,
+        game,
+        wheelingSystems: wheelSystems
+      });
+    } catch (error) {
+      console.error('Error generating wheeling systems:', error);
+      res.status(500).json({ error: 'Failed to generate wheeling systems' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
