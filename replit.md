@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application for generating lottery numbers for Powerball and MegaMillions using statistical analysis. The project is evolving from a basic prediction tool into a commercial mobile platform with subscription-based community features, revenue generation for Russell Nomer, and potential Jackpocket integration. The system now emphasizes statistical transparency and honest disclaimers following comprehensive analysis of performance claims.
+LotteryPro is a full-stack web application designed to generate lottery numbers for Powerball and MegaMillions using statistical analysis. It is evolving into a commercial mobile platform featuring subscription-based community features, revenue generation, and potential integrations like Jackpocket. The system emphasizes statistical transparency and provides honest disclaimers regarding performance claims. Its purpose is to transition from a basic prediction tool to a comprehensive platform for lottery enthusiasts.
 
 ## User Preferences
 
@@ -15,196 +15,44 @@ Preferred communication style: Simple, everyday language.
 - Focus on connecting with show runners, producers, decision makers for music placement opportunities
 - Preferred streaming platforms: Apple Music (best payout), Spotify, YouTube Russell Nomer Topic Channel
 
-## Commercial Development Goals (Russell Nomer)
-
-- Mobile app development for iOS and Android distribution
-- ✅ Subscription-based revenue model with community features (implemented)
-- ✅ PayPal payment integration (implemented with sandbox environment)
-- ✅ Freemium model with advertising integration (implemented)
-- ✅ Daily usage limits for free tier users (implemented)
-- CashApp payment integration
-- Jackpocket integration for ticket purchasing
-- Community pooling and resource sharing features
-- Administrative fee structure for ongoing revenue generation
-
 ## System Architecture
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Bundler**: Vite with custom configuration
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack Query (React Query) for server state
-- **UI Framework**: shadcn/ui components built on Radix UI
-- **Styling**: Tailwind CSS with custom CSS variables for theming
-- **Charts**: Custom Chart.js integration for frequency visualization
+### UI/UX Decisions
+The platform features a responsive design with a mobile-first approach, utilizing `shadcn/ui` components built on `Radix UI` for accessibility. Styling is managed with `Tailwind CSS` and custom CSS variables for theming, ensuring a consistent and customizable visual experience. Custom `Chart.js` integration is used for frequency visualization. Advertising spaces are strategically placed for free users, while paid subscribers enjoy an ad-free experience.
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript with ES modules
-- **Database ORM**: Drizzle ORM with PostgreSQL
-- **Database Provider**: Neon serverless PostgreSQL
-- **API Pattern**: RESTful endpoints with JSON responses
-- **Session Management**: PostgreSQL-backed sessions via connect-pg-simple
+### Technical Implementations
+- **Frontend**: React 18 with TypeScript, Vite bundler, Wouter for routing, TanStack Query for state management.
+- **Backend**: Node.js with Express.js, TypeScript, Drizzle ORM with Neon serverless PostgreSQL, RESTful API.
+- **Database**: PostgreSQL with Drizzle ORM, using `lottery_draws`, `generated_tickets`, `prediction_results`, `performance_stats`, `user_accounts`, `user_sessions`, and `sessions` tables. JSONB fields store flexible data like number arrays and MFA backup codes. UUID primary keys are used.
+- **Core Services**: Includes automated real-time lottery data fetching, statistical analysis (frequency, hot/cold numbers), multiple number generation algorithms (hot numbers, balanced, wheel systems), prediction tracking, and performance analytics.
+- **Authentication**: Secure user registration, login with bcrypt password hashing, Google Authenticator TOTP-based MFA with QR code generation and backup codes, and secure token-based session management.
+- **Advertising**: `AdSpace` component supporting various sizes, integrated with Google AdSense for production and development testing.
+- **Data Flow**: Involves pre-seeded historical data, an analysis pipeline, user interaction for number generation and ticket saving, automated prediction tracking, and performance reporting. User tier management enforces daily usage limits and displays appropriate content.
 
-### Key Components
-
-#### Database Schema (shared/schema.ts)
-- **lottery_draws**: Stores historical lottery draw data with game type, dates, numbers, and jackpot info
-- **generated_tickets**: Tracks user-generated number combinations with metadata
-- **prediction_results**: Tracks performance of predictions against actual draws with match counts and prize levels
-- **performance_stats**: Aggregated performance metrics by game, method, and time period
-- **user_accounts**: User authentication with email, password hash, subscription tiers, MFA secrets and backup codes
-- **user_sessions**: Secure session management with MFA verification tracking and expiration
-- **sessions**: PostgreSQL-backed user sessions for database connectivity
-- Uses JSONB fields for flexible number array storage and MFA backup codes
-- UUID primary keys with PostgreSQL's gen_random_uuid()
-
-#### Core Services
-- **Storage Layer**: PostgreSQL database with Drizzle ORM, automated data seeding
-- **Real-Time Lottery Data Service**: Automated fetching and maintenance of current lottery results
-- **Lottery Analysis**: Frequency analysis, hot/cold number detection, wheel system generation
-- **Number Generation**: Multiple algorithms (hot numbers, balanced, wheel systems)
-- **Statistical Validation**: Maintains 30-100 draw samples for statistically significant analysis
-- **Prediction Tracking**: Automatic evaluation of predictions against actual draws
-- **Performance Analytics**: Statistical analysis for marketing and system improvement
-- **Authentication System**: Secure user registration, login with bcrypt password hashing
-- **MFA Service**: Google Authenticator TOTP integration with QR code generation and backup codes
-- **Session Management**: Secure token-based sessions with MFA verification requirements
-
-#### Frontend Pages
-- **Home Page**: Main interface with game selection, method selection, number generation, advertising spaces, and daily usage tracking
-- **Performance Page**: Marketing-focused analytics dashboard showing track record and method comparison
-- **Subscription Page**: PayPal-integrated subscription plans with four tiers (Free, Basic, Pro, Premium) 
-- **Authentication Page**: Complete MFA-enforced registration/login with Google Authenticator setup and educational content
-- **Not Found**: 404 error handling
-
-#### Advertising Integration
-- **AdSpace Component**: Flexible advertising component supporting multiple sizes (banner, square, rectangle, leaderboard)
-- **Google AdSense Integration**: Production-ready AdSense with secure server-side Publisher ID handling
-- **Development Testing**: AdSense configured for development environment testing with domain approval workflow
-- **Strategic Ad Placement**: Header, mid-content, sidebar, and footer advertising spaces for free users
-- **Ad-Free Experience**: All paid subscribers enjoy completely ad-free interface
-- **Security Focus**: Zero client-side credential exposure, all sensitive data handled server-side
-
-#### UI Components
-- Complete shadcn/ui component library
-- Custom Chart component for frequency visualization
-- Responsive design with mobile-first approach
-
-## Data Flow
-
-1. **Historical Data**: Pre-seeded with July 2025 lottery results for both games
-2. **Analysis Pipeline**: 
-   - Fetch historical draws from storage
-   - Calculate frequency analysis (hot/cold numbers)
-   - Generate numbers based on selected method
-3. **User Interaction**:
-   - Select game (Powerball/MegaMillions)
-   - Choose generation method (hot/balanced/wheel)
-   - View generated numbers and frequency charts
-   - Save generated tickets to database
-4. **Prediction Tracking**:
-   - Automatically evaluate predictions when new draws are added
-   - Calculate accuracy, matches, and estimated prize levels
-   - Update performance statistics for marketing analytics
-5. **Performance Reporting**:
-   - Generate method comparison analytics
-   - Calculate improvement over random selection
-   - Display recent wins and track record for marketing
-6. **User Tier Management**: 
-   - Track daily usage limits for free users
-   - Display advertising content based on subscription level
-   - Enforce feature restrictions and upgrade prompts
+### Feature Specifications
+- **Commercial Development Goals**: Mobile app development (iOS/Android), subscription-based revenue model, PayPal and CashApp integration, freemium model with daily usage limits and advertising, Jackpocket integration, community pooling, and administrative fee structure.
+- **MFA Implementation**: Comprehensive Multi-Factor Authentication for all subscribers, using Google Authenticator TOTP.
+- **Security Hardening**: Full compliance with OWASP, CIS, ISACA, Security Forum, and NIST frameworks, including security headers, rate limiting, input sanitization, and audit logging.
+- **Admin Dashboard**: Comprehensive administrative interface for VIP code generation, user tier management, security auditing, and user creation.
+- **Lottery Data Service**: Automatically fetches and maintains current lottery results, ensuring statistically significant sampling (30-100 draw samples) for analysis.
+- **Statistical Accuracy**: Enhanced dataset analysis (120+ Powerball, 80+ MegaMillions draws) covering 10 months historically for optimized hot number detection.
 
 ## External Dependencies
 
 ### Database
-- **Neon PostgreSQL**: Serverless PostgreSQL database
-- **Connection**: Via DATABASE_URL environment variable
-- **Session Store**: PostgreSQL-backed user sessions
+- **Neon PostgreSQL**: Serverless PostgreSQL database, connected via `DATABASE_URL` environment variable.
+- **PostgreSQL**: Used as the session store for user sessions.
 
 ### Frontend Libraries
-- **Radix UI**: Headless UI components for accessibility
-- **Tailwind CSS**: Utility-first CSS framework
-- **Chart.js**: Data visualization for frequency analysis
-- **TanStack Query**: Server state management and caching
+- **Radix UI**: Headless UI components.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Chart.js**: Data visualization library.
+- **TanStack Query**: Server state management and caching.
 
 ### Development Tools
-- **Vite**: Fast development server and build tool
-- **TypeScript**: Type safety across the stack
-- **ESBuild**: Fast JavaScript bundler for production
+- **Vite**: Fast development server and build tool.
+- **TypeScript**: For type safety across the stack.
+- **ESBuild**: Fast JavaScript bundler for production builds.
 
 ### Payment Processing
-- **PayPal SDK**: @paypal/paypal-server-sdk for payment processing
-- **Environment**: Sandbox for development, production for live payments
-- **Features**: Order creation, payment capture, client token generation
-
-## Deployment Strategy
-
-### Development
-- **Script**: `npm run dev` - runs Express server with tsx
-- **Hot Reload**: Vite middleware integrated with Express
-- **Database**: Drizzle migrations via `npm run db:push`
-
-### Production Build
-- **Frontend**: Vite builds to `dist/public`
-- **Backend**: ESBuild bundles server to `dist/index.js`
-- **Start**: `npm start` runs the production bundle
-- **Environment**: NODE_ENV controls development vs production features
-
-### Configuration
-- **Path Aliases**: Configured for clean imports (@/, @shared/, @assets/)
-- **TypeScript**: Strict mode with comprehensive type checking
-- **PostCSS**: Tailwind CSS processing with autoprefixer
-
-## Recent Changes (January 2025)
-
-- ✅ Implemented comprehensive freemium model with advertising integration
-- ✅ Added Free tier (1 generation/day) with strategic advertising placement
-- ✅ Created AdSpace component system for Google AdSense and custom banner ads
-- ✅ Implemented daily usage tracking and limits using localStorage
-- ✅ Added upgrade prompts and subscription conversion funnels
-- ✅ Enhanced subscription page with four tiers including free option
-- ✅ Integrated ad-free experience for all paid tiers
-- ✅ Added tier switcher for testing different user experiences
-- ✅ **SECURITY AUDIT COMPLETE**: Eliminated all API/credential exposure risks
-- ✅ **MFA IMPLEMENTATION**: Force Multi-Factor Authentication for all subscribers
-- ✅ **GOOGLE AUTHENTICATOR INTEGRATION**: TOTP-based 6-digit codes (no push notifications)
-- ✅ **SECURE DEVELOPMENT ADS**: AdSense configured for both development and production testing
-- ✅ **INDUSTRY COMPLIANCE**: Full compliance with OWASP, CIS, ISACA, Security Forum, and NIST frameworks
-- ✅ **COMPREHENSIVE SECURITY HARDENING**: Defense-in-depth implementation with security headers, rate limiting, input sanitization, and audit logging
-- ✅ **ENHANCED BOOK VISIBILITY**: Bold orange gradients and prominent "Support Russell!" buttons with streaming royalty education
-- ✅ **EMBEDDED MUSIC PLAYER**: YouTube & Spotify iframe embeds play directly in app (no external links)
-- ✅ **FAN LOYALTY CONTEST SYSTEM**: VIP code rewards for music sharing, book reviews, fan stories, social posts
-- ✅ **ASCAP INTEGRATION**: Removed TIDAL (PRO restriction), added ASCAP networking features for industry connections
-- ✅ **ASTROLOGICAL FEATURES**: Complete zodiac system with lucky numbers, horoscopes, and Amazon astrology affiliate link
-- ✅ **RUSSELL BIOGRAPHY COMPONENT**: Comprehensive personal story explaining cervical spinal fusion, chronic pain, revenue challenges, and AI assistance
-- ✅ **AUTHENTIC MUSIC CATALOG**: Replaced fictional song titles with actual Russell Nomer tracks from UnitedMasters and SoundCloud
-- ✅ **ACCURATE PLATFORM REPRESENTATION**: Music data now reflects real releases including "Gold and Red", "Fatal Whispers", "A Songwriter's Prayer", and "The Risk You Didn't Take"
-- ✅ **COMPLETE 35-BOOK AMAZON INTEGRATION**: Implemented ontology-based organization of Russell's entire Amazon collection
-- ✅ **ONTOLOGY-BASED BOOK ORGANIZATION**: Primary focus on gambling strategy books, secondary subject-matter categorization for cybersecurity, blockchain, compliance, wellness, and social commentary
-- ✅ **YOUTUBE DUPLICATE REMOVAL**: Intelligent deduplication system removes duplicate songs and cleans titles for better user experience
-- ✅ **AUTHENTIC AMAZON LINKS**: All book links updated to Russell's complete collection (https://amzn.to/4m6r2mS) with accurate star ratings and descriptions
-- ✅ **UNHACKABLE VIP CODE SYSTEM**: Implemented "Nomerati" + Google Authenticator TOTP + account-specific email hash security system
-- ✅ **COMPREHENSIVE ADMIN DASHBOARD**: Complete administrative interface for VIP code generation, user tier management, and security auditing
-- ✅ **ACCOUNT-SPECIFIC VIP CODES**: Codes are mathematically bound to target email addresses and cannot be used by other accounts
-- ✅ **GOOGLE AUTHENTICATOR INTEGRATION**: Real-time TOTP generation with 5-minute expiration windows for maximum security
-- ✅ **COMPREHENSIVE AUDIT LOGGING**: All admin actions logged with IP addresses, user agents, and detailed action history
-- ✅ **TIER MANAGEMENT SYSTEM**: Russell can instantly upgrade any user account tier with full logging and tracking
-- ✅ **UNIFIED NAVIGATION SYSTEM**: Added comprehensive navigation header with seamless switching between main app and admin interface
-- ✅ **VIP CODE GENERATION FIXES**: Resolved 500 errors in admin dashboard, fixed missing database tables and columns
-- ✅ **USER CREATION SYSTEM**: Added comprehensive user creation functionality in admin dashboard with automatic VIP code generation and email notifications
-- ✅ **ADVERTISEMENT MANAGEMENT COMPLETE**: Full ad campaign system with Google AdSense, custom ads, affiliate content management, analytics tracking, and revenue reporting
-- ✅ **EMAIL NOTIFICATION SYSTEM**: Welcome emails with VIP codes sent automatically when creating new users through admin interface
-- ✅ **VIP CODE TIMEOUT EXTENSION**: Extended VIP code validity from 5 minutes to 30 minutes for easier redemption
-- ✅ **AUTOMATED VIP ALLOCATION**: Added one-click user upgrade system in admin dashboard that auto-generates and redeems VIP codes
-- ✅ **RUSSELL UNLIMITED ACCESS**: Set russell@russellnomer.com as unlimited tier user with no daily generation limits
-- ✅ **UNLIMITED TIER SUPPORT**: Added unlimited subscription tier with complete bypass of all usage restrictions
-- ✅ **VIP CODE REDEMPTION FIX**: Fixed critical database query bug that was checking for expired codes instead of valid ones
-- ✅ **REAL-TIME LOTTERY DATA SERVICE**: Implemented comprehensive lottery data service that automatically fetches current results based on date
-- ✅ **STATISTICALLY SIGNIFICANT SAMPLING**: System maintains 30-100 draws for statistically valid analysis with automatic data refresh
-- ✅ **AUTOMATED DATA UPDATES**: API endpoints now automatically update lottery data before generating predictions
-- ✅ **CURRENT DATE AWARENESS**: System generates realistic lottery data based on September 1, 2025 timeline
-- ✅ **SAMPLE SIZE VALIDATION**: All analysis includes statistical significance indicators and data freshness metrics
-
-The application follows a monorepo structure with shared types and schemas, enabling type safety between frontend and backend while maintaining clear separation of concerns.
+- **PayPal SDK**: `@paypal/paypal-server-sdk` for payment processing, configured for both sandbox (development) and production environments.
