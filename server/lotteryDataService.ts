@@ -18,8 +18,8 @@ export class LotteryDataService {
     megamillions: 'https://api.megamillions.com/v2/recent-draws'
   };
 
-  private readonly MINIMUM_SAMPLE_SIZE = 50; // Enhanced statistical significance
-  private readonly MAXIMUM_SAMPLE_SIZE = 200; // Expanded analysis capacity
+  private readonly MINIMUM_SAMPLE_SIZE = 100; // Maximum statistical significance
+  private readonly MAXIMUM_SAMPLE_SIZE = 300; // Ultra-comprehensive analysis capacity
 
   /**
    * Fetch latest lottery results for all games
@@ -113,8 +113,8 @@ export class LotteryDataService {
     const results: LotteryApiResponse[] = [];
     const currentDate = new Date();
     
-    // Generate results for the last 120 draws (about 1 year of data)
-    for (let i = 0; i < 120; i++) {
+    // Generate results for the last 250 draws (about 20 months of data)
+    for (let i = 0; i < 250; i++) {
       const drawDate = new Date(currentDate);
       
       // Powerball draws: Monday, Wednesday, Saturday

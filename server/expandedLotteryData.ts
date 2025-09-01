@@ -1,11 +1,11 @@
 import { storage } from "./storage";
 
 /**
- * Comprehensive lottery dataset generator for enhanced statistical analysis
- * Generates 120+ draws for both Powerball and MegaMillions covering ~1 year
+ * Ultra-comprehensive lottery dataset generator for maximum statistical analysis
+ * Generates 250+ Powerball and 200+ MegaMillions draws covering ~20 months
  */
 export async function seedExpandedLotteryData() {
-  console.log('🎯 Generating comprehensive lottery dataset with 120+ draws...');
+  console.log('🎯 Generating ultra-comprehensive lottery dataset with 250+ draws...');
   
   // Generate Powerball draws (Monday, Wednesday, Saturday = ~156 draws per year)
   const powerbellDraws = generatePowerbellHistory();
@@ -43,7 +43,7 @@ export async function seedExpandedLotteryData() {
     }
   }
 
-  console.log(`✅ Seeded ${powerbellDraws.length} Powerball and ${megaMillionsDraws.length} MegaMillions draws`);
+  console.log(`✅ Seeded ${powerbellDraws.length} Powerball and ${megaMillionsDraws.length} MegaMillions draws for ultra-comprehensive analysis`);
 }
 
 function generatePowerbellHistory() {
@@ -51,8 +51,8 @@ function generatePowerbellHistory() {
   const currentDate = new Date('2025-09-01');
   let drawDate = new Date(currentDate);
   
-  // Generate 120 Powerball draws (about 8 months of data)
-  for (let i = 0; i < 120; i++) {
+  // Generate 250 Powerball draws (about 20 months of data)
+  for (let i = 0; i < 250; i++) {
     // Powerball draws: Monday (1), Wednesday (3), Saturday (6)
     if (i > 0) {
       do {
@@ -79,8 +79,8 @@ function generateMegaMillionsHistory() {
   const currentDate = new Date('2025-09-01');
   let drawDate = new Date(currentDate);
   
-  // Generate 80 MegaMillions draws (about 8 months of data)  
-  for (let i = 0; i < 80; i++) {
+  // Generate 200 MegaMillions draws (about 20 months of data)  
+  for (let i = 0; i < 200; i++) {
     // MegaMillions draws: Tuesday (2), Friday (5)
     if (i > 0) {
       do {
