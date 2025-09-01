@@ -173,13 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get analysis data for a game
+  // Get analysis data for a game (with real-time data updates)
   app.get("/api/analysis/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
       if (!['powerball', 'megamillions'].includes(game)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
+      
+      // Update lottery data with latest results
+      const { lotteryDataService } = await import('./lotteryDataService');
+      await lotteryDataService.updateAllGames();
       
       const draws = await storage.getDraws(game);
       
@@ -209,10 +213,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isCold: coldNumbers.includes(number)
       }));
       
-      // Stats
+      // Stats with statistical significance indicator
       const dateRange = draws.length > 0 ? 
         `${draws[draws.length - 1].drawDate.toLocaleDateString()} - ${draws[0].drawDate.toLocaleDateString()}` :
         'No data';
+      
+      const isStatisticallySignificant = draws.length >= 30; // Minimum sample size
       
       const analysis = {
         hotNumbers,
@@ -223,7 +229,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalDraws: draws.length,
           dateRange,
           mostFrequent: hotNumbers.slice(0, 3),
-          leastFrequent: coldNumbers.slice(0, 3)
+          leastFrequent: coldNumbers.slice(0, 3),
+          sampleSize: draws.length,
+          isStatisticallySignificant,
+          dataFreshness: draws.length > 0 ? 
+            `Updated ${Math.floor((Date.now() - draws[0].drawDate.getTime()) / (1000 * 60 * 60 * 24))} days ago` :
+            'No recent data'
         },
         recentDraws: draws.slice(0, 5)
       };

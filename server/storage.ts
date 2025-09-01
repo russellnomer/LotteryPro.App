@@ -36,6 +36,7 @@ export interface IStorage {
   getDraws(game: string): Promise<LotteryDraw[]>;
   getDrawsByDateRange(game: string, startDate: Date, endDate: Date): Promise<LotteryDraw[]>;
   createDraw(draw: InsertDraw): Promise<LotteryDraw>;
+  deleteDraw(drawId: string): Promise<void>;
   
   // Generated tickets
   getRecentTickets(limit?: number): Promise<GeneratedTicket[]>;
@@ -168,6 +169,10 @@ export class MemStorage implements IStorage {
     const draw: LotteryDraw = { ...insertDraw, id, jackpot: insertDraw.jackpot || null };
     this.draws.set(id, draw);
     return draw;
+  }
+
+  async deleteDraw(drawId: string): Promise<void> {
+    this.draws.delete(drawId);
   }
 
   async getRecentTickets(limit: number = 10): Promise<GeneratedTicket[]> {
