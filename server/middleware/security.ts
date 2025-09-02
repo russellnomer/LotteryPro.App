@@ -56,8 +56,10 @@ export const authRateLimit = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true,
   keyGenerator: (req) => {
-    // Use built-in IP handling for IPv6 support
-    return req.ip || 'unknown';
+    // Use express-rate-limit's built-in IP handling for proper IPv6 support
+    const forwarded = req.headers['x-forwarded-for'] as string;
+    const ip = forwarded ? forwarded.split(',')[0].trim() : req.connection.remoteAddress;
+    return ip || 'unknown';
   }
 });
 

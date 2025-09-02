@@ -737,6 +737,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced lottery analysis with latest results
+  app.get('/api/enhanced-analysis/:game', async (req, res) => {
+    try {
+      const { game } = req.params;
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ error: 'Invalid game type' });
+      }
+
+      // Update lottery data with latest results first
+      const { lotteryDataService } = await import('./lotteryDataService');
+      await lotteryDataService.updateAllGames();
+
+      const { enhancedAnalysis } = await import('./enhancedLotteryAnalysis');
+      const predictions = await enhancedAnalysis.generateEnhancedPredictions(game as any);
+      
+      res.json({
+        success: true,
+        game,
+        enhancedPredictions: predictions,
+        totalPredictions: predictions.length,
+        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length,
+        averageExpectedValue: predictions.reduce((sum, p) => sum + p.expectedValue, 0) / predictions.length,
+        analysisDate: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error generating enhanced analysis:', error);
+      res.status(500).json({ error: 'Failed to generate enhanced analysis' });
+    }
+  });
+
+  // Ultimate prediction combining all strategies
+  app.get('/api/ultimate-prediction/:game', async (req, res) => {
+    try {
+      const { game } = req.params;
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ error: 'Invalid game type' });
+      }
+
+      // Update lottery data first
+      const { lotteryDataService } = await import('./lotteryDataService');
+      await lotteryDataService.updateAllGames();
+
+      // Get all strategies
+      const { advancedStrategies } = await import('./advancedLotteryStrategies');
+      const { enhancedAnalysis } = await import('./enhancedLotteryAnalysis');
+      
+      const [basicStrategies, enhancedPredictions] = await Promise.all([
+        advancedStrategies.generateAdvancedPredictions(game as any, 5),
+        enhancedAnalysis.generateEnhancedPredictions(game as any)
+      ]);
+
+      // Find the highest confidence prediction from enhanced analysis
+      const bestEnhanced = enhancedPredictions.reduce((best, current) => 
+        current.confidence > best.confidence ? current : best
+      );
+
+      // Get current draws for additional analysis
+      const draws = await storage.getDraws(game);
+      const latestDrawDate = draws[0]?.drawDate || new Date();
+
+      res.json({
+        success: true,
+        game,
+        ultimatePrediction: bestEnhanced,
+        alternativePredictions: enhancedPredictions.slice(0, 3),
+        supportingStrategies: basicStrategies.slice(0, 3),
+        analysisMetadata: {
+          totalDrawsAnalyzed: draws.length,
+          latestDrawDate: latestDrawDate,
+          analysisDate: new Date().toISOString(),
+          confidenceLevel: bestEnhanced.confidence,
+          expectedValue: bestEnhanced.expectedValue,
+          strategiesUsed: enhancedPredictions.length + basicStrategies.length
+        }
+      });
+    } catch (error) {
+      console.error('Error generating ultimate prediction:', error);
+      res.status(500).json({ error: 'Failed to generate ultimate prediction' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
