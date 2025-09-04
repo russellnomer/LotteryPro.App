@@ -184,46 +184,62 @@ export class NumerologyAnalysis {
    * Focuses on powerful numerological numbers (11, 22, 33, etc.)
    */
   private async generateMasterNumberStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
-    const masterNumbers = [11, 22, 33, 44, 55];
-    const powerNumbers = [7, 9, 13, 21, 27];
-    
     const mainNumbers: number[] = [];
     
-    // Include relevant master numbers within lottery range
-    masterNumbers.forEach(num => {
-      if (num <= 69 && mainNumbers.length < 3) {
-        mainNumbers.push(num);
+    if (personalNumbers) {
+      // Create personalized master number patterns based on individual
+      const personalMaster11 = personalNumbers.lifePath * 11;
+      if (personalMaster11 <= 69) mainNumbers.push(personalMaster11);
+      
+      const personalMaster22 = personalNumbers.destiny + 22;
+      if (personalMaster22 <= 69 && !mainNumbers.includes(personalMaster22)) {
+        mainNumbers.push(personalMaster22);
       }
-    });
+      
+      const soulMaster = personalNumbers.soulUrge + personalNumbers.personalityNumber;
+      if (soulMaster <= 69 && !mainNumbers.includes(soulMaster)) {
+        mainNumbers.push(soulMaster);
+      }
+      
+      // Birth date master influence
+      const birthMaster = this.scaleToLotteryRange(personalNumbers.birthDay + personalNumbers.birthMonth, 1, 69);
+      if (!mainNumbers.includes(birthMaster)) {
+        mainNumbers.push(birthMaster);
+      }
+    }
     
-    // Add power numbers
-    powerNumbers.forEach(num => {
+    // Fill with traditional master numbers only if personalization didn't fill enough
+    const traditionalMasters = [11, 22, 33];
+    traditionalMasters.forEach(num => {
       if (num <= 69 && !mainNumbers.includes(num) && mainNumbers.length < 5) {
         mainNumbers.push(num);
       }
     });
     
-    // Add personal power number if available
-    if (personalNumbers && mainNumbers.length < 5) {
-      const personalPower = this.scaleToLotteryRange(
-        personalNumbers.lifePath + personalNumbers.destiny, 1, 69
-      );
-      if (!mainNumbers.includes(personalPower)) {
-        mainNumbers.push(personalPower);
-      }
-    }
-    
-    // Fill remaining with scaled master number harmonics
+    // Fill remaining with personal harmonics if available
     while (mainNumbers.length < 5) {
-      const harmonic = this.scaleToLotteryRange(11 * (mainNumbers.length + 1), 1, 69);
-      if (!mainNumbers.includes(harmonic)) {
-        mainNumbers.push(harmonic);
+      if (personalNumbers) {
+        const harmonic = this.scaleToLotteryRange(
+          (personalNumbers.lifePath + personalNumbers.destiny) * (mainNumbers.length + 1), 1, 69
+        );
+        if (!mainNumbers.includes(harmonic)) {
+          mainNumbers.push(harmonic);
+          continue;
+        }
+      }
+      // Fallback
+      const fallback = this.scaleToLotteryRange(11 * (mainNumbers.length + 7), 1, 69);
+      if (!mainNumbers.includes(fallback)) {
+        mainNumbers.push(fallback);
       }
     }
 
+    const personalBonusNumber = personalNumbers ? 
+      this.scaleToLotteryRange(personalNumbers.lifePath + personalNumbers.destiny, 1, 26) : 11;
+
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: 11, // Master number powerball
+      bonusNumber: personalBonusNumber,
       numerologySystem: "Master Numbers & Power Numbers",
       confidence: 0.95,
       personalizedFactors: [
@@ -484,6 +500,16 @@ export class NumerologyAnalysis {
     return kabbalahMap[number - 1] || number * 3;
   }
 
+  private calculateChaldeanValue(number: number): number {
+    // Chaldean numerology calculation
+    // Uses specific transformation for power numbers
+    const chaldeanMultipliers = [1, 3, 5, 8, 13, 17, 22, 26, 31];
+    const baseValue = Math.abs(number) % 9;
+    const multiplier = chaldeanMultipliers[baseValue] || 8;
+    const result = (number * multiplier) % 69;
+    return Math.max(1, result === 0 ? 69 : result);
+  }
+
   /**
    * Generate personalized numerology report
    */
@@ -589,26 +615,54 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
    * Strategy 7: Chaldean Numerology (Ancient Wisdom)
    */
   private async generateChaldeanStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
-    // Chaldean system uses different letter values
-    const chaldeanValues = {
-      A: 1, B: 2, C: 3, D: 4, E: 5, F: 8, G: 3, H: 5, I: 1,
-      J: 1, K: 2, L: 3, M: 4, N: 5, O: 7, P: 8, Q: 1, R: 2,
-      S: 3, T: 4, U: 6, V: 6, W: 6, X: 5, Y: 1, Z: 7
-    };
-    
-    const chaldeanPowerNumbers = [8, 13, 17, 22, 26, 31, 35, 40, 44, 48, 53, 57, 62, 66];
     const mainNumbers: number[] = [];
     
-    // Add Chaldean power numbers within range
-    chaldeanPowerNumbers.forEach(num => {
-      if (num <= 69 && mainNumbers.length < 4) {
+    if (personalNumbers) {
+      // Create personalized Chaldean calculations based on individual's data
+      const chaldeanLife = this.calculateChaldeanValue(personalNumbers.lifePath + personalNumbers.birthDay);
+      if (chaldeanLife <= 69) mainNumbers.push(chaldeanLife);
+      
+      const chaldeanDestiny = this.calculateChaldeanValue(personalNumbers.destiny * 3 + personalNumbers.birthMonth);
+      if (chaldeanDestiny <= 69 && !mainNumbers.includes(chaldeanDestiny)) {
+        mainNumbers.push(chaldeanDestiny);
+      }
+      
+      const chaldeanSoul = this.calculateChaldeanValue(personalNumbers.soulUrge + personalNumbers.personalityNumber);
+      if (chaldeanSoul <= 69 && !mainNumbers.includes(chaldeanSoul)) {
+        mainNumbers.push(chaldeanSoul);
+      }
+      
+      // Birth year influence in Chaldean system
+      const yearInfluence = this.calculateChaldeanValue(personalNumbers.birthYear % 100);
+      if (yearInfluence <= 69 && !mainNumbers.includes(yearInfluence)) {
+        mainNumbers.push(yearInfluence);
+      }
+    }
+    
+    // Only add traditional Chaldean power numbers if personalization didn't provide enough
+    const traditionalChaldean = [8, 13, 17, 22, 23];
+    traditionalChaldean.forEach(num => {
+      if (num <= 69 && !mainNumbers.includes(num) && mainNumbers.length < 5) {
         mainNumbers.push(num);
       }
     });
     
-    // Add compound number 23 (highly favorable in Chaldean)
-    if (!mainNumbers.includes(23)) {
-      mainNumbers.push(23);
+    // Fill remaining with personal Chaldean harmonics
+    while (mainNumbers.length < 5) {
+      if (personalNumbers) {
+        const harmonic = this.calculateChaldeanValue(
+          (personalNumbers.lifePath + personalNumbers.destiny) * (mainNumbers.length + 2)
+        );
+        if (harmonic <= 69 && !mainNumbers.includes(harmonic)) {
+          mainNumbers.push(harmonic);
+          continue;
+        }
+      }
+      // Fallback
+      const fallback = this.scaleToLotteryRange(8 * (mainNumbers.length + 3), 1, 69);
+      if (!mainNumbers.includes(fallback)) {
+        mainNumbers.push(fallback);
+      }
     }
 
     return {
