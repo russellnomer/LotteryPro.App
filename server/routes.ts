@@ -10,6 +10,7 @@ import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
 // VIP management functions will be imported dynamically
 import { seedRussellNomerContent } from "./seedMusicData";
+import { numerologyAnalysis } from "./numerologyAnalysis";
 import { 
   securityHeaders, 
   authRateLimit, 
@@ -843,6 +844,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error generating real-time analysis:', error);
       res.status(500).json({ error: 'Failed to generate real-time analysis' });
+    }
+  });
+
+  // Numerology analysis routes - based on book guidance
+  app.get('/api/numerology-analysis', async (req, res) => {
+    try {
+      const { numerologyAnalysis } = await import('./numerologyAnalysis');
+      const { fullName, birthDate } = req.query;
+      
+      const predictions = await numerologyAnalysis.generateNumerologyPredictions(
+        fullName as string, 
+        birthDate as string
+      );
+      
+      res.json({
+        success: true,
+        numerologyPredictions: predictions,
+        totalPredictions: predictions.length,
+        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length,
+        averageVibration: predictions.reduce((sum, p) => sum + p.vibrationLevel, 0) / predictions.length,
+        analysisDate: new Date().toISOString(),
+        personalizedInput: {
+          fullName: fullName || 'Universal Energy',
+          birthDate: birthDate || 'Current Universal Day'
+        }
+      });
+    } catch (error: any) {
+      console.error('Error in numerology analysis:', error);
+      res.status(500).json({ error: 'Failed to generate numerology analysis' });
+    }
+  });
+
+  // Personalized numerology report based on book guidance
+  app.post('/api/numerology-report', async (req, res) => {
+    try {
+      const { numerologyAnalysis } = await import('./numerologyAnalysis');
+      const { fullName, birthDate } = req.body;
+      
+      if (!fullName || !birthDate) {
+        return res.status(400).json({ 
+          error: 'Full name and birth date are required for personalized numerology analysis' 
+        });
+      }
+
+      const [predictions, report] = await Promise.all([
+        numerologyAnalysis.generateNumerologyPredictions(fullName, birthDate),
+        numerologyAnalysis.generatePersonalizedReport(fullName, birthDate)
+      ]);
+
+      // Find the highest vibration prediction
+      const mostPowerfulPrediction = predictions.reduce((best, current) => 
+        current.vibrationLevel > best.vibrationLevel ? current : best
+      );
+
+      res.json({
+        success: true,
+        personalizedReport: report,
+        numerologyPredictions: predictions,
+        mostPowerfulPrediction,
+        spiritualGuidance: mostPowerfulPrediction.spiritualGuidance,
+        luckyTiming: mostPowerfulPrediction.luckyTiming,
+        analysisDate: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('Error generating personalized numerology report:', error);
+      res.status(500).json({ error: 'Failed to generate personalized numerology report' });
     }
   });
 
