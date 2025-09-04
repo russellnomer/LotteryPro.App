@@ -57,6 +57,21 @@ export class NumerologyAnalysis {
     // Strategy 5: Kabbalah Number System
     predictions.push(await this.generateKabbalahStrategy(personalNumbers));
     
+    // Strategy 6: Pythagorean Number System (Advanced Book Method)
+    predictions.push(await this.generatePythagoreanStrategy(personalNumbers));
+    
+    // Strategy 7: Chaldean Numerology (Ancient Wisdom)
+    predictions.push(await this.generateChaldeanStrategy(personalNumbers));
+    
+    // Strategy 8: Angel Numbers & Divine Guidance
+    predictions.push(await this.generateAngelNumberStrategy(personalNumbers));
+    
+    // Strategy 9: Chinese Numerology & Feng Shui
+    predictions.push(await this.generateChineseNumerologyStrategy(personalNumbers));
+    
+    // Strategy 10: Karmic Lessons & Debt Numbers
+    predictions.push(await this.generateKarmicStrategy(personalNumbers));
+    
     return predictions;
   }
 
@@ -515,6 +530,250 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
     };
     
     return guidance[lifePath as keyof typeof guidance] || "unique spiritual path requiring personalized guidance";
+  }
+
+  /**
+   * Strategy 6: Pythagorean Number System (Advanced Book Method)
+   */
+  private async generatePythagoreanStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
+    // Pythagorean system emphasizes mathematical harmony
+    const pythagoreanNumbers = [1, 4, 8, 9, 16, 25, 36, 49, 64]; // Perfect squares
+    const harmonicNumbers = [3, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66]; // Multiples of 3 & 6
+    
+    const mainNumbers: number[] = [];
+    
+    // Add Pythagorean perfect squares within lottery range
+    pythagoreanNumbers.forEach(num => {
+      if (num <= 69 && mainNumbers.length < 3) {
+        mainNumbers.push(num);
+      }
+    });
+    
+    // Add harmonic numbers
+    harmonicNumbers.forEach(num => {
+      if (num <= 69 && !mainNumbers.includes(num) && mainNumbers.length < 5) {
+        mainNumbers.push(num);
+      }
+    });
+    
+    // Fill with personal Pythagorean calculations
+    if (personalNumbers && mainNumbers.length < 5) {
+      const pythagoreanPersonal = Math.pow(personalNumbers.lifePath, 2);
+      if (pythagoreanPersonal <= 69 && !mainNumbers.includes(pythagoreanPersonal)) {
+        mainNumbers.push(pythagoreanPersonal);
+      }
+    }
+
+    return {
+      mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
+      bonusNumber: 9, // Sacred number in Pythagorean system
+      numerologySystem: "Pythagorean Mathematical Harmony",
+      confidence: 0.91,
+      personalizedFactors: [
+        "Perfect square mathematical relationships",
+        "Harmonic number sequences (3, 6, 9)",
+        "Pythagorean theorem applications",
+        "Mathematical divine proportion"
+      ],
+      luckyTiming: "Most powerful during mathematical sequences (3rd, 6th, 9th of month)",
+      spiritualGuidance: [
+        "Connected to mathematical universal laws",
+        "Resonates with sacred geometry",
+        "Aligned with Pythagorean wisdom"
+      ],
+      vibrationLevel: 9.1
+    };
+  }
+
+  /**
+   * Strategy 7: Chaldean Numerology (Ancient Wisdom)
+   */
+  private async generateChaldeanStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
+    // Chaldean system uses different letter values
+    const chaldeanValues = {
+      A: 1, B: 2, C: 3, D: 4, E: 5, F: 8, G: 3, H: 5, I: 1,
+      J: 1, K: 2, L: 3, M: 4, N: 5, O: 7, P: 8, Q: 1, R: 2,
+      S: 3, T: 4, U: 6, V: 6, W: 6, X: 5, Y: 1, Z: 7
+    };
+    
+    const chaldeanPowerNumbers = [8, 13, 17, 22, 26, 31, 35, 40, 44, 48, 53, 57, 62, 66];
+    const mainNumbers: number[] = [];
+    
+    // Add Chaldean power numbers within range
+    chaldeanPowerNumbers.forEach(num => {
+      if (num <= 69 && mainNumbers.length < 4) {
+        mainNumbers.push(num);
+      }
+    });
+    
+    // Add compound number 23 (highly favorable in Chaldean)
+    if (!mainNumbers.includes(23)) {
+      mainNumbers.push(23);
+    }
+
+    return {
+      mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
+      bonusNumber: 8, // Most powerful Chaldean number
+      numerologySystem: "Chaldean Ancient Wisdom",
+      confidence: 0.96,
+      personalizedFactors: [
+        "Ancient Babylonian numerology",
+        "Compound number 23 (royal star of the lion)",
+        "Chaldean power number sequences",
+        "Mesopotamian mathematical wisdom"
+      ],
+      luckyTiming: "Most powerful during Babylonian calendar significant dates",
+      spiritualGuidance: [
+        "Connected to ancient Mesopotamian wisdom",
+        "Channels Chaldean mystical knowledge",
+        "Aligned with royal star energies"
+      ],
+      vibrationLevel: 9.6
+    };
+  }
+
+  /**
+   * Strategy 8: Angel Numbers & Divine Guidance
+   */
+  private async generateAngelNumberStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
+    // Angel numbers - repetitive number sequences
+    const angelNumbers = [11, 22, 33, 44, 55, 66]; // Double digits
+    const divineNumbers = [111 % 69, 222 % 69, 333 % 69, 444 % 69, 555 % 69]; // Triple digits modded
+    const guidanceNumbers = [7, 17, 27, 37, 47, 57, 67]; // Numbers of spiritual guidance
+    
+    const mainNumbers: number[] = [];
+    
+    // Add angel numbers
+    angelNumbers.forEach(num => {
+      if (num <= 69 && mainNumbers.length < 2) {
+        mainNumbers.push(num);
+      }
+    });
+    
+    // Add divine guidance numbers
+    guidanceNumbers.forEach(num => {
+      if (num <= 69 && !mainNumbers.includes(num) && mainNumbers.length < 4) {
+        mainNumbers.push(num);
+      }
+    });
+    
+    // Add modded triple digit angel numbers
+    divineNumbers.forEach(num => {
+      if (num <= 69 && !mainNumbers.includes(num) && mainNumbers.length < 5) {
+        mainNumbers.push(num);
+      }
+    });
+
+    return {
+      mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
+      bonusNumber: 7, // Spiritual completion number
+      numerologySystem: "Angel Numbers & Divine Guidance",
+      confidence: 0.93,
+      personalizedFactors: [
+        "Angel number sequences (11, 22, 33)",
+        "Divine guidance through repetitive patterns",
+        "Spiritual messenger number alignments",
+        "Celestial communication channels"
+      ],
+      luckyTiming: "Most powerful at 11:11, 2:22, 3:33, 4:44, 5:55",
+      spiritualGuidance: [
+        "Direct connection to angelic guidance",
+        "Opens channels for divine intervention",
+        "Attracts spiritual abundance"
+      ],
+      vibrationLevel: 9.7
+    };
+  }
+
+  /**
+   * Strategy 9: Chinese Numerology & Feng Shui
+   */
+  private async generateChineseNumerologyStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
+    // Chinese lucky numbers and Feng Shui principles
+    const chineseLuckyNumbers = [6, 8, 9, 16, 18, 19, 26, 28, 29, 36, 38, 39, 48, 49, 58, 59, 68, 69];
+    const fengShuiNumbers = [1, 6, 8, 9]; // Water, metal, prosperity, completion
+    const dragonNumbers = [3, 12, 21, 30, 39, 48, 57, 66]; // Dragon year influences
+    
+    const mainNumbers: number[] = [];
+    
+    // Add most powerful Chinese numbers
+    [8, 9, 6, 18, 28].forEach(num => {
+      if (num <= 69 && mainNumbers.length < 5) {
+        mainNumbers.push(num);
+      }
+    });
+
+    return {
+      mainNumbers: mainNumbers.sort((a, b) => a - b),
+      bonusNumber: 8, // Ultimate prosperity number in Chinese culture
+      numerologySystem: "Chinese Numerology & Feng Shui",
+      confidence: 0.89,
+      personalizedFactors: [
+        "Number 8 (prosperity and wealth)",
+        "Number 9 (completion and longevity)",
+        "Number 6 (smooth and harmonious)",
+        "Feng Shui energy alignment"
+      ],
+      luckyTiming: "Most powerful during Chinese New Year and dragon dates",
+      spiritualGuidance: [
+        "Aligned with Chinese prosperity energies",
+        "Channels Feng Shui abundance flow",
+        "Connected to ancient Chinese wisdom"
+      ],
+      vibrationLevel: 8.8
+    };
+  }
+
+  /**
+   * Strategy 10: Karmic Lessons & Debt Numbers
+   */
+  private async generateKarmicStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
+    // Karmic debt numbers and their transformations
+    const karmicDebtNumbers = [13, 14, 16, 19]; // Traditional karmic debt
+    const karmicLessonNumbers = [1, 4, 5, 7]; // Corresponding lessons
+    const transformationNumbers = [31, 40, 43, 46]; // Karmic transformation
+    
+    const mainNumbers: number[] = [];
+    
+    // Add karmic debt numbers (transformed to positive)
+    [13, 14, 16, 19].forEach(num => {
+      if (num <= 69 && mainNumbers.length < 4) {
+        mainNumbers.push(num);
+      }
+    });
+    
+    // Add a transformation number
+    if (mainNumbers.length < 5) {
+      mainNumbers.push(31); // 13 reversed and enhanced
+    }
+    
+    // Calculate personal karmic number if available
+    if (personalNumbers) {
+      const karmicPersonal = (personalNumbers.lifePath + personalNumbers.destiny) % 69 || 1;
+      if (!mainNumbers.includes(karmicPersonal) && mainNumbers.length < 5) {
+        mainNumbers.push(karmicPersonal);
+      }
+    }
+
+    return {
+      mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
+      bonusNumber: 4, // Karmic lesson number for stability
+      numerologySystem: "Karmic Lessons & Debt Transformation",
+      confidence: 0.94,
+      personalizedFactors: [
+        "Karmic debt number 13 (transformation through change)",
+        "Karmic debt number 14 (freedom through discipline)",
+        "Karmic debt number 16 (spiritual awakening)",
+        "Karmic debt number 19 (independence through service)"
+      ],
+      luckyTiming: "Most powerful during karmic clearing periods",
+      spiritualGuidance: [
+        "Facilitates karmic debt clearing",
+        "Accelerates spiritual growth",
+        "Transforms challenges into opportunities"
+      ],
+      vibrationLevel: 9.4
+    };
   }
 }
 
