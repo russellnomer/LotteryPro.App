@@ -1,4 +1,5 @@
 import { storage } from "./storage";
+import { LotteryDraw } from "@shared/schema";
 
 /**
  * Enhanced Lottery Analysis with Latest Results Integration
@@ -60,7 +61,7 @@ export class EnhancedLotteryAnalysis {
    * Analyze the latest draw for insights and patterns
    */
   private async analyzeLatestDraw(game: 'powerball' | 'megamillions'): Promise<LatestDrawAnalysis> {
-    const draws = await storage.getDraws(game);
+    const draws: LotteryDraw[] = await storage.getDraws(game);
     const latestDraw = draws[0]; // Most recent draw
     
     if (!latestDraw) {
@@ -68,7 +69,7 @@ export class EnhancedLotteryAnalysis {
     }
 
     // Analyze gaps between numbers in latest draw
-    const sortedNumbers = [...latestDraw.mainNumbers].sort((a, b) => a - b);
+    const sortedNumbers = [...(latestDraw.mainNumbers as number[])].sort((a, b) => a - b);
     const gaps = [];
     for (let i = 1; i < sortedNumbers.length; i++) {
       gaps.push(sortedNumbers[i] - sortedNumbers[i-1]);
@@ -100,7 +101,7 @@ export class EnhancedLotteryAnalysis {
     game: 'powerball' | 'megamillions', 
     analysis: LatestDrawAnalysis
   ): Promise<EnhancedPrediction> {
-    const draws = await storage.getDraws(game);
+    const draws: LotteryDraw[] = await storage.getDraws(game);
     const maxNum = game === 'powerball' ? 69 : 70;
     
     // Find numbers that haven't appeared recently
@@ -108,7 +109,7 @@ export class EnhancedLotteryAnalysis {
     
     // Check last 20 draws for each number
     for (let i = 0; i < Math.min(20, draws.length); i++) {
-      draws[i].mainNumbers.forEach((num: number) => {
+      (draws[i].mainNumbers as number[]).forEach((num: number) => {
         recentAppearances.set(num, (recentAppearances.get(num) || 0) + 1);
       });
     }
