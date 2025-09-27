@@ -86,7 +86,7 @@ export default function SubscriptionPage() {
             Choose Your LotteryPro Plan
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Unlock the power of statistical analysis and increase your chances with our proven lottery strategies
+Educational lottery number analysis tools for cultural learning and entertainment purposes only
           </p>
         </div>
 

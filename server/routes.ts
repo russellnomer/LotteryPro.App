@@ -142,23 +142,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid game type" });
       }
 
-      // Check if user is authenticated and enforce usage limits
-      if (req.user?.id) {
-        const usageInfo = await storage.checkUserUsageLimit(req.user.id);
-        
-        if (!usageInfo.canUse) {
-          return res.status(429).json({ 
-            success: false,
-            message: "Daily usage limit reached. Please upgrade your subscription for unlimited access.",
-            usageCount: usageInfo.count,
-            usageLimit: usageInfo.limit,
-            upgradeRequired: true
-          });
-        }
-        
-        // Increment usage count for authenticated users
-        await storage.incrementUserDailyUsage(req.user.id);
+      // Track usage for all users (authenticated and guests)
+      let usageTrackingId = req.user?.id;
+      let isGuest = false;
+      
+      if (!usageTrackingId) {
+        // For guest users, use session ID or consistent IP-based ID (NO timestamp)
+        isGuest = true;
+        usageTrackingId = req.sessionID || `guest_${req.ip}`;
+        console.log('📊 USAGE TRACKING: Guest user detected, using tracking ID:', usageTrackingId);
       }
+      
+      // Check usage limits for all users
+      const usageInfo = await storage.checkUserUsageLimit(usageTrackingId);
+      
+      if (!usageInfo.canUse) {
+        console.log('🚫 USAGE LIMIT: User reached daily limit', usageTrackingId, usageInfo);
+        return res.status(429).json({ 
+          success: false,
+          message: "Daily usage limit reached. Please upgrade your subscription for unlimited access.",
+          usageCount: usageInfo.count,
+          usageLimit: usageInfo.limit,
+          upgradeRequired: true,
+          isGuest
+        });
+      }
+      
+      // Increment usage count for all users
+      console.log('⚡ USAGE INCREMENT: Tracking usage for', isGuest ? 'guest' : 'user', usageTrackingId);
+      await storage.incrementUserDailyUsage(usageTrackingId);
 
       const { method = 'hot' } = req.body;
       
@@ -726,6 +738,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PayPal Subscription routes
+  
+  // Get user subscription status
+  app.get("/api/subscription/status", async (req, res) => {
+    try {
+      // Use same tracking logic as generate endpoint
+      let usageTrackingId = req.user?.id;
+      let isGuest = false;
+      let userTier = "free";
+      let userStatus = "inactive";
+      let paypalId = null;
+      
+      if (!usageTrackingId) {
+        // For guest users, use session ID or consistent IP-based ID (NO timestamp)
+        isGuest = true;
+        usageTrackingId = req.sessionID || `guest_${req.ip}`;
+        userTier = "guest";
+        console.log('📊 STATUS CHECK: Guest user detected, using tracking ID:', usageTrackingId);
+      } else {
+        // For authenticated users, get user details
+        const user = await storage.getUserById(req.user.id);
+        if (user) {
+          userTier = user.subscriptionTier || "free";
+          userStatus = user.subscriptionStatus || "inactive";
+          paypalId = user.paypalSubscriptionId || null;
+        }
+      }
+      
+      // Get usage info for tracking ID
+      const usageInfo = await storage.checkUserUsageLimit(usageTrackingId);
+      
+      console.log('📊 STATUS RESPONSE:', {
+        trackingId: usageTrackingId,
+        isGuest,
+        tier: userTier,
+        usage: usageInfo.count,
+        limit: usageInfo.limit
+      });
+      
+      res.json({
+        success: true,
+        subscription_tier: userTier,
+        subscription_status: userStatus, 
+        daily_usage_count: usageInfo.count,
+        daily_usage_limit: usageInfo.limit,
+        can_use: usageInfo.canUse,
+        paypal_subscription_id: paypalId,
+        is_guest: isGuest,
+        tracking_id: usageTrackingId
+      });
+    } catch (error: any) {
+      console.error('Subscription status error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message,
+        subscription_tier: "guest",
+        subscription_status: "inactive",
+        daily_usage_count: 0
+      });
+    }
+  });
+
   app.post("/api/subscriptions/create", requireAuth, async (req, res) => {
     try {
       const { planId } = req.body;

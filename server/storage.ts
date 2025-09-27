@@ -31,6 +31,14 @@ import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 
+// In-memory guest usage tracking (resets on server restart)
+interface GuestUsage {
+  count: number;
+  lastReset: string; // Date string for daily reset
+}
+
+const guestUsageMap = new Map<string, GuestUsage>();
+
 export interface IStorage {
   // Lottery draws
   getDraws(game: string): Promise<LotteryDraw[]>;
@@ -758,7 +766,21 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     if (user.length === 0) {
-      return { canUse: false, count: 0, limit: 0 };
+      // Guest user - use in-memory tracking
+      const today = new Date().toDateString();
+      let guestUsage = guestUsageMap.get(userId);
+      
+      // Reset if new day or first visit
+      if (!guestUsage || guestUsage.lastReset !== today) {
+        guestUsage = { count: 0, lastReset: today };
+        guestUsageMap.set(userId, guestUsage);
+      }
+      
+      const limit = 3; // Free tier guest limit
+      const canUse = guestUsage.count < limit;
+      
+      console.log('🎁 GUEST USER:', userId, 'Count:', guestUsage.count, 'Limit:', limit, 'CanUse:', canUse);
+      return { canUse, count: guestUsage.count, limit };
     }
 
     const userData = user[0];
@@ -789,6 +811,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementUserDailyUsage(userId: string): Promise<void> {
+    // Check if user exists first (to handle guests)
+    const user = await db.select({ id: userAccounts.id })
+      .from(userAccounts)
+      .where(eq(userAccounts.id, userId))
+      .limit(1);
+      
+    if (user.length === 0) {
+      // Guest user - increment in-memory tracking
+      const today = new Date().toDateString();
+      let guestUsage = guestUsageMap.get(userId);
+      
+      if (!guestUsage || guestUsage.lastReset !== today) {
+        guestUsage = { count: 0, lastReset: today };
+      }
+      
+      guestUsage.count++;
+      guestUsageMap.set(userId, guestUsage);
+      
+      console.log('🎯 GUEST INCREMENT:', userId, 'New count:', guestUsage.count);
+      return;
+    }
+    
+    // Update registered user's usage count
     await db.update(userAccounts)
       .set({
         dailyUsageCount: sql`${userAccounts.dailyUsageCount} + 1`,

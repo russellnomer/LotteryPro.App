@@ -6,12 +6,12 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
   // Content Security Policy - OWASP A05:2021
   res.setHeader('Content-Security-Policy', 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://www.googleadservices.com https://tpc.googlesyndication.com; " +
+    "script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://www.googleadservices.com https://tpc.googlesyndication.com https://www.paypal.com https://www.sandbox.paypal.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: https: blob:; " +
     "connect-src 'self' https:; " +
-    "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; " +
+    "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.paypal.com https://www.sandbox.paypal.com; " +
     "object-src 'none'; " +
     "base-uri 'self';"
   );
