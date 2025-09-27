@@ -57,7 +57,7 @@ export class ProgressiveLoader extends EventEmitter {
       this.waitForStage('megamillions', 'progressive')
     ]);
 
-    console.log('✅ Essential data loaded for both games - INSTANT FUNCTIONALITY READY!');
+    console.log('✅ Essential data loaded for both games - Educational system ready for academic use!');
   }
 
   /**
@@ -88,7 +88,7 @@ export class ProgressiveLoader extends EventEmitter {
   }
 
   /**
-   * Load essential draws for instant functionality
+   * Load essential draws for educational functionality
    */
   private async loadEssentialDraws(game: GameType): Promise<void> {
     // Essential draws are already loaded by seedData.ts

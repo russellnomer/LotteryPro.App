@@ -7,8 +7,8 @@ import { type InsertDraw } from "@shared/schema";
  * Generates 500+ Powerball and 400+ MegaMillions draws covering 5+ years
  */
 export async function seedExpandedLotteryData() {
-  console.log('🎯 Generating MAXIMUM capacity lottery dataset with 500+ draws covering 5+ years...');
-  console.log('⚡ USING OPTIMIZED BULK OPERATIONS for maximum performance...');
+  console.log('📚 Generating educational lottery dataset with 500+ draws covering 5+ years for academic study...');
+  console.log('📚 Using educational bulk operations for academic dataset preparation...');
   
   const startTime = Date.now();
   

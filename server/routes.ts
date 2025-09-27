@@ -8,6 +8,14 @@ import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
+import { 
+  createPayPalSubscription, 
+  activatePayPalSubscription,
+  handleSubscriptionActivated,
+  handleSubscriptionCancelled,
+  handleSubscriptionSuspended,
+  handlePaymentCompleted
+} from "./paypalSubscriptions";
 // VIP management functions will be imported dynamically
 import { seedRussellNomerContent } from "./seedMusicData";
 import { numerologyAnalysis } from "./numerologyAnalysis";
@@ -33,7 +41,7 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize smart caching and progressive loading
-  console.log('🚀 Initializing hybrid powerhouse system...');
+  console.log('🎓 Initializing educational lottery analysis system...');
   
   // Seed historical data and Russell Nomer content on startup  
   await seedHistoricalData();
@@ -126,12 +134,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate lottery numbers
+  // Generate lottery numbers with usage enforcement
   app.post("/api/generate/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
       if (!['powerball', 'megamillions'].includes(game)) {
         return res.status(400).json({ message: "Invalid game type" });
+      }
+
+      // Check if user is authenticated and enforce usage limits
+      if (req.user?.id) {
+        const usageInfo = await storage.checkUserUsageLimit(req.user.id);
+        
+        if (!usageInfo.canUse) {
+          return res.status(429).json({ 
+            success: false,
+            message: "Daily usage limit reached. Please upgrade your subscription for unlimited access.",
+            usageCount: usageInfo.count,
+            usageLimit: usageInfo.limit,
+            upgradeRequired: true
+          });
+        }
+        
+        // Increment usage count for authenticated users
+        await storage.incrementUserDailyUsage(req.user.id);
       }
 
       const { method = 'hot' } = req.body;
@@ -697,6 +723,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/paypal/order/:orderID/capture", async (req, res) => {
     await capturePaypalOrder(req, res);
+  });
+
+  // PayPal Subscription routes
+  app.post("/api/subscriptions/create", requireAuth, async (req, res) => {
+    try {
+      const { planId } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      if (!planId) {
+        return res.status(400).json({ success: false, message: 'Plan ID is required' });
+      }
+
+      // Create PayPal subscription
+      const subscription = await createPayPalSubscription(planId, userId);
+      
+      if (subscription.success) {
+        res.json({ 
+          success: true, 
+          subscriptionId: subscription.subscriptionId,
+          approvalUrl: subscription.approvalUrl
+        });
+      } else {
+        res.status(400).json({ success: false, message: subscription.error });
+      }
+    } catch (error) {
+      console.error('Subscription creation error:', error);
+      res.status(500).json({ success: false, message: 'Failed to create subscription' });
+    }
+  });
+
+  app.post("/api/subscriptions/activate", requireAuth, async (req, res) => {
+    try {
+      const { subscriptionId } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      // Activate subscription and update user tier
+      const result = await activatePayPalSubscription(subscriptionId, userId);
+      
+      if (result.success) {
+        res.json({ success: true, tier: result.tier });
+      } else {
+        res.status(400).json({ success: false, message: result.error });
+      }
+    } catch (error) {
+      console.error('Subscription activation error:', error);
+      res.status(500).json({ success: false, message: 'Failed to activate subscription' });
+    }
+  });
+
+  app.post("/webhooks/paypal", async (req, res) => {
+    try {
+      const eventType = req.body.event_type;
+      const resource = req.body.resource;
+
+      console.log('PayPal webhook received:', eventType);
+
+      switch (eventType) {
+        case 'BILLING.SUBSCRIPTION.ACTIVATED':
+          await handleSubscriptionActivated(resource);
+          break;
+        case 'BILLING.SUBSCRIPTION.CANCELLED':
+          await handleSubscriptionCancelled(resource);
+          break;
+        case 'BILLING.SUBSCRIPTION.SUSPENDED':
+          await handleSubscriptionSuspended(resource);
+          break;
+        case 'PAYMENT.SALE.COMPLETED':
+          await handlePaymentCompleted(resource);
+          break;
+        default:
+          console.log('Unhandled webhook event:', eventType);
+      }
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(500).json({ success: false, message: 'Webhook processing failed' });
+    }
+  });
+
+  // Usage enforcement endpoint
+  app.post("/api/check-usage", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      const usageInfo = await storage.checkUserUsageLimit(userId);
+      res.json({ success: true, ...usageInfo });
+    } catch (error) {
+      console.error('Usage check error:', error);
+      res.status(500).json({ success: false, message: 'Failed to check usage' });
+    }
+  });
+
+  // Subscription info endpoint
+  app.get("/api/subscription-info", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      const subscriptionInfo = await storage.getUserSubscriptionInfo(userId);
+      if (subscriptionInfo) {
+        res.json({ success: true, ...subscriptionInfo });
+      } else {
+        res.status(404).json({ success: false, message: 'Subscription info not found' });
+      }
+    } catch (error) {
+      console.error('Subscription info error:', error);
+      res.status(500).json({ success: false, message: 'Failed to get subscription info' });
+    }
   });
 
   // Secure AdSense configuration endpoint - no sensitive data exposed

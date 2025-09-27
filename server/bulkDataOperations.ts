@@ -134,7 +134,7 @@ export class BulkDataOperations {
     powerball: { inserted: number; skipped: number; errors: number }; 
     megamillions: { inserted: number; skipped: number; errors: number }; 
   }> {
-    console.log('⚡ PARALLEL PROCESSING: Starting bulk insertion for both games simultaneously...');
+    console.log('📚 EDUCATIONAL PROCESSING: Starting bulk insertion for both games simultaneously...');
     
     const startTime = Date.now();
     
@@ -145,7 +145,7 @@ export class BulkDataOperations {
     ]);
     
     const duration = Date.now() - startTime;
-    console.log(`🚀 PARALLEL COMPLETION: Both games processed in ${duration}ms`);
+    console.log(`📚 EDUCATIONAL COMPLETION: Both games processed in ${duration}ms`);
     
     return {
       powerball: powerbellResult,
