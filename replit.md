@@ -2,7 +2,7 @@
 
 ## Overview
 
-LotteryPro is a full-stack web application designed to generate lottery numbers for Powerball and MegaMillions using statistical analysis. It is evolving into a commercial mobile platform featuring subscription-based community features, revenue generation, and potential integrations like Jackpocket. The system emphasizes statistical transparency and provides honest disclaimers regarding performance claims. Its purpose is to transition from a basic prediction tool to a comprehensive platform for lottery enthusiasts.
+LotteryPro is a full-stack web application designed for educational lottery number analysis for Powerball and MegaMillions. It is evolving into a commercial mobile platform featuring subscription-based community features, revenue generation, and potential integrations like Jackpocket. The system emphasizes educational transparency and provides prominent legal disclaimers clarifying that it makes no performance claims. Its purpose is to serve as an educational platform for lottery study and entertainment.
 
 ## User Preferences
 
@@ -35,10 +35,10 @@ The platform features a responsive design with a mobile-first approach, utilizin
 - **Security Hardening**: Full compliance with OWASP, CIS, ISACA, Security Forum, and NIST frameworks, including security headers, rate limiting, input sanitization, and audit logging.
 - **Admin Dashboard**: Comprehensive administrative interface for VIP code generation, user tier management, security auditing, and user creation.
 - **Lottery Data Service**: Automatically fetches and maintains current lottery results, ensuring statistically significant sampling (30-100 draw samples) for analysis.
-- **Statistical Accuracy**: MAXIMUM CAPACITY dataset analysis (5,066 Powerball, 2,601 MegaMillions draws) covering 5+ years historically for ultimate hot number detection.
-- **ULTIMATE STATISTICAL POWER**: 7,667 total draws analyzed spanning June 2022 - September 2025
-- **MAXIMUM CONFIDENCE ACHIEVED**: 2,533% statistical advantage (25x above minimum requirements) for Powerball
-- **UNPRECEDENTED ANALYSIS**: 1,301% statistical advantage (13x above minimum requirements) for MegaMillions
+- **Educational Dataset**: Comprehensive dataset analysis (5,066 Powerball, 2,601 MegaMillions draws) covering 5+ years historically for educational frequency study.
+- **Analysis Scope**: 7,667 total draws analyzed spanning June 2022 - September 2025
+- **Educational Value**: Large sample size provides statistically significant data for educational analysis purposes
+- **Study Scope**: Comprehensive historical analysis for educational lottery number frequency patterns
 
 ## External Dependencies
 
