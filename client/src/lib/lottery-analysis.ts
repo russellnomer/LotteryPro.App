@@ -36,7 +36,7 @@ export function calculateFrequencyAnalysis(draws: LotteryDraw[], game: GameType)
 
 export function generateWheelCombinations(hotNumbers: number[], game: GameType, wheelType: string = 'abbreviated'): number[][] {
   const combinations: number[][] = [];
-  const maxMain = game === 'powerball' ? 69 : 60;
+  const maxMain = game === 'powerball' ? 69 : 70;
   const maxBonus = game === 'powerball' ? 26 : 24;
   
   // Configuration for different wheel types

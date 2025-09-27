@@ -1,4 +1,6 @@
 import { storage } from "./storage";
+import { bulkDataOps } from "./bulkDataOperations";
+import { type InsertDraw } from "@shared/schema";
 
 /**
  * Maximum capacity lottery dataset generator for ultimate statistical analysis
@@ -6,44 +8,49 @@ import { storage } from "./storage";
  */
 export async function seedExpandedLotteryData() {
   console.log('🎯 Generating MAXIMUM capacity lottery dataset with 500+ draws covering 5+ years...');
+  console.log('⚡ USING OPTIMIZED BULK OPERATIONS for maximum performance...');
   
-  // Generate Powerball draws (Monday, Wednesday, Saturday = ~156 draws per year)
-  const powerbellDraws = generatePowerbellHistory();
+  const startTime = Date.now();
   
-  // Generate MegaMillions draws (Tuesday, Friday = ~104 draws per year)  
-  const megaMillionsDraws = generateMegaMillionsHistory();
-
-  // Insert Powerball data
-  for (const draw of powerbellDraws) {
-    try {
-      await storage.createDraw({
-        game: 'powerball',
-        drawDate: new Date(draw.date),
-        mainNumbers: draw.numbers,
-        bonusNumber: draw.powerball,
-        jackpot: draw.jackpot
-      });
-    } catch (error) {
-      // Skip duplicates
-    }
-  }
-
-  // Insert MegaMillions data
-  for (const draw of megaMillionsDraws) {
-    try {
-      await storage.createDraw({
-        game: 'megamillions', 
-        drawDate: new Date(draw.date),
-        mainNumbers: draw.numbers,
-        bonusNumber: draw.megaBall,
-        jackpot: draw.jackpot
-      });
-    } catch (error) {
-      // Skip duplicates
-    }
-  }
-
-  console.log(`✅ Seeded ${powerbellDraws.length} Powerball and ${megaMillionsDraws.length} MegaMillions draws for ultra-comprehensive analysis`);
+  // Generate data for both games
+  const powerbellDrawsRaw = generatePowerbellHistory();
+  const megaMillionsDrawsRaw = generateMegaMillionsHistory();
+  
+  // Convert to InsertDraw format for bulk operations
+  const powerbellDraws: InsertDraw[] = powerbellDrawsRaw.map(draw => ({
+    game: 'powerball',
+    drawDate: new Date(draw.date),
+    mainNumbers: draw.numbers,
+    bonusNumber: draw.powerball,
+    jackpot: draw.jackpot
+  }));
+  
+  const megaMillionsDraws: InsertDraw[] = megaMillionsDrawsRaw.map(draw => ({
+    game: 'megamillions',
+    drawDate: new Date(draw.date),
+    mainNumbers: draw.numbers,
+    bonusNumber: draw.megaBall,
+    jackpot: draw.jackpot
+  }));
+  
+  // Use optimized parallel bulk insertion
+  const results = await bulkDataOps.bulkInsertParallel(powerbellDraws, megaMillionsDraws);
+  
+  const duration = Date.now() - startTime;
+  
+  console.log(`✅ OPTIMIZED SEEDING COMPLETE in ${duration}ms:`);
+  console.log(`   📊 Powerball: ${results.powerball.inserted} inserted, ${results.powerball.skipped} skipped`);
+  console.log(`   📊 MegaMillions: ${results.megamillions.inserted} inserted, ${results.megamillions.skipped} skipped`);
+  
+  // Get final database statistics
+  const stats = await bulkDataOps.getDatabaseStats();
+  console.log(`🎯 DATABASE STATS: ${stats.totalDraws} total draws (${stats.powerbellCount} PB, ${stats.megaMillionsCount} MM)`);
+  
+  return {
+    powerball: results.powerball,
+    megamillions: results.megamillions,
+    performance: { duration, totalDraws: stats.totalDraws }
+  };
 }
 
 function generatePowerbellHistory() {

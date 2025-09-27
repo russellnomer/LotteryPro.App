@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,13 +14,15 @@ import { apiRequest } from "@/lib/queryClient";
 import { GameType, TicketGeneration } from "@shared/schema";
 import AdSpace from "@/components/AdSpace";
 // import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer"; // Replaced with RussellMusicPlayer
-import BookRecommendations from "@/components/BookRecommendations";
-import VipCodeManager from "@/components/VipCodeManager";
-import FanLoyaltyContest from "@/components/FanLoyaltyContest";
-import AstrologicalFeatures from "@/components/AstrologicalFeatures";
-import RussellBiography from "@/components/RussellBiography";
-import RussellMusicPlayer from "@/components/RussellMusicPlayer";
-import ProfileSetup from "@/components/ProfileSetup";
+// Lazy load non-critical components for better initial performance
+const BookRecommendations = lazy(() => import("@/components/BookRecommendations"));
+const VipCodeManager = lazy(() => import("@/components/VipCodeManager"));
+const FanLoyaltyContest = lazy(() => import("@/components/FanLoyaltyContest"));
+const AstrologicalFeatures = lazy(() => import("@/components/AstrologicalFeatures"));
+const RussellBiography = lazy(() => import("@/components/RussellBiography"));
+const RussellMusicPlayer = lazy(() => import("@/components/RussellMusicPlayer"));
+const ProfileSetup = lazy(() => import("@/components/ProfileSetup"));
+import SystemStatusIndicator from "@/components/SystemStatusIndicator";
 import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign } from "lucide-react";
 
 export default function Home() {
@@ -59,10 +61,10 @@ export default function Home() {
     localStorage.setItem(`dailyUsage_${today}`, newUsage.toString());
   };
 
-  // Fetch analysis data for selected game
-  const { data: analysis, isLoading: analysisLoading } = useQuery<any>({
+  // Fetch analysis data for selected game (only when needed)
+  const { data: analysis, isLoading: analysisLoading, refetch: refetchAnalysis } = useQuery<any>({
     queryKey: ['/api/analysis', selectedGame],
-    enabled: !!selectedGame
+    enabled: false // Don't auto-fetch, only load when user generates numbers
   });
 
   // Generate numbers mutation
@@ -88,9 +90,13 @@ export default function Home() {
     }
   });
 
-  const handleGenerateNumbers = () => {
+  const handleGenerateNumbers = async () => {
     // Unlimited users and Russell bypass all limits
     if (userTier === 'unlimited' || userEmail === 'russell@russellnomer.com') {
+      // Load analysis data if not already loaded
+      if (!analysis) {
+        await refetchAnalysis();
+      }
       generateMutation.mutate({ game: selectedGame, method: selectedMethod });
       return;
     }
@@ -103,6 +109,11 @@ export default function Home() {
         variant: "destructive"
       });
       return;
+    }
+    
+    // Load analysis data if not already loaded
+    if (!analysis) {
+      await refetchAnalysis();
     }
     generateMutation.mutate({ game: selectedGame, method: selectedMethod });
   };
@@ -203,10 +214,14 @@ export default function Home() {
               </Card>
             </div>
             <div className="lg:col-span-1">
-              <BookRecommendations compact={true} />
+              <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>}>
+                <BookRecommendations compact={true} />
+              </Suspense>
             </div>
             <div className="lg:col-span-1">
-              <VipCodeManager userEmail={userEmail} />
+              <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>}>
+                <VipCodeManager userEmail={userEmail} />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -241,6 +256,11 @@ export default function Home() {
           </Alert>
         )}
 
+        {/* Real-time System Status and Statistical Power Indicator */}
+        <div className="mb-6">
+          <SystemStatusIndicator showDetails={true} />
+        </div>
+
         {/* Game Selector */}
         <div className="mb-8">
           <Tabs value={selectedGame} onValueChange={(value) => setSelectedGame(value as GameType)}>
@@ -256,7 +276,7 @@ export default function Home() {
                 <div className="text-center">
                   <i className="fas fa-gem text-2xl mb-2 block"></i>
                   <div className="text-lg font-semibold">MegaMillions</div>
-                  <div className="text-sm opacity-90">5 from 1-60 + 1 from 1-24</div>
+                  <div className="text-sm opacity-90">5 from 1-70 + 1 from 1-24</div>
                 </div>
               </TabsTrigger>
             </TabsList>
@@ -781,29 +801,39 @@ export default function Home() {
       
       {/* Russell Biography Section - Personal story and mission */}
       <div className="mb-8">
-        <RussellBiography />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-48 rounded-lg"></div>}>
+          <RussellBiography />
+        </Suspense>
       </div>
 
       {/* Russell's Authentic Music Player Section - Replaces old music player */}
       <div className="mb-8">
-        <RussellMusicPlayer />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded-lg"></div>}>
+          <RussellMusicPlayer />
+        </Suspense>
       </div>
       
       {/* Remove old Enhanced Music Player to prevent confusion */}
 
       {/* Book Recommendations Section */}
       <div className="mb-8">
-        <BookRecommendations />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-48 rounded-lg"></div>}>
+          <BookRecommendations />
+        </Suspense>
       </div>
 
       {/* Astrological Features Section */}
       <div className="mb-8">
-        <AstrologicalFeatures compact={false} />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-48 rounded-lg"></div>}>
+          <AstrologicalFeatures compact={false} />
+        </Suspense>
       </div>
 
       {/* Fan Loyalty Contest Section */}
       <div className="mb-8">
-        <FanLoyaltyContest compact={false} />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-48 rounded-lg"></div>}>
+          <FanLoyaltyContest compact={false} />
+        </Suspense>
       </div>
     </div>
   );

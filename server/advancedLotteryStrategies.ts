@@ -116,7 +116,7 @@ export class AdvancedLotteryStrategies {
     const gapAnalysis = this.analyzeNumberGaps(draws);
     
     // Select numbers based on optimal gap patterns
-    const mainNumbers = this.selectNumbersByGapPattern(gapAnalysis, game === 'powerball' ? 5 : 5);
+    const mainNumbers = this.selectNumbersByGapPattern(gapAnalysis, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
@@ -156,7 +156,7 @@ export class AdvancedLotteryStrategies {
     const patterns = this.identifyWinningPatterns(draws);
     
     // Apply most successful pattern
-    const mainNumbers = this.applyWinningPattern(patterns, game === 'powerball' ? 5 : 5);
+    const mainNumbers = this.applyWinningPattern(patterns, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
@@ -176,7 +176,7 @@ export class AdvancedLotteryStrategies {
     const deltaAnalysis = this.analyzeDeltaPatterns(draws);
     
     // Generate numbers using optimal delta sequences
-    const mainNumbers = this.generateNumbersFromDeltas(deltaAnalysis, game === 'powerball' ? 5 : 5);
+    const mainNumbers = this.generateNumbersFromDeltas(deltaAnalysis, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
@@ -322,9 +322,10 @@ export class AdvancedLotteryStrategies {
     return gaps;
   }
 
-  private selectNumbersByGapPattern(gaps: Record<number, number[]>, count: number): number[] {
+  private selectNumbersByGapPattern(gaps: Record<number, number[]>, count: number, game: string): number[] {
     // Select numbers based on optimal gap patterns
-    return Array.from({length: count}, (_, i) => Math.floor(Math.random() * 69) + 1);
+    const maxNum = game === 'powerball' ? 69 : 70;
+    return Array.from({length: count}, (_, i) => Math.floor(Math.random() * maxNum) + 1);
   }
 
   private selectBalancedNumbers(frequency: Record<number, number>, count: number): number[] {
@@ -341,9 +342,10 @@ export class AdvancedLotteryStrategies {
     return {};
   }
 
-  private applyWinningPattern(patterns: any, count: number): number[] {
+  private applyWinningPattern(patterns: any, count: number, game: string): number[] {
     // Apply identified patterns to generate numbers
-    return Array.from({length: count}, (_, i) => Math.floor(Math.random() * 69) + 1);
+    const maxNum = game === 'powerball' ? 69 : 70;
+    return Array.from({length: count}, (_, i) => Math.floor(Math.random() * maxNum) + 1);
   }
 
   private analyzeDeltaPatterns(draws: any[]): any {
@@ -351,9 +353,10 @@ export class AdvancedLotteryStrategies {
     return {};
   }
 
-  private generateNumbersFromDeltas(deltaAnalysis: any, count: number): number[] {
+  private generateNumbersFromDeltas(deltaAnalysis: any, count: number, game: string): number[] {
     // Generate numbers using delta patterns
-    return Array.from({length: count}, (_, i) => Math.floor(Math.random() * 69) + 1);
+    const maxNum = game === 'powerball' ? 69 : 70;
+    return Array.from({length: count}, (_, i) => Math.floor(Math.random() * maxNum) + 1);
   }
 
   private calculateOptimalSumRange(draws: any[]): {min: number, max: number} {

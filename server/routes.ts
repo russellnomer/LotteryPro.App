@@ -11,6 +11,8 @@ import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
 // VIP management functions will be imported dynamically
 import { seedRussellNomerContent } from "./seedMusicData";
 import { numerologyAnalysis } from "./numerologyAnalysis";
+import { lotteryCache } from "./lotteryCache";
+import { progressiveLoader } from "./progressiveLoader";
 import { 
   securityHeaders, 
   authRateLimit, 
@@ -30,11 +32,19 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Seed historical data and Russell Nomer content on startup
+  // Initialize smart caching and progressive loading
+  console.log('🚀 Initializing hybrid powerhouse system...');
+  
+  // Seed historical data and Russell Nomer content on startup  
   await seedHistoricalData();
   await seedRussellNomerContent();
   
-  // Get historical draws for a specific game
+  // Start progressive enhancement system
+  progressiveLoader.startProgressiveLoading().catch(error => {
+    console.error('❌ Progressive loading error:', error);
+  });
+  
+  // Get historical draws for a specific game (using smart cache)
   app.get("/api/draws/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
@@ -42,8 +52,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
-      const draws = await storage.getDraws(game);
+      // Use cache for instant response
+      const draws = await lotteryCache.getEssentialDraws(game);
       res.json(draws);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get full dataset for maximum statistical power
+  app.get("/api/draws/:game/full", async (req, res) => {
+    try {
+      const game = req.params.game as GameType;
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ message: "Invalid game type" });
+      }
+      
+      // Progressive loading for full statistical power
+      const draws = await lotteryCache.getFullDraws(game);
+      res.json(draws);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get cache statistics for monitoring
+  app.get("/api/cache/stats", async (req, res) => {
+    try {
+      const stats = lotteryCache.getCacheStats();
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get progressive loading status for real-time monitoring
+  app.get("/api/loading/status", async (req, res) => {
+    try {
+      const loadingState = progressiveLoader.getLoadingState();
+      const isComplete = progressiveLoader.isComplete();
+      res.json({ 
+        loadingState, 
+        isComplete,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get loading status for a specific game
+  app.get("/api/loading/status/:game", async (req, res) => {
+    try {
+      const game = req.params.game as GameType;
+      if (!['powerball', 'megamillions'].includes(game)) {
+        return res.status(400).json({ message: "Invalid game type" });
+      }
+      
+      const gameState = progressiveLoader.getGameLoadingState(game);
+      res.json(gameState || { message: "Loading state not found" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Force refresh all data (admin endpoint)
+  app.post("/api/loading/refresh", async (req, res) => {
+    try {
+      await progressiveLoader.forceRefresh();
+      res.json({ message: "Data refresh initiated", timestamp: new Date().toISOString() });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -67,19 +144,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let bonusNumber: number;
       
       if (method === 'hot') {
-        // Use frequency analysis for hot numbers
-        const frequency = new Map<number, number>();
-        const bonusFreq = new Map<number, number>();
-        
-        draws.forEach(draw => {
-          (draw.mainNumbers as number[]).forEach(num => {
-            frequency.set(num, (frequency.get(num) || 0) + 1);
-          });
-          bonusFreq.set(draw.bonusNumber, (bonusFreq.get(draw.bonusNumber) || 0) + 1);
-        });
+        // Use cached frequency maps for instant hot number analysis
+        const { mainFreq, bonusFreq } = await lotteryCache.getFrequencyMaps(game);
         
         // Get most frequent numbers
-        const sortedNumbers = Array.from(frequency.entries())
+        const sortedNumbers = Array.from(mainFreq.entries())
           .sort((a, b) => b[1] - a[1])
           .map(([num]) => num);
         

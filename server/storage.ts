@@ -226,13 +226,13 @@ export class MemStorage implements IStorage {
     };
   }
 
-  // User management methods (not supported in memory storage)
+  // User management stub implementations
   async getUserByEmail(email: string): Promise<UserAccount | undefined> {
-    throw new Error("User management not supported in memory storage");
+    return undefined;
   }
 
   async getUserById(id: string): Promise<UserAccount | undefined> {
-    throw new Error("User management not supported in memory storage");
+    return undefined;
   }
 
   async createUser(user: InsertUserAccount): Promise<UserAccount> {
@@ -240,24 +240,81 @@ export class MemStorage implements IStorage {
   }
 
   async updateUserMFASecret(userId: string, secret: string): Promise<void> {
-    throw new Error("User management not supported in memory storage");
+    // No-op for memory storage
   }
 
   async enableUserMFA(userId: string, backupCodes: string[]): Promise<void> {
-    throw new Error("User management not supported in memory storage");
+    // No-op for memory storage
   }
 
   async updateUserLastLogin(userId: string): Promise<void> {
-    throw new Error("User management not supported in memory storage");
+    // No-op for memory storage
   }
 
+  // Session management stub implementations
   async createUserSession(session: InsertUserSession): Promise<UserSession> {
     throw new Error("Session management not supported in memory storage");
   }
 
   async getUserSession(sessionToken: string): Promise<UserSession | undefined> {
-    throw new Error("Session management not supported in memory storage");
+    return undefined;
   }
+
+  // VIP code management stub implementations
+  async createVipCode(vipCode: InsertVipCode): Promise<VipCode> {
+    throw new Error("VIP code management not supported in memory storage");
+  }
+
+  async getVipCodeByCode(codeHash: string): Promise<VipCode | undefined> {
+    return undefined;
+  }
+
+  async redeemVipCode(codeHash: string, userId: string): Promise<VipCode | null> {
+    return null;
+  }
+
+  async updateUserSubscriptionTier(userId: string, tier: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async updateUserTier(email: string, tier: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async getUserVipCodes(createdBy: string): Promise<VipCode[]> {
+    return [];
+  }
+
+  async deactivateVipCode(codeId: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async getAllUsers(): Promise<UserAccount[]> {
+    return [];
+  }
+
+  // Music content management stub implementations
+  async getMusicContent(featured?: boolean): Promise<MusicContent[]> {
+    return [];
+  }
+
+  async createMusicContent(music: InsertMusicContent): Promise<MusicContent> {
+    throw new Error("Music content management not supported in memory storage");
+  }
+
+  async updateMusicContent(id: string, updates: Partial<InsertMusicContent>): Promise<void> {
+    // No-op for memory storage
+  }
+
+  // Book recommendations stub implementations
+  async getBookRecommendations(): Promise<BookRecommendation[]> {
+    return [];
+  }
+
+  async createBookRecommendation(book: InsertBookRecommendation): Promise<BookRecommendation> {
+    throw new Error("Book recommendations not supported in memory storage");
+  }
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -282,6 +339,11 @@ export class DatabaseStorage implements IStorage {
       .values(insertDraw)
       .returning();
     return draw;
+  }
+
+  async deleteDraw(drawId: string): Promise<void> {
+    await db.delete(lotteryDraws)
+      .where(eq(lotteryDraws.id, drawId));
   }
 
   async getRecentTickets(limit: number = 10): Promise<GeneratedTicket[]> {
@@ -534,19 +596,18 @@ export class DatabaseStorage implements IStorage {
     return vipCode;
   }
 
-  async getVipCodeByCode(code: string): Promise<VipCode | undefined> {
+  async getVipCodeByCode(codeHash: string): Promise<VipCode | undefined> {
     const [vipCode] = await db.select().from(vipCodes)
-      .where(eq(vipCodes.code, code));
+      .where(eq(vipCodes.codeHash, codeHash));
     return vipCode || undefined;
   }
 
-  async redeemVipCode(code: string, userId: string): Promise<VipCode | null> {
+  async redeemVipCode(codeHash: string, userId: string): Promise<VipCode | null> {
     // Find active VIP code
     const [vipCode] = await db.select().from(vipCodes)
       .where(and(
-        eq(vipCodes.code, code),
-        eq(vipCodes.isActive, 1),
-        sql`${vipCodes.usedBy} IS NULL`,
+        eq(vipCodes.codeHash, codeHash),
+        eq(vipCodes.isUsed, 0),
         sql`(${vipCodes.expiresAt} IS NULL OR ${vipCodes.expiresAt} > now())`
       ));
 
@@ -557,7 +618,7 @@ export class DatabaseStorage implements IStorage {
     // Mark as used
     await db.update(vipCodes)
       .set({
-        usedBy: userId,
+        isUsed: 1,
         usedAt: sql`now()`
       })
       .where(eq(vipCodes.id, vipCode.id));
@@ -602,11 +663,8 @@ export class DatabaseStorage implements IStorage {
 
   // Music content management
   async getMusicContent(featured?: boolean): Promise<MusicContent[]> {
-    const baseQuery = db.select().from(musicContent)
-      .where(eq(musicContent.isActive, 1));
-    
     if (featured !== undefined) {
-      return await baseQuery
+      return await db.select().from(musicContent)
         .where(and(
           eq(musicContent.isActive, 1),
           eq(musicContent.featured, featured ? 1 : 0)
@@ -614,7 +672,9 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(musicContent.createdAt));
     }
 
-    return await baseQuery.orderBy(desc(musicContent.featured), desc(musicContent.createdAt));
+    return await db.select().from(musicContent)
+      .where(eq(musicContent.isActive, 1))
+      .orderBy(desc(musicContent.featured), desc(musicContent.createdAt));
   }
 
   async createMusicContent(music: InsertMusicContent): Promise<MusicContent> {
@@ -644,125 +704,6 @@ export class DatabaseStorage implements IStorage {
     return bookRec;
   }
 
-  // Customer data operations for marketing and compliance
-  async upsertCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> {
-    const [customer] = await db
-      .insert(customerProfiles)
-      .values(profile)
-      .onConflictDoUpdate({
-        target: customerProfiles.email,
-        set: {
-          ...profile,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return customer;
-  }
-
-  async createCustomerActivity(activity: InsertCustomerActivity): Promise<CustomerActivity> {
-    const [record] = await db
-      .insert(customerActivity)
-      .values(activity)
-      .returning();
-    return record;
-  }
-
-  async createAdminAccessLog(log: InsertAdminAccessLog): Promise<AdminAccessLog> {
-    const [record] = await db
-      .insert(adminAccessLogs)
-      .values(log)
-      .returning();
-    return record;
-  }
-
-  async getAllCustomers(): Promise<CustomerProfile[]> {
-    return await db.select().from(customerProfiles);
-  }
-
-  async getCustomersWithFilters(filters?: any): Promise<CustomerProfile[]> {
-    return await db.select().from(customerProfiles);
-  }
-
-  async getCustomerActivities(filters?: any): Promise<CustomerActivity[]> {
-    return await db.select().from(customerActivity);
-  }
-
-  async getAllCustomerActivities(): Promise<CustomerActivity[]> {
-    return await db.select().from(customerActivity);
-  }
-
-  async getAdminAccessLogs(): Promise<AdminAccessLog[]> {
-    return await db.select().from(adminAccessLogs);
-  }
-
-  async getCustomersBySegment(criteria: any): Promise<CustomerProfile[]> {
-    return await db.select().from(customerProfiles);
-  }
-
-  // Verification code management
-  async createEmailVerificationCode(data: any): Promise<any> {
-    const [record] = await db
-      .insert(emailVerificationCodes)
-      .values(data)
-      .returning();
-    return record;
-  }
-
-  async createSmsVerificationCode(data: any): Promise<any> {
-    const [record] = await db
-      .insert(smsVerificationCodes)
-      .values(data)
-      .returning();
-    return record;
-  }
-
-  async getEmailVerificationCode(emailHash: string, code: string): Promise<any> {
-    const [record] = await db
-      .select()
-      .from(emailVerificationCodes)
-      .where(and(eq(emailVerificationCodes.emailHash, emailHash), eq(emailVerificationCodes.verificationCode, code)));
-    return record;
-  }
-
-  async getSmsVerificationCode(mobileHash: string, code: string): Promise<any> {
-    const [record] = await db
-      .select()
-      .from(smsVerificationCodes)
-      .where(and(eq(smsVerificationCodes.mobileNumberHash, mobileHash), eq(smsVerificationCodes.verificationCode, code)));
-    return record;
-  }
-
-  async markEmailVerificationAsUsed(id: string): Promise<void> {
-    await db
-      .update(emailVerificationCodes)
-      .set({ isUsed: true })
-      .where(eq(emailVerificationCodes.id, id));
-  }
-
-  async markSmsVerificationAsUsed(id: string): Promise<void> {
-    await db
-      .update(smsVerificationCodes)
-      .set({ isUsed: true })
-      .where(eq(smsVerificationCodes.id, id));
-  }
-
-  async getCustomerProfile(id: string): Promise<CustomerProfile | undefined> {
-    const [profile] = await db
-      .select()
-      .from(customerProfiles)
-      .where(eq(customerProfiles.id, id));
-    return profile;
-  }
-
-  async updateCustomerProfile(id: string, updates: any): Promise<CustomerProfile> {
-    const [profile] = await db
-      .update(customerProfiles)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(customerProfiles.id, id))
-      .returning();
-    return profile;
-  }
 }
 
 export const storage = new DatabaseStorage();
