@@ -10,12 +10,12 @@ export async function seedHistoricalData() {
     console.log('✅ Essential data loaded - app ready for instant use!');
     
     // Then load full dataset in background
-    console.log('📊 Background loading: Building maximum statistical power...');
+    console.log('📊 Background loading: Building educational dataset for academic analysis...');
     setImmediate(async () => {
       try {
         const { seedExpandedLotteryData } = await import('./expandedLotteryData');
         await seedExpandedLotteryData();
-        console.log('✅ MAXIMUM STATISTICAL POWER: Full dataset loaded!');
+        console.log('✅ EDUCATIONAL DATASET COMPLETE: Full academic dataset loaded for study!');
       } catch (error: any) {
         console.error('❌ Background dataset loading failed:', error.message);
       }

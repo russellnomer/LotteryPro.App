@@ -308,21 +308,20 @@ export class NumerologyAnalysis {
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
       bonusNumber: this.reduceToSingleDigit(month + day),
-      numerologySystem: "Birth Date Harmonics",
-      confidence: 0.88,
-      personalizedFactors: [
-        `Birth Month: ${month}`,
-        `Birth Day: ${day}`,
-        `Personal Year: ${personalYear}`,
-        "Birth date harmonic resonance"
+      numerologyMethod: "Birth Date Harmony Educational Study",
+      educationalNote: "Educational study of birth date numerological concepts for entertainment purposes",
+      studyFactors: [
+        `Educational birth month analysis: ${month}`,
+        `Academic birth day study: ${day}`,
+        `Educational personal year concept: ${personalYear}`,
+        "Birth date pattern study for educational purposes"
       ],
-      luckyTiming: `Most powerful during your birth month (${month})`,
-      spiritualGuidance: [
-        "Connected to your birth energy",
-        "Resonates with your soul's entry point",
-        "Aligned with your cosmic timing"
-      ],
-      vibrationLevel: 7.9
+      culturalContext: `Traditional numerology suggests this pattern may be most relevant during month ${month}`,
+      educationalGuidance: [
+        "Educational study of birth energy concepts",
+        "Academic exploration of numerological entry point theories",
+        "Educational timing pattern analysis"
+      ]
     };
   }
 
@@ -379,21 +378,20 @@ export class NumerologyAnalysis {
     return {
       mainNumbers: uniqueNumbers.slice(0, 5).sort((a, b) => a - b),
       bonusNumber: universalDay,
-      numerologySystem: "Universal Day Energy",
-      confidence: 0.85,
-      personalizedFactors: [
-        `Universal Day: ${universalDay}`,
-        `Universal Year: ${universalYear}`,
-        `Current Month Energy: ${month}`,
-        "Cosmic timing alignment"
+      numerologyMethod: "Universal Day Energy Educational Study",
+      educationalNote: "Educational study of universal day energy concepts for entertainment and cultural learning",
+      studyFactors: [
+        `Educational universal day analysis: ${universalDay}`,
+        `Academic universal year study: ${universalYear}`,
+        `Educational month energy concept: ${month}`,
+        "Academic timing alignment study"
       ],
-      luckyTiming: "Play today for maximum universal energy alignment",
-      spiritualGuidance: [
-        "Aligned with current cosmic energies",
-        "Tapped into universal flow",
-        "Synchronized with planetary vibrations"
-      ],
-      vibrationLevel: 8.2
+      culturalContext: "Traditional numerology suggests considering current cosmic timing for educational interest",
+      educationalGuidance: [
+        "Educational study of cosmic energy concepts",
+        "Academic exploration of universal flow theories",
+        "Educational analysis of planetary timing beliefs"
+      ]
     };
   }
 
@@ -445,22 +443,21 @@ export class NumerologyAnalysis {
 
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: 7, // Sacred number in Kabbalah
-      numerologySystem: "Kabbalah Sacred Numbers",
-      confidence: 0.94,
-      personalizedFactors: [
-        "Hebrew alphabet numerical values",
-        "Sacred geometry principles",
-        "Tree of Life pathways",
-        "Ancient mystical wisdom"
+      bonusNumber: 7, // Educational study of significant numbers in Kabbalistic tradition
+      numerologyMethod: "Kabbalistic Number Educational Study",
+      educationalNote: "Educational exploration of Kabbalistic numerical concepts for cultural learning and entertainment",
+      studyFactors: [
+        "Educational study of Hebrew alphabet numerical values",
+        "Academic exploration of sacred geometry principles",
+        "Educational analysis of Tree of Life pathway concepts",
+        "Cultural study of ancient mystical number traditions"
       ],
-      luckyTiming: "Most powerful on Sabbath or during Jewish holidays",
-      spiritualGuidance: [
-        "Connected to ancient wisdom traditions",
-        "Channels sacred geometric energies",
-        "Aligned with Tree of Life vibrations"
-      ],
-      vibrationLevel: 9.5
+      culturalContext: "Traditional Kabbalistic study suggests these numbers may hold cultural significance in Jewish tradition",
+      educationalGuidance: [
+        "Educational connection to ancient wisdom traditions for cultural study",
+        "Academic exploration of sacred geometric number concepts",
+        "Educational study of Tree of Life numerical symbolism"
+      ]
     };
   }
 
@@ -590,22 +587,21 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
 
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: 9, // Sacred number in Pythagorean system
-      numerologySystem: "Pythagorean Mathematical Harmony",
-      confidence: 0.91,
-      personalizedFactors: [
-        "Perfect square mathematical relationships",
-        "Harmonic number sequences (3, 6, 9)",
-        "Pythagorean theorem applications",
-        "Mathematical divine proportion"
+      bonusNumber: 9, // Educational study of significant numbers in Pythagorean tradition
+      numerologyMethod: "Pythagorean Mathematical Educational Study",
+      educationalNote: "Educational exploration of Pythagorean mathematical concepts for cultural learning and entertainment",
+      studyFactors: [
+        "Educational study of perfect square mathematical relationships",
+        "Academic analysis of harmonic number sequences (3, 6, 9)",
+        "Educational exploration of Pythagorean theorem applications",
+        "Cultural study of mathematical proportion concepts"
       ],
-      luckyTiming: "Most powerful during mathematical sequences (3rd, 6th, 9th of month)",
-      spiritualGuidance: [
-        "Connected to mathematical universal laws",
-        "Resonates with sacred geometry",
-        "Aligned with Pythagorean wisdom"
-      ],
-      vibrationLevel: 9.1
+      culturalContext: "Traditional Pythagorean study suggests mathematical sequences like 3rd, 6th, 9th may hold cultural significance",
+      educationalGuidance: [
+        "Educational connection to mathematical universal law concepts",
+        "Academic exploration of sacred geometry principles",
+        "Educational study of Pythagorean wisdom traditions"
+      ]
     };
   }
 
@@ -665,22 +661,21 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
 
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: 8, // Most powerful Chaldean number
-      numerologySystem: "Chaldean Ancient Wisdom",
-      confidence: 0.96,
-      personalizedFactors: [
-        "Ancient Babylonian numerology",
-        "Compound number 23 (royal star of the lion)",
-        "Chaldean power number sequences",
-        "Mesopotamian mathematical wisdom"
+      bonusNumber: 8, // Educational study of significant numbers in Chaldean tradition
+      numerologyMethod: "Chaldean Ancient Wisdom Educational Study",
+      educationalNote: "Educational exploration of Chaldean numerological concepts for cultural learning and entertainment",
+      studyFactors: [
+        "Educational study of ancient Babylonian numerology traditions",
+        "Academic analysis of compound number 23 (royal star of the lion) concept",
+        "Educational exploration of Chaldean number sequence patterns",
+        "Cultural study of Mesopotamian mathematical wisdom traditions"
       ],
-      luckyTiming: "Most powerful during Babylonian calendar significant dates",
-      spiritualGuidance: [
-        "Connected to ancient Mesopotamian wisdom",
-        "Channels Chaldean mystical knowledge",
-        "Aligned with royal star energies"
-      ],
-      vibrationLevel: 9.6
+      culturalContext: "Traditional Chaldean study suggests these patterns may be culturally significant during Babylonian calendar dates",
+      educationalGuidance: [
+        "Educational connection to ancient Mesopotamian wisdom traditions",
+        "Academic exploration of Chaldean mystical knowledge concepts",
+        "Educational study of royal star energy symbolism"
+      ]
     };
   }
 
@@ -718,22 +713,21 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
 
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: 7, // Spiritual completion number
-      numerologySystem: "Angel Numbers & Divine Guidance",
-      confidence: 0.93,
-      personalizedFactors: [
-        "Angel number sequences (11, 22, 33)",
-        "Divine guidance through repetitive patterns",
-        "Spiritual messenger number alignments",
-        "Celestial communication channels"
+      bonusNumber: 7, // Educational study of completion symbolism
+      numerologyMethod: "Angel Numbers Educational Study",
+      educationalNote: "Educational exploration of angel number concepts for cultural learning and entertainment",
+      studyFactors: [
+        "Educational study of angel number sequences (11, 22, 33)",
+        "Academic analysis of repetitive pattern concepts in numerology",
+        "Educational exploration of spiritual messenger number beliefs",
+        "Cultural study of celestial communication traditions"
       ],
-      luckyTiming: "Most powerful at 11:11, 2:22, 3:33, 4:44, 5:55",
-      spiritualGuidance: [
-        "Direct connection to angelic guidance",
-        "Opens channels for divine intervention",
-        "Attracts spiritual abundance"
-      ],
-      vibrationLevel: 9.7
+      culturalContext: "Traditional angel number study suggests times like 11:11, 2:22, 3:33, 4:44, 5:55 may hold cultural significance",
+      educationalGuidance: [
+        "Educational study of angelic guidance concepts for cultural interest",
+        "Academic exploration of divine intervention beliefs in numerology",
+        "Educational analysis of spiritual abundance symbolism"
+      ]
     };
   }
 
@@ -757,22 +751,21 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
 
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
-      bonusNumber: 8, // Ultimate prosperity number in Chinese culture
-      numerologySystem: "Chinese Numerology & Feng Shui",
-      confidence: 0.89,
-      personalizedFactors: [
-        "Number 8 (prosperity and wealth)",
-        "Number 9 (completion and longevity)",
-        "Number 6 (smooth and harmonious)",
-        "Feng Shui energy alignment"
+      bonusNumber: 8, // Educational study of prosperity symbolism in Chinese culture
+      numerologyMethod: "Chinese Numerology Educational Study",
+      educationalNote: "Educational exploration of Chinese numerology and Feng Shui concepts for cultural learning and entertainment",
+      studyFactors: [
+        "Educational study of number 8 (prosperity and wealth) symbolism",
+        "Academic analysis of number 9 (completion and longevity) concepts",
+        "Educational exploration of number 6 (smooth and harmonious) beliefs",
+        "Cultural study of Feng Shui energy alignment traditions"
       ],
-      luckyTiming: "Most powerful during Chinese New Year and dragon dates",
-      spiritualGuidance: [
-        "Aligned with Chinese prosperity energies",
-        "Channels Feng Shui abundance flow",
-        "Connected to ancient Chinese wisdom"
-      ],
-      vibrationLevel: 8.8
+      culturalContext: "Traditional Chinese numerology suggests these patterns may be culturally significant during Chinese New Year and dragon year dates",
+      educationalGuidance: [
+        "Educational study of Chinese prosperity energy concepts",
+        "Academic exploration of Feng Shui abundance flow beliefs",
+        "Educational connection to ancient Chinese wisdom traditions"
+      ]
     };
   }
 
@@ -809,22 +802,21 @@ Your numbers suggest a strong connection to ${this.getLifePathGuidance(personalN
 
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: 4, // Karmic lesson number for stability
-      numerologySystem: "Karmic Lessons & Debt Transformation",
-      confidence: 0.94,
-      personalizedFactors: [
-        "Karmic debt number 13 (transformation through change)",
-        "Karmic debt number 14 (freedom through discipline)",
-        "Karmic debt number 16 (spiritual awakening)",
-        "Karmic debt number 19 (independence through service)"
+      bonusNumber: 4, // Educational study of stability symbolism in karmic traditions
+      numerologyMethod: "Karmic Lessons Educational Study",
+      educationalNote: "Educational exploration of karmic debt concepts for cultural learning and entertainment",
+      studyFactors: [
+        "Educational study of karmic debt number 13 (transformation through change) concept",
+        "Academic analysis of karmic debt number 14 (freedom through discipline) beliefs",
+        "Educational exploration of karmic debt number 16 (spiritual awakening) traditions",
+        "Cultural study of karmic debt number 19 (independence through service) concepts"
       ],
-      luckyTiming: "Most powerful during karmic clearing periods",
-      spiritualGuidance: [
-        "Facilitates karmic debt clearing",
-        "Accelerates spiritual growth",
-        "Transforms challenges into opportunities"
-      ],
-      vibrationLevel: 9.4
+      culturalContext: "Traditional karmic numerology suggests these patterns may be culturally significant during karmic clearing periods",
+      educationalGuidance: [
+        "Educational study of karmic debt clearing concepts for cultural interest",
+        "Academic exploration of spiritual growth beliefs in numerology",
+        "Educational analysis of transformation opportunity symbolism"
+      ]
     };
   }
 }
