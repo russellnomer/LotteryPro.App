@@ -2,171 +2,172 @@ import { storage } from "./storage";
 import { LotteryDraw } from "@shared/schema";
 
 /**
- * Enhanced Lottery Analysis with Latest Results Integration
- * Implements advanced mathematical approaches for maximum winning probability
+ * Educational Lottery Analysis with Historical Data Integration
+ * Implements various mathematical approaches for educational analysis purposes
+ * All methods are for entertainment and educational use only
  */
 
-interface EnhancedPrediction {
+interface EducationalAnalysis {
   mainNumbers: number[];
   bonusNumber: number;
-  strategy: string;
-  confidence: number;
-  analysisFactors: string[];
-  expectedValue: number;
-  riskLevel: 'low' | 'medium' | 'high';
+  methodology: string;
+  studyFactors: string[];
+  analysisType: string;
+  educationalNote: string;
 }
 
-interface LatestDrawAnalysis {
+interface HistoricalDataStudy {
   game: string;
-  latestDraw: any;
+  recentDraw: any;
   gapAnalysis: number[];
-  patternDeviations: string[];
-  overdueFactor: number;
-  recommendations: string[];
+  patternObservations: string[];
+  frequencyFactor: number;
+  studyInsights: string[];
 }
 
 export class EnhancedLotteryAnalysis {
   
   /**
-   * Generate enhanced predictions incorporating latest draw results
+   * Generate educational analysis methods incorporating historical data
    */
-  async generateEnhancedPredictions(game: 'powerball' | 'megamillions'): Promise<EnhancedPrediction[]> {
-    const predictions: EnhancedPrediction[] = [];
+  async generateEducationalAnalyses(game: 'powerball' | 'megamillions'): Promise<EducationalAnalysis[]> {
+    const analyses: EducationalAnalysis[] = [];
     
-    // Get latest draw analysis
-    const latestAnalysis = await this.analyzeLatestDraw(game);
+    // Get historical data study
+    const dataStudy = await this.analyzeHistoricalData(game);
     
-    // Strategy 1: Overdue Number Compensation
-    predictions.push(await this.generateOverdueCompensationPrediction(game, latestAnalysis));
+    // Method 1: Frequency Pattern Study
+    analyses.push(await this.generateFrequencyPatternStudy(game, dataStudy));
     
-    // Strategy 2: Pattern Deviation Response  
-    predictions.push(await this.generatePatternDeviationPrediction(game, latestAnalysis));
+    // Method 2: Pattern Observation Analysis  
+    analyses.push(await this.generatePatternObservationStudy(game, dataStudy));
     
-    // Strategy 3: Dynamic Hot-Cold Rebalancing
-    predictions.push(await this.generateDynamicRebalancePrediction(game, latestAnalysis));
+    // Method 3: Dynamic Distribution Study
+    analyses.push(await this.generateDynamicDistributionStudy(game, dataStudy));
     
-    // Strategy 4: Mathematical Expectation Optimization
-    predictions.push(await this.generateExpectationOptimizedPrediction(game, latestAnalysis));
+    // Method 4: Mathematical Probability Study
+    analyses.push(await this.generateProbabilityStudy(game, dataStudy));
     
-    // Strategy 5: Anti-Pattern Strategy (contrarian approach)
-    predictions.push(await this.generateAntiPatternPrediction(game, latestAnalysis));
+    // Method 5: Contrarian Analysis (alternative approach)
+    analyses.push(await this.generateContrarianStudy(game, dataStudy));
     
-    // Strategy 6: Recursive Analysis (learning from previous misses)
-    predictions.push(await this.generateRecursiveAnalysisPrediction(game, latestAnalysis));
+    // Method 6: Historical Comparison Study
+    analyses.push(await this.generateHistoricalComparisonStudy(game, dataStudy));
     
-    return predictions;
+    return analyses;
   }
 
   /**
-   * Analyze the latest draw for insights and patterns
+   * Analyze historical data for educational insights and patterns
    */
-  private async analyzeLatestDraw(game: 'powerball' | 'megamillions'): Promise<LatestDrawAnalysis> {
+  private async analyzeHistoricalData(game: 'powerball' | 'megamillions'): Promise<HistoricalDataStudy> {
     const draws: LotteryDraw[] = await storage.getDraws(game);
-    const latestDraw = draws[0]; // Most recent draw
+    const recentDraw = draws[0]; // Most recent draw
     
-    if (!latestDraw) {
+    if (!recentDraw) {
       throw new Error(`No draws found for ${game}`);
     }
 
-    // Analyze gaps between numbers in latest draw
-    const sortedNumbers = [...(latestDraw.mainNumbers as number[])].sort((a, b) => a - b);
+    // Study gaps between numbers in recent draw
+    const sortedNumbers = [...(recentDraw.mainNumbers as number[])].sort((a, b) => a - b);
     const gaps = [];
     for (let i = 1; i < sortedNumbers.length; i++) {
       gaps.push(sortedNumbers[i] - sortedNumbers[i-1]);
     }
 
-    // Identify pattern deviations
-    const patternDeviations = this.identifyPatternDeviations(latestDraw, draws);
+    // Observe pattern characteristics
+    const patternObservations = this.identifyPatternDeviations(recentDraw, draws);
     
-    // Calculate overdue factor for numbers not drawn recently
-    const overdueFactor = this.calculateOverdueFactor(draws, game);
+    // Study frequency characteristics for educational purposes
+    const frequencyFactor = this.calculateOverdueFactor(draws, game);
     
-    // Generate recommendations based on analysis
-    const recommendations = this.generateRecommendations(gaps, patternDeviations, overdueFactor);
+    // Generate educational insights based on analysis
+    const studyInsights = this.generateRecommendations(gaps, patternObservations, frequencyFactor);
 
     return {
       game,
-      latestDraw,
+      recentDraw,
       gapAnalysis: gaps,
-      patternDeviations,
-      overdueFactor,
-      recommendations
+      patternObservations,
+      frequencyFactor,
+      studyInsights
     };
   }
 
   /**
-   * Strategy 1: Compensate for overdue numbers
+   * Method 1: Frequency Pattern Study
+   * Educational purpose: Studies numbers that appear less frequently in recent draws
    */
-  private async generateOverdueCompensationPrediction(
+  private async generateFrequencyPatternStudy(
     game: 'powerball' | 'megamillions', 
-    analysis: LatestDrawAnalysis
-  ): Promise<EnhancedPrediction> {
+    study: HistoricalDataStudy
+  ): Promise<EducationalAnalysis> {
     const draws: LotteryDraw[] = await storage.getDraws(game);
     const maxNum = game === 'powerball' ? 69 : 70;
     
-    // Find numbers that haven't appeared recently
+    // Study numbers that haven't appeared recently for educational purposes
     const recentAppearances = new Map<number, number>();
     
-    // Check last 20 draws for each number
+    // Examine last 20 draws for frequency patterns
     for (let i = 0; i < Math.min(20, draws.length); i++) {
       (draws[i].mainNumbers as number[]).forEach((num: number) => {
         recentAppearances.set(num, (recentAppearances.get(num) || 0) + 1);
       });
     }
     
-    // Find overdue numbers (haven't appeared in recent draws)
-    const overdueNumbers: number[] = [];
+    // Identify numbers with lower recent frequency for study
+    const infrequentNumbers: number[] = [];
     for (let num = 1; num <= maxNum; num++) {
       if (!recentAppearances.has(num) || recentAppearances.get(num)! < 2) {
-        overdueNumbers.push(num);
+        infrequentNumbers.push(num);
       }
     }
     
-    // Select from overdue numbers weighted by historical frequency
+    // Study frequency patterns weighted by historical data
     const frequency = this.calculateFrequencies(draws);
-    const overdueWithFreq = overdueNumbers.map(num => ({
+    const studyNumbers = infrequentNumbers.map(num => ({
       num,
       freq: frequency[num] || 0
     })).sort((a, b) => b.freq - a.freq);
     
-    const mainNumbers = overdueWithFreq.slice(0, 5).map(item => item.num);
+    const mainNumbers = studyNumbers.slice(0, 5).map(item => item.num);
     const bonusNumber = this.getBestBonusNumber(draws, game);
 
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Overdue Number Compensation",
-      confidence: 0.87,
-      analysisFactors: ["Recent draw gaps", "Historical frequency", "Overdue analysis"],
-      expectedValue: analysis.overdueFactor,
-      riskLevel: 'medium'
+      methodology: "Frequency Pattern Study",
+      studyFactors: ["Recent frequency patterns", "Historical data analysis", "Educational frequency study"],
+      analysisType: "Frequency-Based Education",
+      educationalNote: "This method may appeal to players interested in frequency pattern studies"
     };
   }
 
   /**
-   * Strategy 2: Pattern deviation response
+   * Method 2: Pattern Observation Study
+   * Educational purpose: Studies gap patterns in historical drawings
    */
-  private async generatePatternDeviationPrediction(
+  private async generatePatternObservationStudy(
     game: 'powerball' | 'megamillions',
-    analysis: LatestDrawAnalysis
-  ): Promise<EnhancedPrediction> {
+    study: HistoricalDataStudy
+  ): Promise<EducationalAnalysis> {
     const draws = await storage.getDraws(game);
     const maxNum = game === 'powerball' ? 69 : 70;
     
-    // Analyze what patterns were broken in latest draw
-    const brokenPatterns = analysis.patternDeviations;
+    // Study pattern characteristics from recent data
+    const observedPatterns = study.patternObservations;
     
-    // Generate numbers that restore typical patterns
+    // Study typical gap patterns for educational purposes
     const mainNumbers: number[] = [];
     
-    // If latest draw had unusual gaps, compensate with normal gaps
-    const normalGapRange = [3, 8]; // Typical gaps between lottery numbers
+    // Study typical gaps between lottery numbers for educational insight
+    const typicalGapRange = [3, 8]; // Common gaps observed in data
     let currentNum = Math.floor(Math.random() * 15) + 1; // Start in low range
     
     for (let i = 0; i < 5; i++) {
       mainNumbers.push(currentNum);
       if (i < 4) {
-        const gap = normalGapRange[0] + Math.floor(Math.random() * (normalGapRange[1] - normalGapRange[0]));
+        const gap = typicalGapRange[0] + Math.floor(Math.random() * (typicalGapRange[1] - typicalGapRange[0]));
         currentNum = Math.min(currentNum + gap, maxNum);
       }
     }
@@ -176,30 +177,30 @@ export class EnhancedLotteryAnalysis {
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Pattern Deviation Response",
-      confidence: 0.84,
-      analysisFactors: ["Pattern analysis", "Gap normalization", "Deviation correction"],
-      expectedValue: 0.82,
-      riskLevel: 'low'
+      methodology: "Pattern Observation Study",
+      studyFactors: ["Gap pattern analysis", "Historical observation", "Educational gap study"],
+      analysisType: "Pattern-Based Education",
+      educationalNote: "This approach may interest players who study gap patterns in drawings"
     };
   }
 
   /**
-   * Strategy 3: Dynamic hot-cold rebalancing
+   * Method 3: Dynamic Distribution Study
+   * Educational purpose: Studies long-term vs recent frequency patterns
    */
-  private async generateDynamicRebalancePrediction(
+  private async generateDynamicDistributionStudy(
     game: 'powerball' | 'megamillions',
-    analysis: LatestDrawAnalysis
-  ): Promise<EnhancedPrediction> {
+    study: HistoricalDataStudy
+  ): Promise<EducationalAnalysis> {
     const draws = await storage.getDraws(game);
     const frequency = this.calculateFrequencies(draws);
     
-    // Dynamic rebalancing based on recent performance
+    // Study dynamic distribution patterns for educational insights
     const recent10Freq = this.calculateRecentFrequencies(draws, 10);
     const recent50Freq = this.calculateRecentFrequencies(draws, 50);
     
-    // Find numbers that are hot in long term but cold recently (due for comeback)
-    const comebackCandidates: {num: number, score: number}[] = [];
+    // Study numbers with different long-term vs recent patterns for education
+    const studyCandidates: {num: number, score: number}[] = [];
     
     Object.keys(frequency).forEach(numStr => {
       const num = parseInt(numStr);
@@ -207,41 +208,41 @@ export class EnhancedLotteryAnalysis {
       const recentFreq = recent10Freq[num] || 0;
       const mediumFreq = recent50Freq[num] || 0;
       
-      // Score based on long-term hot but recent cold
+      // Study score based on frequency variance patterns
       const score = longTermFreq - (recentFreq * 3) + (mediumFreq * 0.5);
       if (score > 0) {
-        comebackCandidates.push({num, score});
+        studyCandidates.push({num, score});
       }
     });
     
-    // Select top comeback candidates
-    comebackCandidates.sort((a, b) => b.score - a.score);
-    const mainNumbers = comebackCandidates.slice(0, 5).map(item => item.num);
+    // Select numbers for educational distribution study
+    studyCandidates.sort((a, b) => b.score - a.score);
+    const mainNumbers = studyCandidates.slice(0, 5).map(item => item.num);
     const bonusNumber = this.getBestBonusNumber(draws, game);
 
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Dynamic Hot-Cold Rebalancing",
-      confidence: 0.89,
-      analysisFactors: ["Long-term frequency", "Recent performance", "Comeback potential"],
-      expectedValue: 0.86,
-      riskLevel: 'medium'
+      methodology: "Dynamic Distribution Study",
+      studyFactors: ["Long-term frequency patterns", "Recent occurrence analysis", "Educational distribution study"],
+      analysisType: "Frequency Distribution Education",
+      educationalNote: "This approach may suit players interested in frequency distribution patterns"
     };
   }
 
   /**
-   * Strategy 4: Mathematical expectation optimization
+   * Method 4: Mathematical Probability Study
+   * Educational purpose: Studies multiple statistical factors for educational insight
    */
-  private async generateExpectationOptimizedPrediction(
+  private async generateProbabilityStudy(
     game: 'powerball' | 'megamillions',
-    analysis: LatestDrawAnalysis
-  ): Promise<EnhancedPrediction> {
+    study: HistoricalDataStudy
+  ): Promise<EducationalAnalysis> {
     const draws = await storage.getDraws(game);
     const maxNum = game === 'powerball' ? 69 : 70;
     
-    // Calculate expected value for each number based on multiple factors
-    const expectedValues = new Map<number, number>();
+    // Study mathematical factors for educational purposes
+    const studyValues = new Map<number, number>();
     
     for (let num = 1; num <= maxNum; num++) {
       const frequency = this.getNumberFrequency(draws, num);
@@ -249,63 +250,63 @@ export class EnhancedLotteryAnalysis {
       const positionScore = this.getPositionScore(draws, num);
       const gapScore = this.getGapScore(draws, num);
       
-      // Combined expected value calculation
-      const expectedValue = (frequency * 0.4) + 
-                           ((15 - recentAppearances) * 0.3) + 
-                           (positionScore * 0.2) + 
-                           (gapScore * 0.1);
+      // Combined study value for educational analysis
+      const studyValue = (frequency * 0.4) + 
+                        ((15 - recentAppearances) * 0.3) + 
+                        (positionScore * 0.2) + 
+                        (gapScore * 0.1);
       
-      expectedValues.set(num, expectedValue);
+      studyValues.set(num, studyValue);
     }
     
-    // Select numbers with highest expected values
-    const sortedByExpectedValue = Array.from(expectedValues.entries())
+    // Select numbers for educational probability study
+    const sortedByStudyValue = Array.from(studyValues.entries())
       .sort(([,a], [,b]) => b - a);
     
-    const mainNumbers = sortedByExpectedValue.slice(0, 5).map(([num]) => num);
+    const mainNumbers = sortedByStudyValue.slice(0, 5).map(([num]) => num);
     const bonusNumber = this.getBestBonusNumber(draws, game);
 
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Mathematical Expectation Optimization",
-      confidence: 0.91,
-      analysisFactors: ["Expected value calculation", "Multi-factor analysis", "Statistical optimization"],
-      expectedValue: 0.91,
-      riskLevel: 'low'
+      methodology: "Mathematical Probability Study",
+      studyFactors: ["Multi-factor mathematical study", "Educational statistical analysis", "Probability theory education"],
+      analysisType: "Mathematical Education",
+      educationalNote: "This method may appeal to players interested in multi-factor mathematical analysis"
     };
   }
 
   /**
-   * Strategy 5: Anti-pattern (contrarian approach)
+   * Method 5: Contrarian Analysis
+   * Educational purpose: Studies alternative approaches to pattern analysis
    */
-  private async generateAntiPatternPrediction(
+  private async generateContrarianStudy(
     game: 'powerball' | 'megamillions',
-    analysis: LatestDrawAnalysis
-  ): Promise<EnhancedPrediction> {
+    study: HistoricalDataStudy
+  ): Promise<EducationalAnalysis> {
     const draws = await storage.getDraws(game);
-    const latestNumbers = analysis.latestDraw.mainNumbers;
+    const recentNumbers = study.recentDraw.mainNumbers;
     const maxNum = game === 'powerball' ? 69 : 70;
     
-    // Identify common patterns and do the opposite
+    // Study contrarian patterns for educational purposes
     const commonPatterns = this.identifyCommonPatterns(draws);
     
-    // Generate numbers that avoid recent patterns
+    // Study numbers with different characteristics than recent patterns
     const mainNumbers: number[] = [];
-    const avoidNumbers = new Set(latestNumbers);
+    const studyNumbers = new Set(recentNumbers);
     
-    // Add numbers from different ranges than recent draws
+    // Study distribution across different ranges for educational insight
     const ranges = [
       [1, 15], [16, 30], [31, 45], [46, 60], [61, maxNum]
     ];
     
-    // Ensure distribution across ranges (anti-clustering)
+    // Study diverse range distribution patterns
     ranges.forEach((range, index) => {
       if (mainNumbers.length < 5) {
         const [min, max] = range;
         for (let attempts = 0; attempts < 20 && mainNumbers.length < 5; attempts++) {
           const num = min + Math.floor(Math.random() * (max - min + 1));
-          if (!mainNumbers.includes(num) && !avoidNumbers.has(num)) {
+          if (!mainNumbers.includes(num) && !studyNumbers.has(num)) {
             mainNumbers.push(num);
             break;
           }
@@ -313,10 +314,10 @@ export class EnhancedLotteryAnalysis {
       }
     });
     
-    // Fill remaining slots if needed
+    // Complete the educational study if needed
     while (mainNumbers.length < 5) {
       const num = Math.floor(Math.random() * maxNum) + 1;
-      if (!mainNumbers.includes(num) && !avoidNumbers.has(num)) {
+      if (!mainNumbers.includes(num) && !studyNumbers.has(num)) {
         mainNumbers.push(num);
       }
     }
@@ -326,33 +327,33 @@ export class EnhancedLotteryAnalysis {
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Anti-Pattern Strategy",
-      confidence: 0.78,
-      analysisFactors: ["Pattern avoidance", "Range distribution", "Contrarian analysis"],
-      expectedValue: 0.75,
-      riskLevel: 'high'
+      methodology: "Contrarian Analysis",
+      studyFactors: ["Alternative pattern study", "Range distribution analysis", "Educational contrarian approach"],
+      analysisType: "Alternative Analysis Education",
+      educationalNote: "This approach may interest players who prefer alternative analysis methods"
     };
   }
 
   /**
-   * Strategy 6: Recursive analysis (learning from previous misses)
+   * Method 6: Historical Comparison Study
+   * Educational purpose: Studies combined analytical approaches for educational insight
    */
-  private async generateRecursiveAnalysisPrediction(
+  private async generateHistoricalComparisonStudy(
     game: 'powerball' | 'megamillions',
-    analysis: LatestDrawAnalysis
-  ): Promise<EnhancedPrediction> {
+    study: HistoricalDataStudy
+  ): Promise<EducationalAnalysis> {
     const draws = await storage.getDraws(game);
     
-    // Analyze what numbers we've been missing in our predictions
-    // (This would integrate with stored prediction results)
+    // Study combined analytical methods for educational purposes
+    // (This demonstrates how multiple approaches can be studied together)
     
-    // For now, implement a sophisticated combination approach
+    // Study multiple analytical approaches for educational insight
     const frequency = this.calculateFrequencies(draws);
     const positionAnalysis = this.analyzePositionalFrequency(draws);
     const sequenceAnalysis = this.analyzeNumberSequences(draws);
     
-    // Combine multiple analytical approaches
-    const combinedScores = new Map<number, number>();
+    // Combine multiple educational study approaches
+    const studyScores = new Map<number, number>();
     const maxNum = game === 'powerball' ? 69 : 70;
     
     for (let num = 1; num <= maxNum; num++) {
@@ -360,25 +361,24 @@ export class EnhancedLotteryAnalysis {
       const posScore = this.getPositionalScore(positionAnalysis, num);
       const seqScore = this.getSequenceScore(sequenceAnalysis, num);
       
-      const combinedScore = (freqScore * 0.5) + (posScore * 0.3) + (seqScore * 0.2);
-      combinedScores.set(num, combinedScore);
+      const combinedStudyScore = (freqScore * 0.5) + (posScore * 0.3) + (seqScore * 0.2);
+      studyScores.set(num, combinedStudyScore);
     }
     
-    // Select top scoring numbers
-    const sortedByScore = Array.from(combinedScores.entries())
+    // Select numbers for educational comparison study
+    const sortedByStudyScore = Array.from(studyScores.entries())
       .sort(([,a], [,b]) => b - a);
     
-    const mainNumbers = sortedByScore.slice(0, 5).map(([num]) => num);
+    const mainNumbers = sortedByStudyScore.slice(0, 5).map(([num]) => num);
     const bonusNumber = this.getBestBonusNumber(draws, game);
 
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Recursive Analysis",
-      confidence: 0.93,
-      analysisFactors: ["Multi-algorithm fusion", "Positional analysis", "Sequence patterns"],
-      expectedValue: 0.93,
-      riskLevel: 'low'
+      methodology: "Historical Comparison Study",
+      studyFactors: ["Multi-method comparison study", "Educational positional analysis", "Historical sequence study"],
+      analysisType: "Comprehensive Educational Analysis",
+      educationalNote: "This comprehensive approach may suit players interested in multi-method comparative analysis"
     };
   }
 
