@@ -74,6 +74,13 @@ export interface IStorage {
   deactivateVipCode(codeId: string): Promise<void>;
   getAllUsers(): Promise<UserAccount[]>;
   
+  // Subscription management
+  updateUserSubscriptionStatus(userId: string, status: string, paypalSubscriptionId?: string): Promise<void>;
+  checkUserUsageLimit(userId: string): Promise<{ canUse: boolean; count: number; limit: number }>;
+  incrementUserDailyUsage(userId: string): Promise<void>;
+  resetUserDailyUsage(userId: string): Promise<void>;
+  getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined>;
+  
   // Music content management
   getMusicContent(featured?: boolean): Promise<MusicContent[]>;
   createMusicContent(music: InsertMusicContent): Promise<MusicContent>;
@@ -291,6 +298,27 @@ export class MemStorage implements IStorage {
 
   async getAllUsers(): Promise<UserAccount[]> {
     return [];
+  }
+
+  // Subscription management stub implementations
+  async updateUserSubscriptionStatus(userId: string, status: string, paypalSubscriptionId?: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async checkUserUsageLimit(userId: string): Promise<{ canUse: boolean; count: number; limit: number }> {
+    return { canUse: true, count: 0, limit: 999 }; // Unlimited for memory storage
+  }
+
+  async incrementUserDailyUsage(userId: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async resetUserDailyUsage(userId: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined> {
+    return { tier: 'unlimited', status: 'active', usageCount: 0, usageLimit: 999 };
   }
 
   // Music content management stub implementations
@@ -702,6 +730,126 @@ export class DatabaseStorage implements IStorage {
       .values(book)
       .returning();
     return bookRec;
+  }
+
+  // Subscription management implementations
+  async updateUserSubscriptionStatus(userId: string, status: string, paypalSubscriptionId?: string): Promise<void> {
+    const updateData: any = {
+      subscriptionStatus: status,
+      updatedAt: new Date()
+    };
+    
+    if (paypalSubscriptionId) {
+      updateData.paypalSubscriptionId = paypalSubscriptionId;
+    }
+    
+    await db.update(userAccounts)
+      .set(updateData)
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async checkUserUsageLimit(userId: string): Promise<{ canUse: boolean; count: number; limit: number }> {
+    const user = await db.select({
+      subscriptionTier: userAccounts.subscriptionTier,
+      dailyUsageCount: userAccounts.dailyUsageCount,
+      lastUsageReset: userAccounts.lastUsageReset
+    }).from(userAccounts)
+      .where(eq(userAccounts.id, userId))
+      .limit(1);
+
+    if (user.length === 0) {
+      return { canUse: false, count: 0, limit: 0 };
+    }
+
+    const userData = user[0];
+    
+    // Check if we need to reset daily usage (new day)
+    const today = new Date().toDateString();
+    const lastReset = userData.lastUsageReset ? new Date(userData.lastUsageReset).toDateString() : '';
+    
+    if (today !== lastReset) {
+      await this.resetUserDailyUsage(userId);
+      userData.dailyUsageCount = 0;
+    }
+
+    // Define usage limits by tier
+    const usageLimits = {
+      free: 1,
+      basic: 5,
+      pro: 999,  // Unlimited
+      premium: 999,  // Unlimited
+      unlimited: 999  // Unlimited
+    };
+
+    const limit = usageLimits[userData.subscriptionTier as keyof typeof usageLimits] || 1;
+    const count = userData.dailyUsageCount || 0;
+    const canUse = count < limit;
+
+    return { canUse, count, limit };
+  }
+
+  async incrementUserDailyUsage(userId: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({
+        dailyUsageCount: sql`${userAccounts.dailyUsageCount} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async resetUserDailyUsage(userId: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({
+        dailyUsageCount: 0,
+        lastUsageReset: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined> {
+    const user = await db.select({
+      subscriptionTier: userAccounts.subscriptionTier,
+      subscriptionStatus: userAccounts.subscriptionStatus,
+      dailyUsageCount: userAccounts.dailyUsageCount,
+      lastUsageReset: userAccounts.lastUsageReset
+    }).from(userAccounts)
+      .where(eq(userAccounts.id, userId))
+      .limit(1);
+
+    if (user.length === 0) {
+      return undefined;
+    }
+
+    const userData = user[0];
+    
+    // Check if we need to reset daily usage (new day)
+    const today = new Date().toDateString();
+    const lastReset = userData.lastUsageReset ? new Date(userData.lastUsageReset).toDateString() : '';
+    
+    let usageCount = userData.dailyUsageCount || 0;
+    if (today !== lastReset) {
+      await this.resetUserDailyUsage(userId);
+      usageCount = 0;
+    }
+
+    // Define usage limits by tier
+    const usageLimits = {
+      free: 1,
+      basic: 5,
+      pro: 999,  // Unlimited
+      premium: 999,  // Unlimited
+      unlimited: 999  // Unlimited
+    };
+
+    const usageLimit = usageLimits[userData.subscriptionTier as keyof typeof usageLimits] || 1;
+
+    return {
+      tier: userData.subscriptionTier,
+      status: userData.subscriptionStatus,
+      usageCount,
+      usageLimit
+    };
   }
 
 }
