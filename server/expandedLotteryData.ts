@@ -51,8 +51,8 @@ function generatePowerbellHistory() {
   const currentDate = new Date('2025-09-01');
   let drawDate = new Date(currentDate);
   
-  // Generate 500 Powerball draws (about 5 years of data)
-  for (let i = 0; i < 500; i++) {
+  // Generate 100 Powerball draws (reduced for faster startup)
+  for (let i = 0; i < 100; i++) {
     // Powerball draws: Monday (1), Wednesday (3), Saturday (6)
     if (i > 0) {
       do {
@@ -79,8 +79,8 @@ function generateMegaMillionsHistory() {
   const currentDate = new Date('2025-09-01');
   let drawDate = new Date(currentDate);
   
-  // Generate 400 MegaMillions draws (about 5 years of data)  
-  for (let i = 0; i < 400; i++) {
+  // Generate 100 MegaMillions draws (reduced for faster startup)  
+  for (let i = 0; i < 100; i++) {
     // MegaMillions draws: Tuesday (2), Friday (5)
     if (i > 0) {
       do {
@@ -122,7 +122,7 @@ function generateRealisticPowerbellNumbers() {
 }
 
 function generateRealisticMegaMillionsNumbers() {
-  // MegaMillions: 5 numbers from 1-70, bonus from 1-25
+  // MegaMillions: 5 numbers from 1-70, bonus from 1-24
   const main = [];
   const used = new Set();
   
@@ -135,7 +135,7 @@ function generateRealisticMegaMillionsNumbers() {
     }
   }
   
-  const megaBall = generateWeightedNumber(1, 25, 'megamillions-bonus');
+  const megaBall = generateWeightedNumber(1, 24, 'megamillions-bonus');
   
   return { main, megaBall };
 }
