@@ -1,20 +1,20 @@
 import { storage } from "./storage";
 
 /**
- * Numerology-Based Lottery Analysis System
- * Incorporates traditional numerological principles for lottery number selection
- * Based on numerology book guidance for improving lottery odds
+ * Educational Numerology Study System
+ * Demonstrates traditional numerological approaches for educational purposes
+ * All methods are for entertainment and educational use only
+ * Based on numerological principles for study and learning
  */
 
-interface NumerologyPrediction {
+interface NumerologyStudy {
   mainNumbers: number[];
   bonusNumber: number;
-  numerologySystem: string;
-  confidence: number;
-  personalizedFactors: string[];
-  luckyTiming: string;
-  spiritualGuidance: string[];
-  vibrationLevel: number;
+  numerologyMethod: string;
+  studyFactors: string[];
+  culturalContext: string;
+  educationalGuidance: string[];
+  educationalNote: string;
 }
 
 interface PersonalNumbers {
@@ -30,49 +30,49 @@ interface PersonalNumbers {
 export class NumerologyAnalysis {
   
   /**
-   * Generate numerology-based lottery predictions using traditional methods
+   * Generate educational numerology studies using traditional methods for learning purposes
    */
-  async generateNumerologyPredictions(
+  async generateNumerologyStudies(
     fullName?: string, 
     birthDate?: string
-  ): Promise<NumerologyPrediction[]> {
-    const predictions: NumerologyPrediction[] = [];
+  ): Promise<NumerologyStudy[]> {
+    const studies: NumerologyStudy[] = [];
     
-    // Parse personal information if provided
+    // Parse personal information if provided for educational study
     const personalNumbers = fullName && birthDate ? 
       this.calculatePersonalNumbers(fullName, birthDate) : undefined;
     
-    // Strategy 1: Life Path Number System
-    predictions.push(await this.generateLifePathStrategy(personalNumbers));
+    // Method 1: Life Path Number Study
+    studies.push(await this.generateLifePathStudy(personalNumbers));
     
-    // Strategy 2: Master Numbers and Power Numbers
-    predictions.push(await this.generateMasterNumberStrategy(personalNumbers));
+    // Method 2: Master Numbers Educational Study
+    studies.push(await this.generateMasterNumberStudy(personalNumbers));
     
-    // Strategy 3: Birth Date Harmonics
-    predictions.push(await this.generateBirthDateHarmonics(personalNumbers));
+    // Method 3: Birth Date Harmony Study
+    studies.push(await this.generateBirthDateHarmonicsStudy(personalNumbers));
     
-    // Strategy 4: Universal Day Energy
-    predictions.push(await this.generateUniversalEnergyStrategy());
+    // Method 4: Universal Energy Study
+    studies.push(await this.generateUniversalEnergyStudy());
     
-    // Strategy 5: Kabbalah Number System
-    predictions.push(await this.generateKabbalahStrategy(personalNumbers));
+    // Method 5: Kabbalah Number Study
+    studies.push(await this.generateKabbalahStudy(personalNumbers));
     
-    // Strategy 6: Pythagorean Number System (Advanced Book Method)
-    predictions.push(await this.generatePythagoreanStrategy(personalNumbers));
+    // Method 6: Pythagorean Educational Method
+    studies.push(await this.generatePythagoreanStudy(personalNumbers));
     
-    // Strategy 7: Chaldean Numerology (Ancient Wisdom)
-    predictions.push(await this.generateChaldeanStrategy(personalNumbers));
+    // Method 7: Chaldean Cultural Study
+    studies.push(await this.generateChaldeanStudy(personalNumbers));
     
-    // Strategy 8: Angel Numbers & Divine Guidance
-    predictions.push(await this.generateAngelNumberStrategy(personalNumbers));
+    // Method 8: Angel Numbers Cultural Study
+    studies.push(await this.generateAngelNumberStudy(personalNumbers));
     
-    // Strategy 9: Chinese Numerology & Feng Shui
-    predictions.push(await this.generateChineseNumerologyStrategy(personalNumbers));
+    // Method 9: Chinese Numerology Cultural Study
+    studies.push(await this.generateChineseNumerologyStudy(personalNumbers));
     
-    // Strategy 10: Karmic Lessons & Debt Numbers
-    predictions.push(await this.generateKarmicStrategy(personalNumbers));
+    // Method 10: Karmic Studies Educational Method
+    studies.push(await this.generateKarmicStudy(personalNumbers));
     
-    return predictions;
+    return studies;
   }
 
   /**
@@ -112,34 +112,34 @@ export class NumerologyAnalysis {
   }
 
   /**
-   * Strategy 1: Life Path Number System
-   * Uses personal life path number to generate harmonious lottery numbers
+   * Method 1: Life Path Number Study
+   * Educational demonstration of numerological life path concepts
    */
-  private async generateLifePathStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
-    const baseLifePath = personalNumbers?.lifePath || 7; // Default to spiritual number 7
+  private async generateLifePathStudy(personalNumbers?: PersonalNumbers): Promise<NumerologyStudy> {
+    const baseLifePath = personalNumbers?.lifePath || 7; // Default example for study
     
-    // Generate numbers based on life path harmonics
+    // Study numbers based on life path concepts for educational purposes
     const mainNumbers: number[] = [];
     
-    // First number: Life path number itself (scaled to lottery range)
+    // Study concept: Life path number scaled to range
     mainNumbers.push(this.scaleToLotteryRange(baseLifePath, 1, 69));
     
-    // Second number: Life path × 2 (partnership energy)
+    // Study concept: Life path doubled for educational demonstration
     mainNumbers.push(this.scaleToLotteryRange(baseLifePath * 2, 1, 69));
     
-    // Third number: Life path + birth day (personal power)
+    // Study concept: Life path combined with birth day for educational insight
     const birthDay = personalNumbers?.birthDay || 15;
     mainNumbers.push(this.scaleToLotteryRange(baseLifePath + birthDay, 1, 69));
     
-    // Fourth number: Destiny number influence
+    // Study concept: Destiny number influence demonstration
     const destiny = personalNumbers?.destiny || 9;
     mainNumbers.push(this.scaleToLotteryRange(destiny * 3, 1, 69));
     
-    // Fifth number: Soul urge manifestation
+    // Study concept: Soul urge combination for educational purposes
     const soulUrge = personalNumbers?.soulUrge || 11;
     mainNumbers.push(this.scaleToLotteryRange(soulUrge + baseLifePath, 1, 69));
     
-    // Remove duplicates and fill if needed
+    // Remove duplicates and complete study set if needed
     const uniqueNumbers: number[] = [];
     mainNumbers.forEach(num => {
       if (!uniqueNumbers.includes(num)) {
@@ -148,113 +148,111 @@ export class NumerologyAnalysis {
     });
     
     while (uniqueNumbers.length < 5) {
-      const harmonic = this.scaleToLotteryRange(baseLifePath * (uniqueNumbers.length + 3), 1, 69);
-      if (!uniqueNumbers.includes(harmonic)) {
-        uniqueNumbers.push(harmonic);
+      const studyExample = this.scaleToLotteryRange(baseLifePath * (uniqueNumbers.length + 3), 1, 69);
+      if (!uniqueNumbers.includes(studyExample)) {
+        uniqueNumbers.push(studyExample);
       }
     }
     
-    // Powerball based on personality number
+    // Study example based on personality number concept
     const personalityNum = personalNumbers?.personalityNumber || 5;
     const bonusNumber = this.scaleToLotteryRange(personalityNum, 1, 26);
 
     return {
       mainNumbers: uniqueNumbers.slice(0, 5).sort((a, b) => a - b),
       bonusNumber,
-      numerologySystem: "Life Path Harmonics",
-      confidence: 0.92,
-      personalizedFactors: [
-        `Life Path Number: ${baseLifePath}`,
-        `Destiny Number: ${destiny}`,
-        `Soul Urge: ${soulUrge}`,
-        "Personal harmonic resonance applied"
+      numerologyMethod: "Life Path Educational Study",
+      studyFactors: [
+        `Life Path Number Study: ${baseLifePath}`,
+        `Destiny Number Example: ${destiny}`,
+        `Soul Urge Study: ${soulUrge}`,
+        "Educational harmonic demonstration"
       ],
-      luckyTiming: "Best played on days matching your life path number",
-      spiritualGuidance: [
-        "Numbers aligned with your soul's purpose",
-        "Resonates with your spiritual journey",
-        "Harmonizes with your life lessons"
+      culturalContext: "Traditional numerological life path concepts for educational study",
+      educationalGuidance: [
+        "Demonstrates how numerologists study life path numbers",
+        "Shows traditional numerical harmony concepts",
+        "Educational insight into numerological thinking"
       ],
-      vibrationLevel: 8.7
+      educationalNote: "This method may appeal to players interested in numerological life path concepts for educational purposes"
     };
   }
 
   /**
-   * Strategy 2: Master Numbers and Power Numbers
-   * Focuses on powerful numerological numbers (11, 22, 33, etc.)
+   * Method 2: Master Numbers Educational Study
+   * Educational study of traditional master number concepts (11, 22, 33)
    */
-  private async generateMasterNumberStrategy(personalNumbers?: PersonalNumbers): Promise<NumerologyPrediction> {
+  private async generateMasterNumberStudy(personalNumbers?: PersonalNumbers): Promise<NumerologyStudy> {
     const mainNumbers: number[] = [];
     
     if (personalNumbers) {
-      // Create personalized master number patterns based on individual
-      const personalMaster11 = personalNumbers.lifePath * 11;
-      if (personalMaster11 <= 69) mainNumbers.push(personalMaster11);
+      // Study personalized master number patterns for educational purposes
+      const studyMaster11 = personalNumbers.lifePath * 11;
+      if (studyMaster11 <= 69) mainNumbers.push(studyMaster11);
       
-      const personalMaster22 = personalNumbers.destiny + 22;
-      if (personalMaster22 <= 69 && !mainNumbers.includes(personalMaster22)) {
-        mainNumbers.push(personalMaster22);
+      const studyMaster22 = personalNumbers.destiny + 22;
+      if (studyMaster22 <= 69 && !mainNumbers.includes(studyMaster22)) {
+        mainNumbers.push(studyMaster22);
       }
       
-      const soulMaster = personalNumbers.soulUrge + personalNumbers.personalityNumber;
-      if (soulMaster <= 69 && !mainNumbers.includes(soulMaster)) {
-        mainNumbers.push(soulMaster);
+      const studySoulMaster = personalNumbers.soulUrge + personalNumbers.personalityNumber;
+      if (studySoulMaster <= 69 && !mainNumbers.includes(studySoulMaster)) {
+        mainNumbers.push(studySoulMaster);
       }
       
-      // Birth date master influence
-      const birthMaster = this.scaleToLotteryRange(personalNumbers.birthDay + personalNumbers.birthMonth, 1, 69);
-      if (!mainNumbers.includes(birthMaster)) {
-        mainNumbers.push(birthMaster);
+      // Study birth date master concepts
+      const studyBirthMaster = this.scaleToLotteryRange(personalNumbers.birthDay + personalNumbers.birthMonth, 1, 69);
+      if (!mainNumbers.includes(studyBirthMaster)) {
+        mainNumbers.push(studyBirthMaster);
       }
     }
     
-    // Fill with traditional master numbers only if personalization didn't fill enough
-    const traditionalMasters = [11, 22, 33];
-    traditionalMasters.forEach(num => {
+    // Study traditional master numbers for educational insight
+    const traditionalMasterStudy = [11, 22, 33];
+    traditionalMasterStudy.forEach(num => {
       if (num <= 69 && !mainNumbers.includes(num) && mainNumbers.length < 5) {
         mainNumbers.push(num);
       }
     });
     
-    // Fill remaining with personal harmonics if available
+    // Complete educational study with examples if needed
     while (mainNumbers.length < 5) {
       if (personalNumbers) {
-        const harmonic = this.scaleToLotteryRange(
+        const studyExample = this.scaleToLotteryRange(
           (personalNumbers.lifePath + personalNumbers.destiny) * (mainNumbers.length + 1), 1, 69
         );
-        if (!mainNumbers.includes(harmonic)) {
-          mainNumbers.push(harmonic);
+        if (!mainNumbers.includes(studyExample)) {
+          mainNumbers.push(studyExample);
           continue;
         }
       }
-      // Fallback
-      const fallback = this.scaleToLotteryRange(11 * (mainNumbers.length + 7), 1, 69);
-      if (!mainNumbers.includes(fallback)) {
-        mainNumbers.push(fallback);
+      // Fallback study example
+      const studyFallback = this.scaleToLotteryRange(11 * (mainNumbers.length + 7), 1, 69);
+      if (!mainNumbers.includes(studyFallback)) {
+        mainNumbers.push(studyFallback);
       }
     }
 
-    const personalBonusNumber = personalNumbers ? 
+    const studyBonusNumber = personalNumbers ? 
       this.scaleToLotteryRange(personalNumbers.lifePath + personalNumbers.destiny, 1, 26) : 11;
 
     return {
       mainNumbers: mainNumbers.slice(0, 5).sort((a, b) => a - b),
-      bonusNumber: personalBonusNumber,
-      numerologySystem: "Master Numbers & Power Numbers",
-      confidence: 0.95,
-      personalizedFactors: [
-        "Master number 11 (intuition and insight)",
-        "Master number 22 (master builder)",
-        "Master number 33 (master teacher)",
-        "Power numbers for manifestation"
+      bonusNumber: studyBonusNumber,
+      numerologyMethod: "Master Numbers Educational Study",
+      studyFactors: [
+        "Master number 11 educational concept",
+        "Master number 22 study example",
+        "Master number 33 cultural reference",
+        "Educational number pattern demonstration"
       ],
-      luckyTiming: "Most powerful on the 11th and 22nd of any month",
-      spiritualGuidance: [
-        "Channels higher vibrational energies",
-        "Connects with universal master frequencies",
-        "Amplifies manifestation power"
+      culturalContext: "Traditional master number concepts for educational study purposes",
+      educationalGuidance: [
+        "Demonstrates traditional master number concepts",
+        "Shows cultural numerological beliefs",
+        "Educational insight into master number theory"
       ],
-      vibrationLevel: 9.8
+      educationalNote: "This method may interest players who want to study traditional master number concepts"
     };
   }
 

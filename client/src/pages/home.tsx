@@ -783,15 +783,24 @@ export default function Home() {
             <div className="flex items-start">
               <i className="fas fa-exclamation-triangle text-red-500 text-xl mr-3 mt-1"></i>
               <div className="text-red-700">
-                <h3 className="font-semibold mb-2">Important Disclaimer</h3>
+                <h3 className="font-semibold mb-2">⚠️ BUYER BEWARE - Important Legal Disclaimer</h3>
                 <p className="text-sm leading-relaxed mb-3">
-                  Lottery games are games of chance. All numbers have equal probability of being drawn regardless of historical frequency. 
-                  This analysis is for entertainment purposes only and does not guarantee winning outcomes. 
-                  Please play responsibly and within your means. If you have a gambling problem, seek help at{' '}
-                  <a href="#" className="underline font-medium">1-800-GAMBLER</a>.
+                  <strong>BUYER BEWARE:</strong> Lottery games are games of chance where past results DO NOT predict future outcomes. 
+                  All numbers have mathematically equal probability of being drawn regardless of any historical analysis or frequency data. 
+                  This system is for educational and entertainment purposes ONLY and makes NO CLAIMS of improving odds or guaranteeing wins.
+                  <br/><br/>
+                  <strong>NO PERFORMANCE GUARANTEES:</strong> Any analysis, predictions, or number suggestions provided may NOT improve your chances of winning and should be considered entertainment only.
+                  Users participate at their own risk and should never spend more than they can afford to lose.
+                  <br/><br/>
+                  <strong>RESPONSIBLE GAMBLING:</strong> Please play responsibly and within your means. 
+                  If you have a gambling problem, seek help immediately at{' '}
+                  <a href="https://www.1800gambler.net" className="underline font-medium text-red-800" target="_blank" rel="noopener noreferrer">1-800-GAMBLER</a> or visit{' '}
+                  <a href="https://www.ncpgambling.org" className="underline font-medium text-red-800" target="_blank" rel="noopener noreferrer">ncpgambling.org</a>.
                 </p>
-                <div className="text-xs">
+                <div className="text-xs bg-red-100 p-2 rounded border border-red-300">
+                  <p className="font-semibold">Mathematical Reality:</p>
                   <p>Powerball odds: 1 in 292,201,338 | MegaMillions odds: 1 in 302,575,350</p>
+                  <p>These odds remain constant regardless of any analytical method used.</p>
                 </div>
               </div>
             </div>
