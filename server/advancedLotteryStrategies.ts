@@ -1,17 +1,17 @@
 import { storage } from "./storage";
 
 /**
- * Advanced Lottery Optimization Strategies
- * Implements multiple mathematical approaches to maximize winning probability
+ * Educational Lottery Analysis Methods
+ * Implements various mathematical approaches for educational analysis purposes
+ * All methods are for entertainment and educational use only
  */
 
-interface AdvancedPrediction {
+interface AnalysisResult {
   mainNumbers: number[];
   bonusNumber: number;
-  strategy: string;
-  confidence: number;
-  wheelingSystem?: string;
-  patternType?: string;
+  methodology: string;
+  analysisType?: string;
+  educationalNote?: string;
 }
 
 interface WheelSystem {
@@ -25,251 +25,261 @@ interface WheelSystem {
 export class AdvancedLotteryStrategies {
 
   /**
-   * Generate multiple advanced prediction strategies
+   * Generate multiple educational analysis methods for study purposes
    */
-  async generateAdvancedPredictions(game: 'powerball' | 'megamillions', count: number = 10): Promise<AdvancedPrediction[]> {
-    const predictions: AdvancedPrediction[] = [];
+  async generateEducationalAnalysis(game: 'powerball' | 'megamillions', count: number = 10): Promise<AnalysisResult[]> {
+    const analyses: AnalysisResult[] = [];
     
-    // Strategy 1: Hot Number Clustering
-    predictions.push(await this.generateHotClusterPrediction(game));
+    // Method 1: Frequency-Based Analysis
+    analyses.push(await this.generateFrequencyAnalysis(game));
     
-    // Strategy 2: Mathematical Wheeling System
-    predictions.push(await this.generateWheelingPrediction(game));
+    // Method 2: Mathematical Distribution Study
+    analyses.push(await this.generateDistributionStudy(game));
     
-    // Strategy 3: Gap Analysis Strategy
-    predictions.push(await this.generateGapAnalysisPrediction(game));
+    // Method 3: Gap Pattern Examination
+    analyses.push(await this.generateGapPatternStudy(game));
     
-    // Strategy 4: Frequency Distribution Balance
-    predictions.push(await this.generateBalancedFrequencyPrediction(game));
+    // Method 4: Balanced Distribution Analysis
+    analyses.push(await this.generateBalancedAnalysis(game));
     
-    // Strategy 5: Pattern Recognition
-    predictions.push(await this.generatePatternPrediction(game));
+    // Method 5: Historical Pattern Study
+    analyses.push(await this.generatePatternStudy(game));
     
-    // Strategy 6: Delta System
-    predictions.push(await this.generateDeltaSystemPrediction(game));
+    // Method 6: Delta System Analysis
+    analyses.push(await this.generateDeltaAnalysis(game));
     
-    // Strategy 7: Sum Total Optimization
-    predictions.push(await this.generateSumOptimizedPrediction(game));
+    // Method 7: Sum Range Study
+    analyses.push(await this.generateSumRangeStudy(game));
     
-    // Strategy 8: Consecutive Number Avoidance
-    predictions.push(await this.generateConsecutiveAvoidancePrediction(game));
+    // Method 8: Sequence Analysis
+    analyses.push(await this.generateSequenceAnalysis(game));
     
-    // Strategy 9: Position-Based Analysis
-    predictions.push(await this.generatePositionBasedPrediction(game));
+    // Method 9: Positional Study
+    analyses.push(await this.generatePositionalStudy(game));
     
-    // Strategy 10: Hybrid Ultra-Strategy
-    predictions.push(await this.generateHybridUltraPrediction(game));
+    // Method 10: Combined Analysis
+    analyses.push(await this.generateCombinedAnalysis(game));
     
-    return predictions.slice(0, count);
+    return analyses.slice(0, count);
   }
 
   /**
-   * Strategy 1: Hot Number Clustering - Group frequently appearing numbers
+   * Method 1: Frequency-Based Analysis - Study frequently appearing numbers
+   * Educational purpose: Demonstrates how frequency analysis works
    */
-  private async generateHotClusterPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateFrequencyAnalysis(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const frequency = this.calculateFrequencies(draws);
     
-    // Get top hot numbers and cluster them
-    const hotNumbers = Object.entries(frequency)
+    // Analyze historical frequency patterns for educational purposes
+    const frequentNumbers = Object.entries(frequency)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 15)
       .map(([num]) => parseInt(num));
     
-    const mainNumbers = this.selectClusteredNumbers(hotNumbers, game === 'powerball' ? 5 : 5);
+    const mainNumbers = this.selectClusteredNumbers(frequentNumbers, game === 'powerball' ? 5 : 5);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Hot Number Clustering",
-      confidence: 0.85,
-      patternType: "Frequency Clustering"
+      methodology: "Frequency-Based Analysis",
+      analysisType: "Historical Pattern Study",
+      educationalNote: "This method may appeal to players who prefer frequency-based selection"
     };
   }
 
   /**
-   * Strategy 2: Mathematical Wheeling System
+   * Method 2: Mathematical Distribution Study
+   * Educational purpose: Shows how wheeling systems work mathematically
    */
-  private async generateWheelingPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateDistributionStudy(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
-    const topNumbers = this.getTopPerformingNumbers(draws, 12);
+    const analyzedNumbers = this.getTopPerformingNumbers(draws, 12);
     
-    // Apply wheeling system logic
-    const wheeledNumbers = this.applyWheelSystem(topNumbers, game === 'powerball' ? 5 : 5);
+    // Study mathematical distribution patterns
+    const selectedNumbers = this.applyWheelSystem(analyzedNumbers, game === 'powerball' ? 5 : 5);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
-      mainNumbers: wheeledNumbers.sort((a, b) => a - b),
+      mainNumbers: selectedNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Mathematical Wheeling",
-      confidence: 0.82,
-      wheelingSystem: "Abbreviated Wheel (12-to-5)"
+      methodology: "Mathematical Distribution Study",
+      analysisType: "Combinatorial Analysis",
+      educationalNote: "This approach may interest players who like systematic coverage"
     };
   }
 
   /**
-   * Strategy 3: Gap Analysis - Analyze gaps between consecutive draws
+   * Method 3: Gap Pattern Examination
+   * Educational purpose: Studies timing patterns between number appearances
    */
-  private async generateGapAnalysisPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateGapPatternStudy(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const gapAnalysis = this.analyzeNumberGaps(draws);
     
-    // Select numbers based on optimal gap patterns
+    // Examine historical gap patterns for educational insights
     const mainNumbers = this.selectNumbersByGapPattern(gapAnalysis, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Gap Analysis Optimization",
-      confidence: 0.78,
-      patternType: "Gap Pattern Recognition"
+      methodology: "Gap Pattern Examination",
+      analysisType: "Timing Analysis",
+      educationalNote: "This method may suggest patterns for players interested in timing studies"
     };
   }
 
   /**
-   * Strategy 4: Balanced Frequency Distribution
+   * Method 4: Balanced Distribution Analysis
+   * Educational purpose: Studies balanced number distribution patterns
    */
-  private async generateBalancedFrequencyPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateBalancedAnalysis(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const frequency = this.calculateFrequencies(draws);
     
-    // Balance hot, warm, and strategic cold numbers
+    // Study balanced selection patterns for educational insights
     const mainNumbers = this.selectBalancedNumbers(frequency, game === 'powerball' ? 5 : 5);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Balanced Frequency Distribution",
-      confidence: 0.80,
-      patternType: "Frequency Balance"
+      methodology: "Balanced Distribution Analysis",
+      analysisType: "Distribution Balance",
+      educationalNote: "This approach may suit players seeking balanced number selection"
     };
   }
 
   /**
-   * Strategy 5: Pattern Recognition
+   * Method 5: Historical Pattern Study
+   * Educational purpose: Examines historical drawing patterns
    */
-  private async generatePatternPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generatePatternStudy(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const patterns = this.identifyWinningPatterns(draws);
     
-    // Apply most successful pattern
+    // Examine historical patterns for educational analysis
     const mainNumbers = this.applyWinningPattern(patterns, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Pattern Recognition",
-      confidence: 0.83,
-      patternType: "Historical Pattern Matching"
+      methodology: "Historical Pattern Study",
+      analysisType: "Pattern Recognition",
+      educationalNote: "This method may interest players who enjoy pattern analysis"
     };
   }
 
   /**
-   * Strategy 6: Delta System - Based on differences between numbers
+   * Method 6: Delta System Analysis
+   * Educational purpose: Studies differences between consecutive numbers
    */
-  private async generateDeltaSystemPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateDeltaAnalysis(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const deltaAnalysis = this.analyzeDeltaPatterns(draws);
     
-    // Generate numbers using optimal delta sequences
+    // Study delta patterns for educational insights
     const mainNumbers = this.generateNumbersFromDeltas(deltaAnalysis, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Delta System Analysis",
-      confidence: 0.77,
-      patternType: "Delta Sequence Optimization"
+      methodology: "Delta System Analysis",
+      analysisType: "Difference Analysis",
+      educationalNote: "This approach may appeal to players interested in mathematical sequences"
     };
   }
 
   /**
-   * Strategy 7: Sum Total Optimization
+   * Method 7: Sum Range Study
+   * Educational purpose: Analyzes sum total patterns in historical data
    */
-  private async generateSumOptimizedPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateSumRangeStudy(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
-    const optimalSumRange = this.calculateOptimalSumRange(draws);
+    const sumRangeData = this.calculateOptimalSumRange(draws);
     
-    // Generate numbers that fall within optimal sum range
-    const mainNumbers = this.generateNumbersForSumRange(optimalSumRange, game === 'powerball' ? 5 : 5, game);
+    // Study sum range patterns for educational purposes
+    const mainNumbers = this.generateNumbersForSumRange(sumRangeData, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Sum Total Optimization",
-      confidence: 0.81,
-      patternType: "Sum Range Targeting"
+      methodology: "Sum Range Study",
+      analysisType: "Total Sum Analysis",
+      educationalNote: "This method may suit players who consider sum total ranges"
     };
   }
 
   /**
-   * Strategy 8: Consecutive Number Avoidance
+   * Method 8: Sequence Analysis
+   * Educational purpose: Studies consecutive number patterns in draws
    */
-  private async generateConsecutiveAvoidancePrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateSequenceAnalysis(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const consecutiveAnalysis = this.analyzeConsecutivePatterns(draws);
     
-    // Generate numbers avoiding consecutive patterns
+    // Study sequence patterns for educational insights
     const mainNumbers = this.generateNonConsecutiveNumbers(consecutiveAnalysis, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Consecutive Avoidance Strategy",
-      confidence: 0.79,
-      patternType: "Non-Consecutive Optimization"
+      methodology: "Sequence Analysis",
+      analysisType: "Consecutive Pattern Study",
+      educationalNote: "This approach may interest players who study number sequence patterns"
     };
   }
 
   /**
-   * Strategy 9: Position-Based Analysis
+   * Method 9: Positional Study
+   * Educational purpose: Analyzes number positions in historical draws
    */
-  private async generatePositionBasedPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generatePositionalStudy(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     const positionAnalysis = this.analyzeNumberPositions(draws);
     
-    // Select numbers based on their historical position performance
+    // Study positional patterns for educational purposes
     const mainNumbers = this.selectNumbersByPosition(positionAnalysis, game === 'powerball' ? 5 : 5);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Position-Based Analysis",
-      confidence: 0.84,
-      patternType: "Positional Frequency"
+      methodology: "Positional Study",
+      analysisType: "Position-Based Analysis",
+      educationalNote: "This method may appeal to players interested in positional frequency studies"
     };
   }
 
   /**
-   * Strategy 10: Hybrid Ultra-Strategy (Combines best elements)
+   * Method 10: Combined Analysis
+   * Educational purpose: Demonstrates how multiple analytical approaches work together
    */
-  private async generateHybridUltraPrediction(game: 'powerball' | 'megamillions'): Promise<AdvancedPrediction> {
+  private async generateCombinedAnalysis(game: 'powerball' | 'megamillions'): Promise<AnalysisResult> {
     const draws = await storage.getDraws(game);
     
-    // Combine multiple analytical approaches
+    // Combine multiple analytical approaches for educational study
     const frequency = this.calculateFrequencies(draws);
     const gaps = this.analyzeNumberGaps(draws);
     const patterns = this.identifyWinningPatterns(draws);
     const sumRange = this.calculateOptimalSumRange(draws);
     
-    // Apply hybrid algorithm
+    // Study combined analytical methods
     const mainNumbers = this.generateHybridNumbers(frequency, gaps, patterns, sumRange, game === 'powerball' ? 5 : 5, game);
     const bonusNumber = this.getBestBonusNumber(draws, game);
     
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber,
-      strategy: "Hybrid Ultra-Strategy",
-      confidence: 0.92,
-      patternType: "Multi-Algorithm Fusion"
+      methodology: "Combined Analysis",
+      analysisType: "Multi-Method Study",
+      educationalNote: "This comprehensive approach may suit players who enjoy multiple analytical perspectives"
     };
   }
 
