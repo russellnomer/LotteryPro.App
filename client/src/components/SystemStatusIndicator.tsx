@@ -115,7 +115,7 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
             <Activity className="h-4 w-4 text-blue-600 animate-pulse" />
           )}
           <span className="text-sm font-medium">
-            {isSystemComplete ? 'Maximum Power Ready' : 'Loading Statistical Power'}
+            {isSystemComplete ? 'Analysis Ready' : 'Loading Analysis Tools'}
           </span>
         </div>
         {showDetails && (
@@ -145,7 +145,7 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
         </CardTitle>
         <div className="text-blue-100 text-sm">
           {isSystemComplete ? 
-            '✅ Maximum statistical power achieved for ultimate lottery analysis' :
+            '✅ Educational analysis tools ready for lottery study' :
             '📊 Progressive enhancement building statistical power in real-time'
           }
         </div>
@@ -241,7 +241,7 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
             <div className="flex items-center gap-2">
               <Crown className="h-4 w-4 text-yellow-600" />
               <span className="font-bold text-yellow-800 text-sm">
-                Russell's Platform: MAXIMUM POWER UNLOCKED
+                Russell's Platform: ANALYSIS READY
               </span>
             </div>
             <div className="text-xs text-yellow-700 mt-1">

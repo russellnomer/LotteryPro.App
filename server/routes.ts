@@ -837,8 +837,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ultimate prediction combining all strategies
-  app.get('/api/ultimate-prediction/:game', async (req, res) => {
+  // Combined educational analysis combining all strategies
+  app.get('/api/combined-analysis/:game', async (req, res) => {
     try {
       const { game } = req.params;
       if (!['powerball', 'megamillions'].includes(game)) {
@@ -870,7 +870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         game,
-        ultimatePrediction: bestEnhanced,
+        combinedAnalysis: bestEnhanced,
         alternativePredictions: enhancedPredictions.slice(0, 3),
         supportingStrategies: basicStrategies.slice(0, 3),
         analysisMetadata: {
@@ -883,8 +883,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      console.error('Error generating ultimate prediction:', error);
-      res.status(500).json({ error: 'Failed to generate ultimate prediction' });
+      console.error('Error generating combined analysis:', error);
+      res.status(500).json({ error: 'Failed to generate combined analysis' });
     }
   });
 
@@ -894,14 +894,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { realTimeAnalysis } = await import('./realTimeAnalysis');
       const predictions = await realTimeAnalysis.generateRealTimePredictions();
       
-      // Find the ultimate prediction (highest confidence)
-      const ultimatePrediction = predictions.reduce((best, current) => 
+      // Find the best educational analysis (highest confidence)
+      const bestAnalysis = predictions.reduce((best, current) => 
         current.confidence > best.confidence ? current : best
       );
 
       res.json({
         success: true,
-        ultimatePrediction,
+        bestAnalysis,
         allPredictions: predictions,
         totalStrategies: predictions.length,
         averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length,

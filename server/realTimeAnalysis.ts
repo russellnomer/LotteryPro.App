@@ -75,8 +75,8 @@ export class RealTimeAnalysis {
     // Strategy 4: Gap Compensation Strategy
     predictions.push(await this.generateGapCompensationStrategy());
     
-    // Strategy 5: Ultimate Combined Strategy
-    predictions.push(await this.generateUltimateCombinedStrategy());
+    // Strategy 5: Combined Educational Analysis
+    predictions.push(await this.generateCombinedEducationalAnalysis());
     
     return predictions;
   }
@@ -348,13 +348,13 @@ export class RealTimeAnalysis {
   }
 
   /**
-   * Strategy 5: Ultimate combined approach
+   * Strategy 5: Combined educational approach
    */
-  private async generateUltimateCombinedStrategy(): Promise<RealTimePrediction> {
+  private async generateCombinedEducationalAnalysis(): Promise<RealTimePrediction> {
     const draws = await storage.getDraws('powerball');
     const frequency = this.calculateFrequencies(draws);
     
-    // Combine all strategies for ultimate prediction
+    // Combine all strategies for educational analysis
     const recentNumbers = new Set<number>();
     this.recentResults.forEach(result => {
       result.mainNumbers.forEach(num => recentNumbers.add(num));
@@ -397,7 +397,7 @@ export class RealTimeAnalysis {
     return {
       mainNumbers: mainNumbers.sort((a, b) => a - b),
       bonusNumber: 11, // High frequency powerball not recently drawn
-      strategy: "Ultimate Combined Analysis",
+      strategy: "Combined Educational Analysis",
       confidence: 0.94,
       reasoning: [
         "Combines frequency, recency, overdue, and distribution analysis",
