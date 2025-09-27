@@ -60,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get full dataset for maximum statistical power
+  // Get full dataset for educational analysis
   app.get("/api/draws/:game/full", async (req, res) => {
     try {
       const game = req.params.game as GameType;
@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
-      // Progressive loading for full statistical power
+      // Progressive loading for educational data collection
       const draws = await lotteryCache.getFullDraws(game);
       res.json(draws);
     } catch (error: any) {
@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mainNumbers,
         bonusNumber,
         method,
-        confidence: method === 'hot' ? 0.75 : method === 'balanced' ? 0.65 : 0.50,
+        educationalNote: `Educational ${method} number methodology for study purposes`,
         ticketId: ticket.id,
         totalNumbers: 6, // Explicitly show this is 6 numbers total
         gameInfo: {
@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `${draws[draws.length - 1].drawDate.toLocaleDateString()} - ${draws[0].drawDate.toLocaleDateString()}` :
         'No data';
       
-      const isStatisticallySignificant = draws.length >= 200; // Ultra-maximum statistical confidence requirement
+      const hasAdequateData = draws.length >= 200; // Adequate sample size for educational analysis
       
       const analysis = {
         hotNumbers,
@@ -777,7 +777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         game,
         strategies: predictions,
         totalStrategies: predictions.length,
-        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length
+        analysisNote: "Educational lottery number study methodologies"
       });
     } catch (error) {
       console.error('Error generating advanced strategies:', error);
@@ -827,8 +827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         game,
         enhancedPredictions: predictions,
         totalPredictions: predictions.length,
-        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length,
-        averageExpectedValue: predictions.reduce((sum, p) => sum + p.expectedValue, 0) / predictions.length,
+        educationalNote: "Enhanced educational analysis for lottery number study",
         analysisDate: new Date().toISOString()
       });
     } catch (error) {
@@ -858,10 +857,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enhancedAnalysis.generateEnhancedPredictions(game as any)
       ]);
 
-      // Find the highest confidence prediction from enhanced analysis
-      const bestEnhanced = enhancedPredictions.reduce((best, current) => 
-        current.confidence > best.confidence ? current : best
-      );
+      // Select the first enhanced analysis for educational display
+      const primaryEnhanced = enhancedPredictions[0] || null;
 
       // Get current draws for additional analysis
       const draws = await storage.getDraws(game);
@@ -870,15 +867,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         game,
-        combinedAnalysis: bestEnhanced,
+        combinedAnalysis: primaryEnhanced,
         alternativePredictions: enhancedPredictions.slice(0, 3),
         supportingStrategies: basicStrategies.slice(0, 3),
         analysisMetadata: {
           totalDrawsAnalyzed: draws.length,
           latestDrawDate: latestDrawDate,
           analysisDate: new Date().toISOString(),
-          confidenceLevel: bestEnhanced.confidence,
-          expectedValue: bestEnhanced.expectedValue,
+          educationalNote: "Combined educational analysis for study purposes",
           strategiesUsed: enhancedPredictions.length + basicStrategies.length
         }
       });
@@ -892,23 +888,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/real-time-analysis', async (req, res) => {
     try {
       const { realTimeAnalysis } = await import('./realTimeAnalysis');
-      const predictions = await realTimeAnalysis.generateRealTimePredictions();
+      const studies = await realTimeAnalysis.generateRealTimeStudies();
       
-      // Find the best educational analysis (highest confidence)
-      const bestAnalysis = predictions.reduce((best, current) => 
-        current.confidence > best.confidence ? current : best
-      );
+      // Select the first educational study for display
+      const primaryStudy = studies[0] || null;
 
       res.json({
         success: true,
-        bestAnalysis,
-        allPredictions: predictions,
-        totalStrategies: predictions.length,
-        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length,
+        primaryStudy,
+        allStudies: studies,
+        totalMethods: studies.length,
         analysisDate: new Date().toISOString(),
         basedOnActualResults: true,
         recentResultsAnalyzed: 5,
-        jackpotAmount: "$1,300,000,000"
+        educationalNote: "For educational analysis and entertainment purposes only"
       });
     } catch (error) {
       console.error('Error generating real-time analysis:', error);
@@ -931,8 +924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         numerologyPredictions: predictions,
         totalPredictions: predictions.length,
-        averageConfidence: predictions.reduce((sum, p) => sum + p.confidence, 0) / predictions.length,
-        averageVibration: predictions.reduce((sum, p) => sum + p.vibrationLevel, 0) / predictions.length,
+        educationalNote: "Educational numerological study methods for entertainment purposes",
         analysisDate: new Date().toISOString(),
         personalizedInput: {
           fullName: fullName || 'Universal Energy',
