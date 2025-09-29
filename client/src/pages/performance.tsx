@@ -34,13 +34,13 @@ export default function Performance() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-primary">
-                <i className="fas fa-chart-line mr-2"></i>LotteryPro Performance
+                <i className="fas fa-chart-line mr-2"></i>Educational Analysis History
               </h1>
             </div>
             <nav className="hidden md:flex space-x-8">
               <a href="/" className="text-gray-600 hover:text-primary transition-colors">Dashboard</a>
-              <a href="#" className="text-primary font-semibold">Performance</a>
-              <a href="#" className="text-gray-600 hover:text-primary transition-colors">Track Record</a>
+              <a href="#" className="text-primary font-semibold">Analysis History</a>
+              <a href="#" className="text-gray-600 hover:text-primary transition-colors">Study Results</a>
             </nav>
           </div>
         </div>
@@ -51,13 +51,12 @@ export default function Performance() {
         <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-lg p-8 mb-8 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Statistical Analysis Status</h2>
+              <h2 className="text-3xl font-bold mb-2">Educational Analysis Summary</h2>
               <p className="text-xl opacity-90">
-                {marketingStats?.overallPerformance.totalEvaluated || 0} validated results - 
-                {(marketingStats?.overallPerformance.sampleSizeNeeded || 384)} more needed for statistical significance
+                {marketingStats?.overallPerformance.totalPredictions || 0} historical pattern studies completed
               </p>
               <p className="text-sm opacity-75 mt-2">
-                ⚠️ No performance advantage claims can be validated with current data
+                📚 For educational and entertainment purposes only
               </p>
             </div>
             <div className="text-right">
@@ -66,7 +65,7 @@ export default function Performance() {
               </div>
               <div className="text-lg opacity-90">Total Generated</div>
               <div className="text-sm opacity-75">
-                {marketingStats?.overallPerformance.totalEvaluated || 0} Evaluated
+                Educational analysis only
               </div>
             </div>
           </div>
@@ -80,20 +79,20 @@ export default function Performance() {
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-medium text-yellow-800">
-                Important Statistical Disclaimer
+                Educational Use Disclaimer
               </h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <p className="mb-2">
-                  <strong>Current data is insufficient for statistical validation.</strong> Any performance claims require:
+                  <strong>This platform is for educational and entertainment purposes only.</strong> Important reminders:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Minimum 384 validated predictions (95% confidence level)</li>
-                  <li>Control group of random selections</li>
-                  <li>6+ months of outcome tracking</li>
-                  <li>Peer-reviewed statistical analysis</li>
+                  <li>All analysis is historical pattern study - not predictive</li>
+                  <li>No system can predict random lottery outcomes</li>
+                  <li>Each lottery draw is mathematically independent</li>
+                  <li>Past results do not influence future outcomes</li>
                 </ul>
                 <p className="mt-3 font-semibold">
-                  Mathematical fact: Each lottery draw is independent. Past results do not influence future outcomes.
+                  Use this tool for cultural learning and entertainment only - never for financial decisions.
                 </p>
               </div>
             </div>
@@ -104,37 +103,37 @@ export default function Performance() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Generated Predictions</CardTitle>
+              <CardTitle className="text-sm font-medium">Pattern Studies</CardTitle>
               <i className="fas fa-dice text-orange-500"></i>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {marketingStats?.overallPerformance.averageAccuracy}%
+                {marketingStats?.overallPerformance.totalPredictions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Better than random selection
+                Total historical studies
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Top Method</CardTitle>
+              <CardTitle className="text-sm font-medium">Most Studied Method</CardTitle>
               <i className="fas fa-trophy text-yellow-500"></i>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold capitalize">
-                {marketingStats?.overallPerformance.topPerformingMethod}
+                {marketingStats?.overallPerformance.topPerformingMethod || 'Various'}
               </div>
               <p className="text-xs text-muted-foreground">
-                Best performing strategy
+                Study methodology
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recent Wins</CardTitle>
+              <CardTitle className="text-sm font-medium">Pattern Matches</CardTitle>
               <i className="fas fa-medal text-green-500"></i>
             </CardHeader>
             <CardContent>
@@ -142,22 +141,22 @@ export default function Performance() {
                 {marketingStats?.recentWins.length || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                In the last 30 days
+                Recent analysis sessions
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Edge Over Random</CardTitle>
+              <CardTitle className="text-sm font-medium">Analysis Sessions</CardTitle>
               <i className="fas fa-chart-up text-blue-500"></i>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                +{marketingStats?.overallPerformance.improvementOverRandom}%
+              <div className="text-2xl font-bold text-blue-600">
+                {marketingStats?.overallPerformance.totalPredictions || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Improvement rate
+                Educational studies
               </p>
             </CardContent>
           </Card>
@@ -167,7 +166,7 @@ export default function Performance() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <i className="fas fa-chart-bar text-primary mr-2"></i>Method Performance Comparison
+              <i className="fas fa-chart-bar text-primary mr-2"></i>Analysis Method Comparison
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -183,20 +182,16 @@ export default function Performance() {
                     </div>
                     <div className="flex items-center space-x-6 text-sm">
                       <div>
-                        <span className="text-gray-600">Accuracy: </span>
-                        <span className="font-bold">{method.accuracy}%</span>
+                        <span className="text-gray-600">Sample Size: </span>
+                        <span className="font-bold">{method.accuracy} studies</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Win Rate: </span>
-                        <span className="font-bold">{method.winRate}%</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Best Match: </span>
-                        <span className="font-bold">{method.bestMatch}/5</span>
+                        <span className="text-gray-600">Method: </span>
+                        <span className="font-bold capitalize">{method.method}</span>
                       </div>
                     </div>
                   </div>
-                  <Progress value={method.accuracy} className="h-2" />
+                  <div className="text-xs text-gray-500 italic">Historical frequency analysis - not predictive</div>
                 </div>
               ))}
             </div>
@@ -207,16 +202,16 @@ export default function Performance() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <i className="fas fa-trophy text-primary mr-2"></i>Recent Winning Predictions
+              <i className="fas fa-book text-primary mr-2"></i>Recent Pattern Studies
             </CardTitle>
           </CardHeader>
           <CardContent>
             {marketingStats?.recentWins && marketingStats.recentWins.length > 0 ? (
               <div className="space-y-4">
                 {marketingStats.recentWins.map((win, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div key={index} className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                         {win.numbersMatched}
                       </div>
                       <div>
@@ -224,13 +219,13 @@ export default function Performance() {
                           {win.game === 'powerball' ? 'Powerball' : 'MegaMillions'}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {win.method.toUpperCase()} method • {win.prizeLevel}
+                          {win.method.toUpperCase()} analysis method
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-green-600">
-                        {win.numbersMatched} matches
+                      <div className="font-semibold text-blue-600">
+                        {win.numbersMatched} pattern correlations
                       </div>
                       <div className="text-sm text-gray-600">{win.date}</div>
                     </div>
@@ -240,7 +235,7 @@ export default function Performance() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <i className="fas fa-chart-line text-4xl mb-4 opacity-50"></i>
-                <p>No recent wins to display. Start generating predictions to build your track record!</p>
+                <p>No recent pattern studies to display. Start analyzing numbers to build your educational history!</p>
               </div>
             )}
           </CardContent>
