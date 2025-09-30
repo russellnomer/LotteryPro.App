@@ -25,7 +25,7 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm">
             <BookOpenIcon className="h-4 w-4" />
-            Russell's Gambling Strategy Books
+            📚 Books by Russell Nomer
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -47,10 +47,10 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
       <CardHeader className="pb-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-t-lg">
         <CardTitle className="flex items-center gap-2 text-lg font-bold">
           <BookOpenIcon className="h-5 w-5" />
-          🎯 Russell's Gambling Strategy Books
+          📚 Books by Russell Nomer
         </CardTitle>
         <p className="text-orange-100 font-medium">
-          ⚡ Master casino strategies with proven expert insights
+          ⚡ Browse the complete collection of published works
         </p>
         <div className="mt-2 p-2 bg-yellow-100 rounded border border-yellow-400">
           <p className="text-yellow-800 text-xs font-medium">
@@ -60,41 +60,59 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {books.map((book) => (
-          <div 
-            key={book.id}
-            className="p-4 rounded-xl border-2 border-orange-300 bg-white hover:border-orange-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <div className="flex justify-between items-start gap-3">
-              <div className="flex-1">
-                <h4 className="font-medium text-sm leading-tight mb-2">
-                  {book.title}
-                </h4>
-                {book.description && !compact && (
-                  <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
-                    {book.description}
-                  </p>
-                )}
-                <div className="flex items-center justify-between">
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs px-2 py-0 capitalize"
-                  >
-                    {book.category}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    className="h-8 px-4 text-xs font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                    onClick={() => window.open(book.amazonUrl, '_blank')}
-                  >
-                    <ShoppingCartIcon className="h-3 w-3 mr-1" />
-                    🛒 Buy & Support Russell!
-                  </Button>
+        {books.map((book) => {
+          const isTheGrove = book.title.toLowerCase().includes('the grove');
+          return (
+            <div 
+              key={book.id}
+              className={`p-4 rounded-xl border-2 ${
+                isTheGrove 
+                  ? 'border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 ring-2 ring-green-300' 
+                  : 'border-orange-300 bg-white'
+              } hover:border-orange-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
+            >
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-medium text-sm leading-tight">
+                      {book.title}
+                    </h4>
+                    {isTheGrove && (
+                      <Badge className="bg-green-600 text-white text-[10px] px-1.5 py-0">
+                        🌟 NEW PREORDER
+                      </Badge>
+                    )}
+                  </div>
+                  {book.description && !compact && (
+                    <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+                      {book.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs px-2 py-0 capitalize"
+                    >
+                      {book.category}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      className={`h-8 px-4 text-xs font-bold ${
+                        isTheGrove
+                          ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                          : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                      } text-white shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300`}
+                      onClick={() => window.open(book.amazonUrl, '_blank')}
+                    >
+                      <ShoppingCartIcon className="h-3 w-3 mr-1" />
+                      {isTheGrove ? '🌟 Preorder Now!' : '🛒 Buy & Support Russell!'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         
         <div className="mt-4 p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border border-blue-200">
           <h4 className="font-semibold text-blue-800 mb-2 flex items-center text-sm">
