@@ -27,6 +27,13 @@ interface PersonalNumbers {
   birthYear: number;
 }
 
+interface NumerologyPrediction {
+  mainNumbers: number[];
+  bonusNumber: number;
+  methodology: string;
+  educationalNote?: string;
+}
+
 export class NumerologyAnalysis {
   
   /**
@@ -49,30 +56,67 @@ export class NumerologyAnalysis {
     studies.push(await this.generateMasterNumberStudy(personalNumbers));
     
     // Method 3: Birth Date Harmony Study
-    studies.push(await this.generateBirthDateHarmonicsStudy(personalNumbers));
+    const birthDateResult = await this.generateBirthDateHarmonics(personalNumbers);
+    studies.push({
+      mainNumbers: birthDateResult.mainNumbers,
+      bonusNumber: birthDateResult.bonusNumber,
+      numerologyMethod: birthDateResult.methodology,
+      studyFactors: birthDateResult.educationalNote ? [birthDateResult.educationalNote] : [],
+      culturalContext: "Birth date numerology study for educational purposes",
+      educationalGuidance: [
+        "Demonstrates birth date harmonic concepts",
+        "Shows traditional numerological calculations"
+      ],
+      educationalNote: "This method studies birth date numerology patterns for educational purposes"
+    });
     
     // Method 4: Universal Energy Study
-    studies.push(await this.generateUniversalEnergyStudy());
+    const universalResult = await this.generateUniversalEnergyStrategy();
+    studies.push(this.convertToStudy(universalResult, "Universal Energy Study"));
     
     // Method 5: Kabbalah Number Study
-    studies.push(await this.generateKabbalahStudy(personalNumbers));
+    const kabbalahResult = await this.generateKabbalahStrategy(personalNumbers);
+    studies.push(this.convertToStudy(kabbalahResult, "Kabbalah Number Study"));
     
     // Method 6: Pythagorean Educational Method
-    studies.push(await this.generatePythagoreanStudy(personalNumbers));
+    const pythagoreanResult = await this.generatePythagoreanStrategy(personalNumbers);
+    studies.push(this.convertToStudy(pythagoreanResult, "Pythagorean Educational Method"));
     
     // Method 7: Chaldean Cultural Study
-    studies.push(await this.generateChaldeanStudy(personalNumbers));
+    const chaldeanResult = await this.generateChaldeanStrategy(personalNumbers);
+    studies.push(this.convertToStudy(chaldeanResult, "Chaldean Cultural Study"));
     
     // Method 8: Angel Numbers Cultural Study
-    studies.push(await this.generateAngelNumberStudy(personalNumbers));
+    const angelResult = await this.generateAngelNumberStrategy(personalNumbers);
+    studies.push(this.convertToStudy(angelResult, "Angel Numbers Cultural Study"));
     
     // Method 9: Chinese Numerology Cultural Study
-    studies.push(await this.generateChineseNumerologyStudy(personalNumbers));
+    const chineseResult = await this.generateChineseNumerologyStrategy(personalNumbers);
+    studies.push(this.convertToStudy(chineseResult, "Chinese Numerology Cultural Study"));
     
     // Method 10: Karmic Studies Educational Method
-    studies.push(await this.generateKarmicStudy(personalNumbers));
+    const karmicResult = await this.generateKarmicStrategy(personalNumbers);
+    studies.push(this.convertToStudy(karmicResult, "Karmic Studies Educational Method"));
     
     return studies;
+  }
+
+  /**
+   * Convert strategy result to study format
+   */
+  private convertToStudy(result: any, methodName: string): NumerologyStudy {
+    return {
+      mainNumbers: result.mainNumbers,
+      bonusNumber: result.bonusNumber,
+      numerologyMethod: methodName,
+      studyFactors: result.educationalNote ? [result.educationalNote] : [],
+      culturalContext: result.methodology || "Traditional numerology study",
+      educationalGuidance: [
+        "Demonstrates traditional numerological concepts",
+        "Shows cultural number beliefs for educational purposes"
+      ],
+      educationalNote: result.educationalNote || "This method studies numerology patterns for educational purposes"
+    };
   }
 
   /**
