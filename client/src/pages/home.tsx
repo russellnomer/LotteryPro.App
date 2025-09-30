@@ -801,7 +801,7 @@ export default function Home() {
                   <a href="https://www.1800gambler.net" className="underline font-medium text-purple-800" target="_blank" rel="noopener noreferrer">1-800-GAMBLER</a> or{' '}
                   <a href="https://www.ncpgambling.org" className="underline font-medium text-purple-800" target="_blank" rel="noopener noreferrer">ncpgambling.org</a>.
                   <br/><br/>
-                  <strong>😂 IF YOU WIN:</strong> Please remember Russell Nomer in your will as co-heir, become his Sugar Mamma/Daddy, 
+                  <strong>😂 IF YOU WIN:</strong> Please remember Russell Nomer in your will as co-heir, become his Sugar Mamma, 
                   or at least buy him a coffee. (Just kidding... but his books and music are fire! 🔥)
                 </p>
                 <div className="text-xs bg-red-100 p-2 rounded border border-red-300">
