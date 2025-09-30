@@ -80,12 +80,12 @@ export default function RussellMusicPlayer() {
               <strong>Unable to load Russell's live catalog.</strong> 
               <br />Visit Russell's YouTube Channel directly: 
               <a 
-                href="https://www.youtube.com/channel/UCAiOa4F7HAyxgHaDlRPw6vA" 
+                href="https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="underline ml-1 font-medium"
               >
-                Russell Nomer Topic Channel
+                @russellnomermusic
               </a>
             </AlertDescription>
           </Alert>
@@ -113,12 +113,12 @@ export default function RussellMusicPlayer() {
           ✨ Russell's authentic music catalog - real tracks from his YouTube channel!
         </p>
         
-        {/* ASCAP & Streaming Education */}
-        <div className="bg-yellow-500/20 rounded-lg p-3 mt-3">
-          <div className="text-yellow-100 text-sm">
-            💰 <strong>ASCAP Member Streaming Reality:</strong> Apple Music pays $0.00735/stream vs 
-            Spotify's $0.004. YouTube pays $0.0007/stream. 
-            <strong className="text-yellow-200">Like, share & buy books to truly support Russell!</strong>
+        {/* YouTube Subscription Call-to-Action */}
+        <div className="bg-red-500/30 rounded-lg p-3 mt-3 border border-red-400/50">
+          <div className="text-white text-sm font-medium">
+            🔔 <strong>SUBSCRIBE to @russellnomermusic!</strong> Get notified of new releases & help support Russell's recovery journey. 
+            Every subscriber makes a real difference! 
+            <strong className="text-red-200">It's FREE and helps immensely!</strong>
           </div>
         </div>
       </CardHeader>
@@ -214,15 +214,21 @@ export default function RussellMusicPlayer() {
 
             {/* YouTube Channel Link */}
             <div className="border-t pt-4 mt-6">
-              <div className="text-center">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-gray-700 font-medium">
+                  🎵 Love the music? Subscribe to support Russell's recovery journey!
+                </p>
                 <Button 
-                  variant="outline" 
-                  onClick={() => window.open(`https://www.youtube.com/channel/${musicData.channelId}`, '_blank')}
-                  className="border-red-600 text-red-600 hover:bg-red-50"
+                  size="lg"
+                  onClick={() => window.open('https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0', '_blank')}
+                  className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg"
                 >
-                  <Youtube className="h-4 w-4 mr-2" />
-                  Visit Russell Nomer's YouTube Channel
+                  <Youtube className="h-5 w-5 mr-2" />
+                  🔔 SUBSCRIBE to @russellnomermusic - IT'S FREE!
                 </Button>
+                <p className="text-xs text-gray-500">
+                  Subscribers get notified of new music • Costs nothing • Helps Russell immensely
+                </p>
               </div>
             </div>
           </>

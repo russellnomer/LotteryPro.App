@@ -254,26 +254,31 @@ export default function MusicHome() {
             <AstrologicalFeatures compact={true} />
 
             {/* Support Russell Section */}
-            <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+            <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-300">
               <CardHeader>
-                <CardTitle className="flex items-center text-orange-800">
-                  <Heart className="h-5 w-5 mr-2 text-red-500" />
-                  Support Russell's Recovery
+                <CardTitle className="flex items-center text-red-800">
+                  <Youtube className="h-5 w-5 mr-2 text-red-600" />
+                  🔔 Subscribe & Support Russell
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-3">
-                <p className="text-orange-700">
-                  Russell has been out of work for 2 years due to cervical spinal fusion surgery and lives with constant pain. 
-                  Your support helps him continue creating music and content during this challenging time.
+                <p className="text-red-700 font-medium">
+                  Russell has been out of work for a few years due to cervical spinal fusion surgery and lives with constant pain. 
+                  Your FREE YouTube subscription helps him continue creating music during this challenging time.
                 </p>
+                <div className="bg-red-100 p-2 rounded border border-red-200">
+                  <p className="text-xs text-red-800 font-medium">
+                    💡 <strong>Why Subscribe?</strong> Get new music alerts • Support independent artists • It costs you NOTHING!
+                  </p>
+                </div>
                 <div className="space-y-2">
                   <Button 
                     size="sm" 
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                    onClick={() => window.open('https://www.youtube.com/channel/UCAiOa4F7HAyxgHaDlRPw6vA', '_blank')}
+                    className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-md"
+                    onClick={() => window.open('https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0', '_blank')}
                   >
                     <Youtube className="h-4 w-4 mr-2" />
-                    Subscribe on YouTube
+                    🔔 SUBSCRIBE NOW - FREE!
                   </Button>
                   <Button 
                     size="sm" 

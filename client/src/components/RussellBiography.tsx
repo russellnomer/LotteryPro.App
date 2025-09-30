@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Shield, Music, Book, TrendingUp, Users } from "lucide-react";
+import { Heart, Shield, Music, Book, TrendingUp, Users, Youtube } from "lucide-react";
 
 export default function RussellBiography() {
   return (
@@ -147,9 +147,12 @@ export default function RussellBiography() {
             Your support helps Russell continue creating while managing chronic pain and rebuilding his career.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              <Music className="h-4 w-4 mr-2" />
-              Stream Music
+            <Button 
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              onClick={() => window.open('https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0', '_blank')}
+            >
+              <Youtube className="h-4 w-4 mr-2" />
+              🔔 Subscribe on YouTube - FREE!
             </Button>
             <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
               <Book className="h-4 w-4 mr-2" />
