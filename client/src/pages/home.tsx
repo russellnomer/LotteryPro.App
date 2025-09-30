@@ -177,22 +177,22 @@ export default function Home() {
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold mb-2">🤖 AI-Powered Lottery Analytics</h2>
+            <h2 className="text-3xl font-bold mb-2">🎓 Educational Lottery Number Analysis</h2>
             <p className="text-purple-100 text-lg">
-              Advanced machine learning algorithms generate statistically optimized lottery numbers
+              Historical pattern frequency study for cultural learning and entertainment purposes only
             </p>
             <div className="mt-4 flex justify-center gap-4">
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <Target className="h-4 w-4 mr-2" />
-                AI Analysis
+                Pattern Study
               </Badge>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <TrendingUp className="h-4 w-4 mr-2" />
-                Statistical Edge
+                Historical Data
               </Badge>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <Star className="h-4 w-4 mr-2" />
-                Smart Predictions
+                Educational Tool
               </Badge>
             </div>
           </div>
@@ -571,36 +571,36 @@ export default function Home() {
               </Card>
             )}
 
-            {/* Performance Teaser */}
+            {/* Educational Dataset Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center">
-                    <i className="fas fa-trophy text-primary mr-2"></i>Our Track Record
+                    <i className="fas fa-graduation-cap text-primary mr-2"></i>Educational Dataset
                   </span>
                   <a href="/performance" className="text-sm text-primary hover:underline">
-                    View Full Report →
+                    View Analysis History →
                   </a>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">25%</div>
-                    <div className="text-sm text-gray-600">Better than Random</div>
-                  </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">73%</div>
-                    <div className="text-sm text-gray-600">Average Accuracy</div>
+                    <div className="text-2xl font-bold text-blue-600">112K+</div>
+                    <div className="text-sm text-gray-600">Historical Draws</div>
                   </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">Hot</div>
-                    <div className="text-sm text-gray-600">Best Method</div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">5+ Years</div>
+                    <div className="text-sm text-gray-600">Data Coverage</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">Pattern</div>
+                    <div className="text-sm text-gray-600">Frequency Study</div>
                   </div>
                 </div>
-                <div className="mt-4 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white text-center">
-                  <p className="font-semibold">Why choose random when you can choose smart?</p>
-                  <p className="text-sm opacity-90">Our algorithms give you a statistical edge over pure luck.</p>
+                <div className="mt-4 p-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg text-white text-center">
+                  <p className="font-semibold">📚 For Educational & Entertainment Purposes Only</p>
+                  <p className="text-sm opacity-90">Historical pattern analysis - not predictive. Lottery outcomes are random and independent.</p>
                 </div>
               </CardContent>
             </Card>
