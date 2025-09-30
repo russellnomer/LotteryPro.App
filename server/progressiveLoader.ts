@@ -15,7 +15,7 @@ interface LoadingProgress {
 
 /**
  * Progressive Enhancement System for Russell Nomer Lottery Platform
- * Provides real-time loading progress and statistical power notifications
+ * Provides real-time loading progress for educational dataset assembly
  */
 export class ProgressiveLoader extends EventEmitter {
   private loadingState = new Map<GameType, LoadingProgress>();
@@ -75,7 +75,7 @@ export class ProgressiveLoader extends EventEmitter {
       // Stage 2: Progressive loading (background enhancement)
       await this.loadProgressiveDraws(game, startTime);
       
-      // Stage 3: Complete (maximum statistical power achieved)
+      // Stage 3: Complete (full historical dataset loaded)
       this.updateProgress(game, 'complete', 100, 500, 500);
       this.emit('gameComplete', game);
       
@@ -124,11 +124,11 @@ export class ProgressiveLoader extends EventEmitter {
       
       // Emit milestone events
       if (loaded >= 100 && loaded < 150) {
-        this.emit('milestone', { game, milestone: 'basic_analysis', confidence: '3x minimum' });
+        this.emit('milestone', { game, milestone: 'initial_dataset', sampleSize: loaded });
       } else if (loaded >= 200 && loaded < 250) {
-        this.emit('milestone', { game, milestone: 'advanced_analysis', confidence: '6x minimum' });
+        this.emit('milestone', { game, milestone: 'extended_dataset', sampleSize: loaded });
       } else if (loaded >= 300 && loaded < 350) {
-        this.emit('milestone', { game, milestone: 'expert_analysis', confidence: '10x minimum' });
+        this.emit('milestone', { game, milestone: 'comprehensive_dataset', sampleSize: loaded });
       }
 
       // Small delay to prevent overwhelming the system
@@ -153,19 +153,11 @@ export class ProgressiveLoader extends EventEmitter {
   }
 
   /**
-   * Calculate statistical power based on number of draws
+   * Calculate dataset size percentage (for progress tracking only - not statistical confidence)
    */
   private calculateStatisticalPower(game: GameType, drawsLoaded: number): number {
-    const minimumSample = 30; // Minimum for basic statistics
-    const optimalSample = game === 'powerball' ? 500 : 400;
-    
-    if (drawsLoaded < minimumSample) {
-      return Math.round((drawsLoaded / minimumSample) * 100);
-    }
-    
-    // Calculate confidence multiplier
-    const multiplier = Math.min(drawsLoaded / minimumSample, optimalSample / minimumSample);
-    return Math.round(multiplier * 100);
+    const targetSample = game === 'powerball' ? 500 : 400;
+    return Math.round((drawsLoaded / targetSample) * 100);
   }
 
   /**

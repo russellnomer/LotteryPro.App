@@ -77,13 +77,13 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
       if (!state) return;
       
       if (state.drawsLoaded >= 100 && state.drawsLoaded < 150) {
-        newMilestones.push(`${state.game.toUpperCase()}: Basic Analysis Ready (3x minimum confidence)`);
+        newMilestones.push(`${state.game.toUpperCase()}: Initial dataset loaded for study`);
       } else if (state.drawsLoaded >= 200 && state.drawsLoaded < 250) {
-        newMilestones.push(`${state.game.toUpperCase()}: Advanced Analysis Ready (6x minimum confidence)`);
+        newMilestones.push(`${state.game.toUpperCase()}: Extended dataset available`);
       } else if (state.drawsLoaded >= 300 && state.drawsLoaded < 350) {
-        newMilestones.push(`${state.game.toUpperCase()}: Expert Analysis Ready (10x minimum confidence)`);
+        newMilestones.push(`${state.game.toUpperCase()}: Comprehensive dataset ready`);
       } else if (state.stage === 'complete') {
-        newMilestones.push(`${state.game.toUpperCase()}: MAXIMUM STATISTICAL POWER achieved!`);
+        newMilestones.push(`${state.game.toUpperCase()}: Full historical dataset loaded`);
       }
     });
 
@@ -146,7 +146,7 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
         <div className="text-blue-100 text-sm">
           {isSystemComplete ? 
             '✅ Educational analysis tools ready for lottery study' :
-            '📊 Progressive enhancement building statistical power in real-time'
+            '📊 Loading historical lottery data for educational analysis'
           }
         </div>
       </CardHeader>
@@ -188,30 +188,33 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
           </div>
         )}
 
-        {/* Statistical Power Summary */}
+        {/* Dataset Size Summary */}
         {(powerbellState || megaMillionsState) && (
           <div className="bg-white p-3 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="h-4 w-4 text-purple-600" />
-              <span className="font-medium text-sm">Statistical Power Status</span>
+              <Database className="h-4 w-4 text-purple-600" />
+              <span className="font-medium text-sm">Educational Dataset Available</span>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               {powerbellState && (
                 <div>
-                  <div className="text-gray-600">Powerball Confidence:</div>
+                  <div className="text-gray-600">Powerball Draws:</div>
                   <div className="font-bold text-red-600">
-                    {powerbellState.statisticalPower || 0}% ({Math.round((powerbellState.statisticalPower || 0) / 100 * 30)}x minimum)
+                    {powerbellState.drawsLoaded.toLocaleString()} loaded
                   </div>
                 </div>
               )}
               {megaMillionsState && (
                 <div>
-                  <div className="text-gray-600">MegaMillions Confidence:</div>
+                  <div className="text-gray-600">MegaMillions Draws:</div>
                   <div className="font-bold text-blue-600">
-                    {megaMillionsState.statisticalPower || 0}% ({Math.round((megaMillionsState.statisticalPower || 0) / 100 * 30)}x minimum)
+                    {megaMillionsState.drawsLoaded.toLocaleString()} loaded
                   </div>
                 </div>
               )}
+            </div>
+            <div className="text-xs text-gray-500 mt-2">
+              Historical data for educational frequency analysis only
             </div>
           </div>
         )}
@@ -245,7 +248,7 @@ export default function SystemStatusIndicator({ compact = false, showDetails = t
               </span>
             </div>
             <div className="text-xs text-yellow-700 mt-1">
-              Unprecedented statistical analysis ready with {powerbellState?.drawsLoaded || 0}+ Powerball and {megaMillionsState?.drawsLoaded || 0}+ MegaMillions draws
+              Educational dataset ready: {powerbellState?.drawsLoaded || 0}+ Powerball and {megaMillionsState?.drawsLoaded || 0}+ MegaMillions historical draws for study
             </div>
           </div>
         )}

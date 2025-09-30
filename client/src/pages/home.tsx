@@ -362,8 +362,8 @@ export default function Home() {
                       <Badge variant="secondary">
                         Method: {ANALYSIS_METHODS[generatedNumbers.method as keyof typeof ANALYSIS_METHODS]?.name || generatedNumbers.method}
                       </Badge>
-                      <Badge variant="outline">
-                        Confidence: {Math.round(generatedNumbers.confidence * 100)}%
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Educational Study
                       </Badge>
                       <Badge variant="outline" className="bg-green-50 text-green-700">
                         6 Total Numbers
