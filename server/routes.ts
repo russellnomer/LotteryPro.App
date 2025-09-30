@@ -1197,6 +1197,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Performance tracking and win/loss analysis endpoints
+  app.post('/api/performance/initialize-tracking', async (req, res) => {
+    try {
+      console.log('🎯 Initializing performance tracking system...');
+      const { dailyPickService } = await import('./dailyPickGenerationService');
+      const { performanceTracker } = await import('./performanceTrackingService');
+      
+      // Generate 30 days of historical picks
+      await dailyPickService.generateHistoricalPicks(30);
+      
+      // Evaluate all tickets against draws
+      const results = await performanceTracker.evaluateAllTickets();
+      
+      console.log('✅ Performance tracking initialized!');
+      
+      res.json({
+        success: true,
+        message: 'Performance tracking initialized',
+        resultsCount: results.length
+      });
+    } catch (error: any) {
+      console.error('Error initializing tracking:', error);
+      res.status(500).json({ error: 'Failed to initialize tracking' });
+    }
+  });
+  
+  app.post('/api/performance/generate-daily-picks', async (req, res) => {
+    try {
+      const { dailyPickService } = await import('./dailyPickGenerationService');
+      await dailyPickService.generateDailyPicks();
+      
+      res.json({
+        success: true,
+        message: 'Daily picks generated successfully'
+      });
+    } catch (error: any) {
+      console.error('Error generating daily picks:', error);
+      res.status(500).json({ error: 'Failed to generate daily picks' });
+    }
+  });
+  
+  app.post('/api/performance/generate-historical-picks', async (req, res) => {
+    try {
+      const { dailyPickService } = await import('./dailyPickGenerationService');
+      const { daysBack } = req.body;
+      await dailyPickService.generateHistoricalPicks(daysBack || 30);
+      
+      res.json({
+        success: true,
+        message: `Historical picks generated for ${daysBack || 30} days`
+      });
+    } catch (error: any) {
+      console.error('Error generating historical picks:', error);
+      res.status(500).json({ error: 'Failed to generate historical picks' });
+    }
+  });
+  
+  app.post('/api/performance/evaluate-tickets', async (req, res) => {
+    try {
+      const { performanceTracker } = await import('./performanceTrackingService');
+      const results = await performanceTracker.evaluateAllTickets();
+      
+      res.json({
+        success: true,
+        resultsCount: results.length,
+        message: 'All tickets evaluated against draws'
+      });
+    } catch (error: any) {
+      console.error('Error evaluating tickets:', error);
+      res.status(500).json({ error: 'Failed to evaluate tickets' });
+    }
+  });
+  
+  app.get('/api/performance/win-loss-statements', async (req, res) => {
+    try {
+      const { performanceTracker } = await import('./performanceTrackingService');
+      const statements = await performanceTracker.generateMultiLevelStatements();
+      
+      res.json({
+        success: true,
+        statements,
+        educationalNote: 'For educational and entertainment purposes only - not predictive'
+      });
+    } catch (error: any) {
+      console.error('Error generating win/loss statements:', error);
+      res.status(500).json({ error: 'Failed to generate statements' });
+    }
+  });
+  
+  app.get('/api/performance/method-summary', async (req, res) => {
+    try {
+      const { performanceTracker } = await import('./performanceTrackingService');
+      const summary = await performanceTracker.getMethodPerformanceSummary();
+      
+      res.json({
+        success: true,
+        summary,
+        educationalNote: 'For educational analysis only - past results do not predict future outcomes'
+      });
+    } catch (error: any) {
+      console.error('Error getting method summary:', error);
+      res.status(500).json({ error: 'Failed to get method summary' });
+    }
+  });
+  
+  app.get('/api/performance/daily-picks', async (req, res) => {
+    try {
+      const { game, method } = req.query;
+      let tickets = await storage.getRecentTickets(10000);
+      
+      // Filter by game if specified
+      if (game && game !== 'all') {
+        tickets = tickets.filter((t: any) => t.game === game);
+      }
+      
+      // Filter by method if specified
+      if (method && method !== 'all') {
+        tickets = tickets.filter((t: any) => t.method === method);
+      }
+      
+      res.json({
+        success: true,
+        tickets,
+        total: tickets.length,
+        educationalNote: 'Educational lottery picks for analysis purposes only'
+      });
+    } catch (error: any) {
+      console.error('Error fetching daily picks:', error);
+      res.status(500).json({ error: 'Failed to fetch daily picks' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
