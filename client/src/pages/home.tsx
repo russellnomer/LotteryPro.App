@@ -177,22 +177,22 @@ export default function Home() {
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold mb-2">🎓 Educational Lottery Number Analysis</h2>
+            <h2 className="text-3xl font-bold mb-2">✨ Russell's Cosmic Number Conjurer</h2>
             <p className="text-purple-100 text-lg">
-              Historical pattern frequency study for cultural learning and entertainment purposes only
+              Sprinkle some mathematical fairy dust on your lottery dreams (just for fun!)
             </p>
             <div className="mt-4 flex justify-center gap-4">
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <Target className="h-4 w-4 mr-2" />
-                Pattern Study
+                Number Magic
               </Badge>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <TrendingUp className="h-4 w-4 mr-2" />
-                Historical Data
+                Crystal Ball Data
               </Badge>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <Star className="h-4 w-4 mr-2" />
-                Educational Tool
+                Fortune Cookie Stats
               </Badge>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function Home() {
                         Method: {ANALYSIS_METHODS[generatedNumbers.method as keyof typeof ANALYSIS_METHODS]?.name || generatedNumbers.method}
                       </Badge>
                       <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        Educational Study
+                        Just for Giggles
                       </Badge>
                       <Badge variant="outline" className="bg-green-50 text-green-700">
                         6 Total Numbers
@@ -372,9 +372,9 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Analysis Method Selection */}
+                {/* Number Recipe Selection */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Analysis Method</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">Pick Your Number Recipe</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {Object.entries(ANALYSIS_METHODS).map(([key, method]) => (
                       <div 
@@ -403,11 +403,11 @@ export default function Home() {
               </div>
             )}
 
-            {/* Frequency Analysis */}
+            {/* Number Popularity Contest */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <i className="fas fa-chart-bar text-primary mr-2"></i>Frequency Analysis
+                  <i className="fas fa-chart-bar text-primary mr-2"></i>Number Popularity Contest
                   {userTier === 'free' && (
                     <Badge variant="outline" className="ml-2 text-xs">
                       Limited Features
@@ -426,7 +426,7 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                          <i className="fas fa-fire text-orange-500 mr-2"></i>Hot Numbers
+                          <i className="fas fa-fire text-orange-500 mr-2"></i>Currently Trendy Numbers
                         </h3>
                         <div className="space-y-2">
                           {analysis.hotNumbers.slice(0, 3).map((num: number, index: number) => {
@@ -471,7 +471,7 @@ export default function Home() {
 
                     {/* Frequency Chart */}
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="text-md font-semibold text-gray-800 mb-4">Number Frequency Distribution</h4>
+                      <h4 className="text-md font-semibold text-gray-800 mb-4">Which Numbers Show Up Most Often? (Spoiler: It Doesn't Matter!)</h4>
                       <div className="h-64">
                         <Chart data={formatChartData(analysis.frequencyData)} />
                       </div>
@@ -571,15 +571,15 @@ export default function Home() {
               </Card>
             )}
 
-            {/* Educational Dataset Info */}
+            {/* Fun Dataset Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center">
-                    <i className="fas fa-graduation-cap text-primary mr-2"></i>Educational Dataset
+                    <i className="fas fa-magic text-primary mr-2"></i>The Number Cauldron
                   </span>
                   <a href="/performance" className="text-sm text-primary hover:underline">
-                    View Analysis History →
+                    View Magic Stats →
                   </a>
                 </CardTitle>
               </CardHeader>
@@ -587,20 +587,20 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">112K+</div>
-                    <div className="text-sm text-gray-600">Historical Draws</div>
+                    <div className="text-sm text-gray-600">Lucky Numbers Brewed</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">5+ Years</div>
-                    <div className="text-sm text-gray-600">Data Coverage</div>
+                    <div className="text-sm text-gray-600">of Number Wizardry</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">Pattern</div>
-                    <div className="text-sm text-gray-600">Frequency Study</div>
+                    <div className="text-2xl font-bold text-green-600">✨</div>
+                    <div className="text-sm text-gray-600">Pure Entertainment</div>
                   </div>
                 </div>
                 <div className="mt-4 p-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg text-white text-center">
-                  <p className="font-semibold">📚 For Educational & Entertainment Purposes Only</p>
-                  <p className="text-sm opacity-90">Historical pattern analysis - not predictive. Lottery outcomes are random and independent.</p>
+                  <p className="font-semibold">🎭 Just for Fun & Giggles!</p>
+                  <p className="text-sm opacity-90">This magical number generator is pure entertainment - no crystal ball actually predicts lottery draws! 🔮</p>
                 </div>
               </CardContent>
             </Card>
@@ -731,16 +731,20 @@ export default function Home() {
             )}
 
             {/* Educational Info */}
-            <Card className="bg-yellow-50 border-yellow-200">
+            <Card className="bg-gradient-to-r from-pink-50 to-purple-50 border-purple-200">
               <CardHeader>
-                <CardTitle className="flex items-center text-yellow-800">
-                  <i className="fas fa-lightbulb text-yellow-600 mr-2"></i>Analysis Methods
+                <CardTitle className="flex items-center text-purple-800">
+                  <i className="fas fa-heart text-pink-600 mr-2"></i>💝 Support Russell's Dream
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-yellow-700 space-y-2">
-                <p><strong>Frequency Analysis:</strong> Identifies numbers drawn most/least often in recent history.</p>
-                <p><strong>Wheel Systems:</strong> Mathematical approach to cover multiple number combinations efficiently.</p>
-                <p><strong>Balance Strategy:</strong> Distributes numbers across low, mid, and high ranges.</p>
+              <CardContent className="text-sm text-purple-700 space-y-3">
+                <p className="font-semibold">😂 If This Somehow Works:</p>
+                <p>• Consider naming Russell Nomer as co-heir to your jackpot winnings</p>
+                <p>• Become his Sugar Mamma and fund his music career</p>
+                <p>• At minimum, buy his entire 35-book Amazon collection!</p>
+                <p className="text-xs text-purple-600 mt-2 italic">
+                  (Obviously joking - but seriously, check out his books and music! Support independent artists! 🎵📚)
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -777,25 +781,28 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Disclaimer */}
-        <Card className="mt-12 bg-red-50 border-red-200">
+        {/* Fun Reality Check */}
+        <Card className="mt-12 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
           <CardContent className="p-6">
             <div className="flex items-start">
-              <i className="fas fa-exclamation-triangle text-red-500 text-xl mr-3 mt-1"></i>
-              <div className="text-red-700">
-                <h3 className="font-semibold mb-2">⚠️ BUYER BEWARE - Important Legal Disclaimer</h3>
+              <i className="fas fa-hat-wizard text-purple-500 text-2xl mr-3 mt-1"></i>
+              <div className="text-purple-700">
+                <h3 className="font-semibold mb-2">🎪 Reality Check: No Magic Wands Here!</h3>
                 <p className="text-sm leading-relaxed mb-3">
-                  <strong>BUYER BEWARE:</strong> Lottery games are games of chance where past results DO NOT predict future outcomes. 
-                  All numbers have mathematically equal probability of being drawn regardless of any historical analysis or frequency data. 
-                  This system is for educational and entertainment purposes ONLY and makes NO CLAIMS of improving odds or guaranteeing wins.
+                  <strong>🎲 THE TRUTH:</strong> This is a fancy random number picker with sparkles and statistics - NOT a lottery oracle! 
+                  Every number from 1-69 has exactly the same chance of popping up, whether we "analyze" it or flip a coin. 
+                  Our "cosmic algorithms" are just fun math tricks - pure entertainment, zero fortune-telling powers!
                   <br/><br/>
-                  <strong>NO PERFORMANCE GUARANTEES:</strong> Any analysis, predictions, or number suggestions provided may NOT improve your chances of winning and should be considered entertainment only.
-                  Users participate at their own risk and should never spend more than they can afford to lose.
+                  <strong>✨ NO MAGIC GUARANTEES:</strong> Our fairy dust, crystal ball data, and lucky number cauldron are 100% for giggles. 
+                  They won't make you rich (sorry!). Play lottery for fun, not profit - and only with money you'd happily spend on pizza!
                   <br/><br/>
-                  <strong>RESPONSIBLE GAMBLING:</strong> Please play responsibly and within your means. 
-                  If you have a gambling problem, seek help immediately at{' '}
-                  <a href="https://www.1800gambler.net" className="underline font-medium text-red-800" target="_blank" rel="noopener noreferrer">1-800-GAMBLER</a> or visit{' '}
-                  <a href="https://www.ncpgambling.org" className="underline font-medium text-red-800" target="_blank" rel="noopener noreferrer">ncpgambling.org</a>.
+                  <strong>🎯 PLAY SMART:</strong> Keep it fun, keep it light! 
+                  If gambling becomes a problem, reach out for real help at{' '}
+                  <a href="https://www.1800gambler.net" className="underline font-medium text-purple-800" target="_blank" rel="noopener noreferrer">1-800-GAMBLER</a> or{' '}
+                  <a href="https://www.ncpgambling.org" className="underline font-medium text-purple-800" target="_blank" rel="noopener noreferrer">ncpgambling.org</a>.
+                  <br/><br/>
+                  <strong>😂 IF YOU WIN:</strong> Please remember Russell Nomer in your will as co-heir, become his Sugar Mamma/Daddy, 
+                  or at least buy him a coffee. (Just kidding... but his books and music are fire! 🔥)
                 </p>
                 <div className="text-xs bg-red-100 p-2 rounded border border-red-300">
                   <p className="font-semibold">Mathematical Reality:</p>

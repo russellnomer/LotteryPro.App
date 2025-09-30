@@ -14,11 +14,11 @@ export default function SubscriptionPage() {
       name: "Free",
       price: "0.00",
       period: "forever",
-      description: "Get started with basic lottery analysis",
+      description: "Dip your toe in the number cauldron",
       features: [
         "1 number generation per day",
-        "Basic frequency analysis",
-        "Hot & cold number tracking",
+        "Basic lucky number mixing",
+        "Hot & cold number watching",
         "Community support"
       ],
       badge: null,
@@ -33,11 +33,11 @@ export default function SubscriptionPage() {
       name: "Basic",
       price: "9.99",
       period: "monthly",
-      description: "Perfect for casual players",
+      description: "Perfect for casual dreamers",
       features: [
-        "5 number generations per day",
-        "Advanced frequency analysis",
-        "Hot & cold number tracking",
+        "5 number conjurings per day",
+        "Fancy number shuffling",
+        "Hot & cold number gazing",
         "No advertisements",
         "Email support"
       ],
@@ -48,14 +48,14 @@ export default function SubscriptionPage() {
       name: "Pro",
       price: "19.99", 
       period: "monthly",
-      description: "Best for serious lottery players",
+      description: "For dedicated number enthusiasts",
       features: [
-        "Unlimited number generations",
-        "Advanced wheel systems",
-        "Performance tracking & analytics",
+        "Unlimited number wizardry",
+        "Fancy wheel spinning systems",
+        "Fun number history tracking",
         "No advertisements",
         "Priority support",
-        "Early access to new features"
+        "Early access to new toys"
       ],
       badge: "Most Popular"
     },
@@ -64,14 +64,14 @@ export default function SubscriptionPage() {
       name: "Premium",
       price: "39.99",
       period: "monthly", 
-      description: "For lottery enthusiasts and groups",
+      description: "For number nerds and dream teams",
       features: [
         "Everything in Pro",
         "Community pool access",
-        "Advanced prediction algorithms",
+        "Extra sprinkles of fairy dust",
         "Jackpocket integration",
-        "Personal lottery advisor",
-        "Group management tools",
+        "Personal number concierge",
+        "Group dream management",
         "100% ad-free experience"
       ],
       badge: "Best Value"
@@ -86,7 +86,7 @@ export default function SubscriptionPage() {
             Choose Your LotteryPro Plan
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-Educational lottery number analysis tools for cultural learning and entertainment purposes only
+Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure entertainment - no actual magic!)
           </p>
         </div>
 
@@ -168,16 +168,16 @@ Educational lottery number analysis tools for cultural learning and entertainmen
 
         {/* Features highlight section */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
-          <h2 className="text-2xl font-bold text-center mb-8">Why Choose LotteryPro?</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">Why Our Number Cauldron is Fun!</h2>
           
           <div className="grid md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="bg-blue-100 dark:bg-blue-900 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <TrendingUp className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="font-semibold mb-2">Statistical Analysis</h3>
+              <h3 className="font-semibold mb-2">Fancy Math Sprinkles</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Advanced frequency analysis and pattern recognition
+                We count stuff and make it look pretty with charts
               </p>
             </div>
             
@@ -185,9 +185,9 @@ Educational lottery number analysis tools for cultural learning and entertainmen
               <div className="bg-green-100 dark:bg-green-900 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Star className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="font-semibold mb-2">Proven Methods</h3>
+              <h3 className="font-semibold mb-2">Fun Number Tricks</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Hot numbers, wheel systems, and balanced selection
+                Hot numbers, spinning wheels, and other entertaining gimmicks
               </p>
             </div>
             
@@ -195,9 +195,9 @@ Educational lottery number analysis tools for cultural learning and entertainmen
               <div className="bg-purple-100 dark:bg-purple-900 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Users className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="font-semibold mb-2">Community</h3>
+              <h3 className="font-semibold mb-2">Dream Together</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Join pools and share strategies with other players
+                Join pools and share hopes with fellow dreamers
               </p>
             </div>
             
@@ -205,9 +205,9 @@ Educational lottery number analysis tools for cultural learning and entertainmen
               <div className="bg-orange-100 dark:bg-orange-900 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Zap className="h-8 w-8 text-orange-600" />
               </div>
-              <h3 className="font-semibold mb-2">Real-time</h3>
+              <h3 className="font-semibold mb-2">Instant Fun</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Live tracking and instant number generation
+                Quick number mixing and sparkly animations
               </p>
             </div>
           </div>
