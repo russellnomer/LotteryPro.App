@@ -23,7 +23,7 @@ export default function RussellBiography() {
           </h3>
           <div className="space-y-4 text-gray-700">
             <p>
-              Russell Nomer has faced extraordinary challenges over the past two years. Following two serious accidents that required cervical spinal fusion surgery, Russell now lives with constant pain while courageously rebuilding his life and career.
+              Russell Nomer has faced extraordinary challenges over the past few years. Following two serious accidents that required cervical spinal fusion surgery, Russell now lives with constant pain while courageously rebuilding his life and career.
             </p>
             <p>
               The combination of chronic pain, extensive physical therapy, pain medication management, and the inability to work full-time in his chosen field has resulted in significant income loss. Despite these overwhelming challenges, Russell's determination to create and contribute remains unshaken.
