@@ -90,13 +90,9 @@ export default function Home() {
     }
   });
 
-  const handleGenerateNumbers = async () => {
+  const handleGenerateNumbers = () => {
     // Unlimited users and Russell bypass all limits
     if (userTier === 'unlimited' || userEmail === 'russell@russellnomer.com') {
-      // Load analysis data if not already loaded
-      if (!analysis) {
-        await refetchAnalysis();
-      }
       generateMutation.mutate({ game: selectedGame, method: selectedMethod });
       return;
     }
@@ -111,10 +107,6 @@ export default function Home() {
       return;
     }
     
-    // Load analysis data if not already loaded
-    if (!analysis) {
-      await refetchAnalysis();
-    }
     generateMutation.mutate({ game: selectedGame, method: selectedMethod });
   };
 
