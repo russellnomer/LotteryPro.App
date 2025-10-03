@@ -190,13 +190,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .sort((a, b) => b[1] - a[1])
           .map(([num]) => num);
         
+        const maxBonus = game === 'powerball' ? 26 : 24;
         const sortedBonus = Array.from(bonusFreq.entries())
+          .filter(([num]) => num >= 1 && num <= maxBonus) // Filter to valid range
           .sort((a, b) => b[1] - a[1])
           .map(([num]) => num);
         
         // Select top frequent numbers with some randomness
         mainNumbers = sortedNumbers.slice(0, 8).sort(() => 0.5 - Math.random()).slice(0, 5).sort((a, b) => a - b);
-        bonusNumber = sortedBonus[0] || Math.floor(Math.random() * (game === 'powerball' ? 26 : 24)) + 1;
+        bonusNumber = sortedBonus[0] || Math.floor(Math.random() * maxBonus) + 1;
         
       } else if (method === 'balanced') {
         // Balanced selection across ranges
