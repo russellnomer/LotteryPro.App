@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       } else if (method === 'balanced') {
         // Balanced selection across ranges
-        const maxMain = game === 'powerball' ? 69 : 60;
+        const maxMain = game === 'powerball' ? 69 : 70;
         const ranges = {
           low: Math.floor(maxMain / 3),
           mid: Math.floor((maxMain * 2) / 3),
@@ -230,7 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       } else {
         // Random generation
-        const maxMain = game === 'powerball' ? 69 : 60;
+        const maxMain = game === 'powerball' ? 69 : 70;
         const maxBonus = game === 'powerball' ? 26 : 24;
         
         mainNumbers = [];
@@ -260,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const gameConfig = {
         powerball: { maxMain: 69, maxBonus: 26 },
-        megamillions: { maxMain: 60, maxBonus: 24 }
+        megamillions: { maxMain: 70, maxBonus: 24 }
       }[game];
 
       res.json({

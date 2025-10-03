@@ -149,9 +149,9 @@ export class LotteryDataService {
         jackpot: this.generateJackpotAmount()
       };
     } else {
-      // MegaMillions: 5 numbers from 1-70, bonus from 1-25
+      // MegaMillions: 5 numbers from 1-70, bonus from 1-24
       const mainNumbers = this.generateRandomNumbers(5, 1, 70);
-      const bonusNumber = Math.floor(Math.random() * 25) + 1;
+      const bonusNumber = Math.floor(Math.random() * 24) + 1;
       
       return {
         game,

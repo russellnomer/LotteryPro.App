@@ -79,7 +79,7 @@ class DailyPickGenerationService {
     console.log(`📊 Generating ${game} picks for ${date.toDateString()}...`);
     
     const picks: DailyPick[] = [];
-    const gameConfig = game === 'powerball' ? {maxMain: 69, maxBonus: 26} : {maxMain: 70, maxBonus: 25};
+    const gameConfig = game === 'powerball' ? {maxMain: 69, maxBonus: 26} : {maxMain: 70, maxBonus: 24};
     
     // Base methods - Hot, Balanced, Wheel, Random (REQUIRED)
     const advancedPredictions = await advancedStrategies.generateEducationalAnalysis(game, 10);
