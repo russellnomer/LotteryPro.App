@@ -206,14 +206,23 @@ export class LotteryCache {
     const mainFreq = new Map<number, number>();
     const bonusFreq = new Map<number, number>();
     
+    // Determine valid ranges based on game type (from first draw if available)
+    const gameType = draws[0]?.game;
+    const maxBonus = gameType === 'powerball' ? 26 : 24;
+    const maxMain = gameType === 'powerball' ? 69 : 70;
+    
     draws.forEach(draw => {
-      // Process main numbers
+      // Process main numbers - filter to valid range
       (draw.mainNumbers as number[]).forEach(num => {
-        mainFreq.set(num, (mainFreq.get(num) || 0) + 1);
+        if (num >= 1 && num <= maxMain) {
+          mainFreq.set(num, (mainFreq.get(num) || 0) + 1);
+        }
       });
       
-      // Process bonus number
-      bonusFreq.set(draw.bonusNumber, (bonusFreq.get(draw.bonusNumber) || 0) + 1);
+      // Process bonus number - filter to valid range
+      if (draw.bonusNumber >= 1 && draw.bonusNumber <= maxBonus) {
+        bonusFreq.set(draw.bonusNumber, (bonusFreq.get(draw.bonusNumber) || 0) + 1);
+      }
     });
     
     return { mainFreq, bonusFreq };
