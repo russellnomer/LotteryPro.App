@@ -184,6 +184,38 @@ export const referralCodes = pgTable("referral_codes", {
   completedAt: timestamp("completed_at"),
 });
 
+// Revenue Generation: Email Notification Preferences
+export const emailPreferences = pgTable("email_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => userAccounts.id),
+  sessionId: text("session_id"), // For guest tracking
+  email: text("email").notNull(),
+  powerballReminders: integer("powerball_reminders").notNull().default(1), // 1 = enabled, 0 = disabled
+  megamillionsReminders: integer("megamillions_reminders").notNull().default(1),
+  weeklyDigest: integer("weekly_digest").notNull().default(1),
+  promotionalEmails: integer("promotional_emails").notNull().default(1),
+  lastEmailSent: timestamp("last_email_sent"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+}, (table) => ({
+  uniqueEmailUser: unique("unique_email_user").on(table.email),
+}));
+
+// Email Send Log - Track all emails sent
+export const emailSendLog = pgTable("email_send_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => userAccounts.id),
+  email: text("email").notNull(),
+  emailType: text("email_type").notNull(), // 'draw_reminder', 'weekly_digest', 'promotional', 'welcome'
+  game: text("game"), // 'powerball', 'megamillions', or null
+  ticketId: varchar("ticket_id").references(() => generatedTickets.id),
+  sendGridMessageId: text("sendgrid_message_id"),
+  status: text("status").notNull().default('pending'), // 'pending', 'sent', 'failed', 'bounced'
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 export const insertDrawSchema = createInsertSchema(lotteryDraws).omit({
   id: true,
 });
@@ -270,6 +302,19 @@ export const insertReferralCodeSchema = createInsertSchema(referralCodes).omit({
   completedAt: true,
 });
 
+export const insertEmailPreferencesSchema = createInsertSchema(emailPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastEmailSent: true,
+});
+
+export const insertEmailSendLogSchema = createInsertSchema(emailSendLog).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+});
+
 export type InsertVipCode = z.infer<typeof insertVipCodeSchema>;
 export type VipCode = typeof vipCodes.$inferSelect;
 export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
@@ -286,6 +331,10 @@ export type InsertDailySpin = z.infer<typeof insertDailySpinSchema>;
 export type DailySpin = typeof dailySpins.$inferSelect;
 export type InsertReferralCode = z.infer<typeof insertReferralCodeSchema>;
 export type ReferralCode = typeof referralCodes.$inferSelect;
+export type InsertEmailPreferences = z.infer<typeof insertEmailPreferencesSchema>;
+export type EmailPreferences = typeof emailPreferences.$inferSelect;
+export type InsertEmailSendLog = z.infer<typeof insertEmailSendLogSchema>;
+export type EmailSendLog = typeof emailSendLog.$inferSelect;
 
 // Export advertisement schemas
 export * from "./adSchema";
