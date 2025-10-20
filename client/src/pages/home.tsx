@@ -361,6 +361,44 @@ export default function Home() {
                         6 Total Numbers
                       </Badge>
                     </div>
+                    
+                    {/* Jackpocket Affiliate CTA - Revenue Generator */}
+                    <div className="mt-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-6 text-white">
+                      <div className="text-center mb-4">
+                        <div className="text-2xl font-bold mb-2">🎫 Ready to Play?</div>
+                        <p className="text-sm opacity-90">
+                          Buy your ticket instantly through Jackpocket - America's #1 lottery app!
+                        </p>
+                      </div>
+                      <Button
+                        className="w-full bg-white text-green-600 hover:bg-gray-100 font-bold text-lg py-6"
+                        onClick={async () => {
+                          // Track affiliate click
+                          try {
+                            await fetch('/api/affiliate/track', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                partner: 'jackpocket',
+                                game: selectedGame,
+                                ticketId: generatedNumbers.ticketId
+                              })
+                            });
+                          } catch (e) {
+                            console.error('Tracking error:', e);
+                          }
+                          // Open Jackpocket (will use affiliate link once you sign up)
+                          window.open('https://www.jackpocket.com/?utm_source=lotterypro&utm_medium=affiliate&utm_campaign=number_generator', '_blank');
+                        }}
+                        data-testid="button-play-jackpocket"
+                      >
+                        <i className="fas fa-ticket-alt mr-2"></i>
+                        Play These Numbers on Jackpocket
+                      </Button>
+                      <div className="mt-3 text-center text-xs opacity-75">
+                        Available in 17+ states • Secure & Regulated • Instant Play
+                      </div>
+                    </div>
                   </div>
                 )}
 

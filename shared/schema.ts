@@ -139,6 +139,45 @@ export const bookRecommendations = pgTable("book_recommendations", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// Revenue Generation: Jackpocket Affiliate Tracking
+export const affiliateTracking = pgTable("affiliate_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => userAccounts.id),
+  sessionId: text("session_id"), // For guest tracking
+  ticketId: varchar("ticket_id").references(() => generatedTickets.id),
+  affiliatePartner: text("affiliate_partner").notNull().default('jackpocket'), // 'jackpocket', future partners
+  clickedAt: timestamp("clicked_at").default(sql`now()`),
+  convertedAt: timestamp("converted_at"),
+  conversionValue: text("conversion_value"), // Estimated commission value
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+// Revenue Generation: Daily Spin-to-Win Gamification
+export const dailySpins = pgTable("daily_spins", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => userAccounts.id),
+  sessionId: text("session_id"), // For guest tracking
+  prizeType: text("prize_type").notNull(), // 'free_generation', 'discount_code', 'premium_trial', 'no_prize'
+  prizeValue: text("prize_value"), // Description of prize
+  spunAt: timestamp("spun_at").default(sql`now()`),
+  claimed: integer("claimed").notNull().default(0), // 0 = unclaimed, 1 = claimed
+  claimedAt: timestamp("claimed_at"),
+});
+
+// Revenue Generation: Referral Program
+export const referralCodes = pgTable("referral_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => userAccounts.id),
+  referralCode: text("referral_code").notNull().unique(),
+  referredUserId: varchar("referred_user_id").references(() => userAccounts.id),
+  rewardType: text("reward_type").notNull().default('free_generation'), // 'free_generation', 'discount', 'premium_credit'
+  rewardValue: integer("reward_value").notNull().default(1), // Number of credits/days/uses
+  status: text("status").notNull().default('pending'), // 'pending', 'completed', 'expired'
+  createdAt: timestamp("created_at").default(sql`now()`),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertDrawSchema = createInsertSchema(lotteryDraws).omit({
   id: true,
 });
@@ -206,6 +245,24 @@ export const insertAdminLogSchema = createInsertSchema(adminLogs).omit({
   timestamp: true,
 });
 
+// Revenue Generation Schemas
+export const insertAffiliateTrackingSchema = createInsertSchema(affiliateTracking).omit({
+  id: true,
+  clickedAt: true,
+});
+
+export const insertDailySpinSchema = createInsertSchema(dailySpins).omit({
+  id: true,
+  spunAt: true,
+  claimedAt: true,
+});
+
+export const insertReferralCodeSchema = createInsertSchema(referralCodes).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
 export type InsertVipCode = z.infer<typeof insertVipCodeSchema>;
 export type VipCode = typeof vipCodes.$inferSelect;
 export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
@@ -214,6 +271,14 @@ export type InsertMusicContent = z.infer<typeof insertMusicContentSchema>;
 export type MusicContent = typeof musicContent.$inferSelect;
 export type InsertBookRecommendation = z.infer<typeof insertBookRecommendationSchema>;
 export type BookRecommendation = typeof bookRecommendations.$inferSelect;
+
+// Revenue Generation Types
+export type InsertAffiliateTracking = z.infer<typeof insertAffiliateTrackingSchema>;
+export type AffiliateTracking = typeof affiliateTracking.$inferSelect;
+export type InsertDailySpin = z.infer<typeof insertDailySpinSchema>;
+export type DailySpin = typeof dailySpins.$inferSelect;
+export type InsertReferralCode = z.infer<typeof insertReferralCodeSchema>;
+export type ReferralCode = typeof referralCodes.$inferSelect;
 
 // Export advertisement schemas
 export * from "./adSchema";

@@ -283,6 +283,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Revenue Generation: Track affiliate clicks (Jackpocket, etc.)
+  app.post("/api/affiliate/track", async (req, res) => {
+    try {
+      const { partner, game, ticketId } = req.body;
+      const { db } = await import('./db');
+      const { affiliateTracking } = await import('@shared/schema');
+      
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      await db.insert(affiliateTracking).values({
+        userId,
+        sessionId,
+        ticketId: ticketId || null,
+        affiliatePartner: partner || 'jackpocket',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      res.json({ success: true, tracked: true });
+    } catch (error: any) {
+      console.error('Affiliate tracking error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // Get analysis data for a game (with real-time data updates)
   app.get("/api/analysis/:game", async (req, res) => {
     try {
