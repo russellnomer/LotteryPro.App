@@ -712,12 +712,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(poolMembers.id, memberId));
       
-      // Get member details
-      const [member] = await db.select()
-        .from(poolMembers)
-        .where(eq(poolMembers.id, memberId))
-        .limit(1);
-      
       // Record transaction
       await db.insert(poolTransactions).values({
         poolId,

@@ -57,7 +57,7 @@ export default function PoolsPage() {
         description: "Your lottery pool is now open for members to join.",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create pool",
@@ -71,7 +71,7 @@ export default function PoolsPage() {
       const { poolId, ...rest } = data;
       return await apiRequest(`/api/pools/${poolId}/join`, 'POST', rest);
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       setJoinDialogOpen(false);
       setPendingMemberId(data.member.id);
       setPaymentDialogOpen(true);
@@ -117,7 +117,7 @@ export default function PoolsPage() {
         description: "You're now an active member of the pool. Good luck!",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Payment Failed",
         description: error.message || "Failed to process payment",
