@@ -572,3 +572,154 @@ export type InsertEmailVerificationCode = typeof emailVerificationCodes.$inferIn
 
 export type SmsVerificationCode = typeof smsVerificationCodes.$inferSelect;
 export type InsertSmsVerificationCode = typeof smsVerificationCodes.$inferInsert;
+
+// ==================== COMMUNITY LOTTERY POOLS ====================
+// Revenue-generating feature: users pool money to buy more tickets together
+
+export const lotteryPools = pgTable("lottery_pools", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  game: text("game").notNull(), // 'powerball' or 'megamillions'
+  targetDrawDate: timestamp("target_draw_date").notNull(),
+  targetDrawId: varchar("target_draw_id").references(() => lotteryDraws.id),
+  
+  // Pool financials
+  contributionPerMember: decimal("contribution_per_member", { precision: 10, scale: 2 }).notNull(),
+  maxMembers: integer("max_members").notNull().default(10),
+  currentMembers: integer("current_members").notNull().default(0),
+  totalContributions: decimal("total_contributions", { precision: 10, scale: 2 }).default("0.00"),
+  adminFeePercent: decimal("admin_fee_percent", { precision: 5, scale: 2 }).notNull().default("7.50"), // 5-10%
+  adminFeeCollected: decimal("admin_fee_collected", { precision: 10, scale: 2 }).default("0.00"),
+  netPoolAmount: decimal("net_pool_amount", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Pool management
+  createdBy: varchar("created_by").references(() => userAccounts.id),
+  status: text("status").notNull().default("open"), // 'open', 'full', 'active', 'completed', 'cancelled'
+  isPublic: boolean("is_public").default(true), // Public pools anyone can join
+  requiresApproval: boolean("requires_approval").default(false),
+  
+  // Results tracking
+  totalTicketsPurchased: integer("total_tickets_purchased").default(0),
+  totalWinnings: decimal("total_winnings", { precision: 15, scale: 2 }).default("0.00"),
+  winningsDistributed: boolean("winnings_distributed").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  closedAt: timestamp("closed_at"),
+}, (table) => ({
+  gameDrawIdx: index("lottery_pools_game_draw_idx").on(table.game, table.targetDrawDate),
+  statusIdx: index("lottery_pools_status_idx").on(table.status),
+}));
+
+export const poolMembers = pgTable("pool_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull().references(() => lotteryPools.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").references(() => userAccounts.id),
+  sessionId: varchar("session_id"), // For guest members
+  
+  // Member details
+  displayName: varchar("display_name", { length: 100 }),
+  email: varchar("email", { length: 255 }),
+  
+  // Payment tracking
+  contributionAmount: decimal("contribution_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentStatus: text("payment_status").notNull().default("pending"), // 'pending', 'paid', 'refunded'
+  paymentMethod: text("payment_method"), // 'paypal', 'cashapp', 'credit'
+  paypalTransactionId: varchar("paypal_transaction_id"),
+  
+  // Winnings
+  sharePercentage: decimal("share_percentage", { precision: 5, scale: 2 }).notNull(), // Based on contribution
+  winningsShare: decimal("winnings_share", { precision: 15, scale: 2 }).default("0.00"),
+  winningsPaid: boolean("winnings_paid").default(false),
+  
+  // Membership
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'active', 'removed'
+  joinedAt: timestamp("joined_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+}, (table) => ({
+  poolMemberUnique: unique("pool_member_unique").on(table.poolId, table.userId),
+  poolIdIdx: index("pool_members_pool_idx").on(table.poolId),
+}));
+
+export const poolTickets = pgTable("pool_tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull().references(() => lotteryPools.id, { onDelete: 'cascade' }),
+  ticketId: varchar("ticket_id").references(() => generatedTickets.id),
+  
+  // Ticket details
+  game: text("game").notNull(),
+  mainNumbers: jsonb("main_numbers").notNull(),
+  bonusNumber: integer("bonus_number").notNull(),
+  generationMethod: text("generation_method").notNull(), // 'hot', 'balanced', 'wheel', etc.
+  
+  // Results
+  drawId: varchar("draw_id").references(() => lotteryDraws.id),
+  numbersMatched: integer("numbers_matched").default(0),
+  bonusMatched: boolean("bonus_matched").default(false),
+  prizeWon: decimal("prize_won", { precision: 15, scale: 2 }).default("0.00"),
+  
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+}, (table) => ({
+  poolIdIdx: index("pool_tickets_pool_idx").on(table.poolId),
+}));
+
+export const poolTransactions = pgTable("pool_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull().references(() => lotteryPools.id, { onDelete: 'cascade' }),
+  memberId: varchar("member_id").references(() => poolMembers.id, { onDelete: 'set null' }),
+  
+  // Transaction details
+  type: text("type").notNull(), // 'contribution', 'admin_fee', 'winnings_payout', 'refund'
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("USD"),
+  
+  // Payment processing
+  paymentProvider: text("payment_provider"), // 'paypal', 'cashapp'
+  providerTransactionId: varchar("provider_transaction_id"),
+  status: text("status").notNull().default("pending"), // 'pending', 'completed', 'failed', 'refunded'
+  
+  // Metadata
+  notes: text("notes"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  poolIdIdx: index("pool_transactions_pool_idx").on(table.poolId),
+  typeIdx: index("pool_transactions_type_idx").on(table.type),
+}));
+
+export const poolWinnings = pgTable("pool_winnings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull().references(() => lotteryPools.id, { onDelete: 'cascade' }),
+  ticketId: varchar("ticket_id").notNull().references(() => poolTickets.id, { onDelete: 'cascade' }),
+  
+  // Winning details
+  prizeAmount: decimal("prize_amount", { precision: 15, scale: 2 }).notNull(),
+  prizeTier: text("prize_tier").notNull(), // 'jackpot', 'match5', 'match4', etc.
+  
+  // Distribution
+  adminFeeDeducted: decimal("admin_fee_deducted", { precision: 15, scale: 2 }).notNull(),
+  netDistribution: decimal("net_distribution", { precision: 15, scale: 2 }).notNull(),
+  distributedToMembers: boolean("distributed_to_members").default(false),
+  
+  wonAt: timestamp("won_at").defaultNow(),
+  distributedAt: timestamp("distributed_at"),
+}, (table) => ({
+  poolIdIdx: index("pool_winnings_pool_idx").on(table.poolId),
+}));
+
+// Type exports for Community Pools
+export type LotteryPool = typeof lotteryPools.$inferSelect;
+export type InsertLotteryPool = typeof lotteryPools.$inferInsert;
+
+export type PoolMember = typeof poolMembers.$inferSelect;
+export type InsertPoolMember = typeof poolMembers.$inferInsert;
+
+export type PoolTicket = typeof poolTickets.$inferSelect;
+export type InsertPoolTicket = typeof poolTickets.$inferInsert;
+
+export type PoolTransaction = typeof poolTransactions.$inferSelect;
+export type InsertPoolTransaction = typeof poolTransactions.$inferInsert;
+
+export type PoolWinning = typeof poolWinnings.$inferSelect;
+export type InsertPoolWinning = typeof poolWinnings.$inferInsert;

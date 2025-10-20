@@ -381,6 +381,576 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== COMMUNITY LOTTERY POOLS ====================
+  
+  // Get all available pools (public pools + user's pools)
+  app.get("/api/pools", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { lotteryPools, poolMembers } = await import('@shared/schema');
+      const { eq, and, or, gt } = await import('drizzle-orm');
+      
+      const userId = req.user?.id;
+      
+      // Get public open pools + user's pools
+      let pools;
+      if (userId) {
+        pools = await db.select()
+          .from(lotteryPools)
+          .where(
+            and(
+              or(
+                eq(lotteryPools.isPublic, true),
+                eq(lotteryPools.createdBy, userId)
+              ),
+              gt(lotteryPools.targetDrawDate, new Date())
+            )
+          )
+          .orderBy(lotteryPools.targetDrawDate);
+      } else {
+        pools = await db.select()
+          .from(lotteryPools)
+          .where(
+            and(
+              eq(lotteryPools.isPublic, true),
+              gt(lotteryPools.targetDrawDate, new Date())
+            )
+          )
+          .orderBy(lotteryPools.targetDrawDate);
+      }
+      
+      res.json({ success: true, pools });
+    } catch (error: any) {
+      console.error('Get pools error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Get pool details with members
+  app.get("/api/pools/:poolId", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { lotteryPools, poolMembers, poolTickets } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const poolId = req.params.poolId;
+      
+      const [pool] = await db.select()
+        .from(lotteryPools)
+        .where(eq(lotteryPools.id, poolId))
+        .limit(1);
+      
+      if (!pool) {
+        return res.status(404).json({ success: false, message: 'Pool not found' });
+      }
+      
+      const members = await db.select()
+        .from(poolMembers)
+        .where(eq(poolMembers.poolId, poolId));
+      
+      const tickets = await db.select()
+        .from(poolTickets)
+        .where(eq(poolTickets.poolId, poolId));
+      
+      res.json({ success: true, pool, members, tickets });
+    } catch (error: any) {
+      console.error('Get pool details error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Create a new pool (requires authentication for accountability)
+  app.post("/api/pools/create", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { lotteryPools } = await import('@shared/schema');
+      
+      const { 
+        name, 
+        description, 
+        game, 
+        targetDrawDate, 
+        contributionPerMember, 
+        maxMembers,
+        adminFeePercent,
+        isPublic,
+        requiresApproval 
+      } = req.body;
+      
+      if (!name || !game || !targetDrawDate || !contributionPerMember || !maxMembers) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Missing required fields' 
+        });
+      }
+      
+      // Validate admin fee is within acceptable range (5-10%)
+      const feePercent = adminFeePercent ? parseFloat(adminFeePercent) : 7.5;
+      if (feePercent < 5 || feePercent > 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Admin fee must be between 5% and 10%'
+        });
+      }
+      
+      // Validate contribution amount
+      const contribution = parseFloat(contributionPerMember);
+      if (contribution < 5) {
+        return res.status(400).json({
+          success: false,
+          message: 'Minimum contribution is $5 per member'
+        });
+      }
+      
+      const userId = req.user?.id;
+      
+      // Require authentication for pool creation (accountability)
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'You must be logged in to create a pool'
+        });
+      }
+      
+      const [pool] = await db.insert(lotteryPools).values({
+        name,
+        description,
+        game,
+        targetDrawDate: new Date(targetDrawDate),
+        contributionPerMember: contribution.toString(),
+        maxMembers,
+        adminFeePercent: feePercent.toString(),
+        isPublic: isPublic ?? true,
+        requiresApproval: requiresApproval ?? false,
+        createdBy: userId,
+        status: 'open'
+      }).returning();
+      
+      res.json({ success: true, pool });
+    } catch (error: any) {
+      console.error('Create pool error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Join a pool
+  app.post("/api/pools/:poolId/join", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { lotteryPools, poolMembers } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const poolId = req.params.poolId;
+      const { displayName, email } = req.body;
+      
+      const userId = req.user?.id;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      // Get pool details
+      const [pool] = await db.select()
+        .from(lotteryPools)
+        .where(eq(lotteryPools.id, poolId))
+        .limit(1);
+      
+      if (!pool) {
+        return res.status(404).json({ success: false, message: 'Pool not found' });
+      }
+      
+      if (pool.status !== 'open') {
+        return res.status(400).json({ success: false, message: 'Pool is not accepting new members' });
+      }
+      
+      if (pool.currentMembers >= pool.maxMembers) {
+        return res.status(400).json({ success: false, message: 'Pool is full' });
+      }
+      
+      // Calculate share percentage (equal shares for now)
+      const sharePercentage = (100 / pool.maxMembers).toFixed(2);
+      
+      // Add member
+      const [member] = await db.insert(poolMembers).values({
+        poolId,
+        userId: userId || null,
+        sessionId,
+        displayName,
+        email,
+        contributionAmount: pool.contributionPerMember,
+        sharePercentage,
+        status: pool.requiresApproval ? 'pending' : 'active',
+        paymentStatus: 'pending'
+      }).returning();
+      
+      // Update pool member count if auto-approved
+      if (!pool.requiresApproval) {
+        const newMemberCount = pool.currentMembers + 1;
+        const newStatus = newMemberCount >= pool.maxMembers ? 'full' : 'open';
+        
+        await db.update(lotteryPools)
+          .set({ 
+            currentMembers: newMemberCount,
+            status: newStatus
+          })
+          .where(eq(lotteryPools.id, poolId));
+      }
+      
+      res.json({ success: true, member, requiresPayment: true });
+    } catch (error: any) {
+      console.error('Join pool error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Create PayPal payment order for pool membership
+  app.post("/api/pools/:poolId/create-payment", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { lotteryPools, poolMembers } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { payPalClient } = await import('./paypal');
+      const { OrdersController } = await import('@paypal/paypal-server-sdk');
+      
+      const poolId = req.params.poolId;
+      const { memberId } = req.body;
+      
+      // Get pool and member details
+      const [pool] = await db.select()
+        .from(lotteryPools)
+        .where(eq(lotteryPools.id, poolId))
+        .limit(1);
+      
+      if (!pool) {
+        return res.status(404).json({ success: false, message: 'Pool not found' });
+      }
+      
+      const [member] = await db.select()
+        .from(poolMembers)
+        .where(eq(poolMembers.id, memberId))
+        .limit(1);
+      
+      if (!member) {
+        return res.status(404).json({ success: false, message: 'Member not found' });
+      }
+      
+      // Create PayPal order
+      const ordersController = new OrdersController(payPalClient);
+      const amount = parseFloat(member.contributionAmount);
+      
+      const order = await ordersController.ordersCreate({
+        body: {
+          intent: 'CAPTURE',
+          purchaseUnits: [{
+            amount: {
+              currencyCode: 'USD',
+              value: amount.toFixed(2)
+            },
+            description: `Pool Contribution - ${pool.name}`
+          }]
+        }
+      });
+      
+      res.json({ 
+        success: true, 
+        orderId: order.result.id,
+        amount: amount.toFixed(2)
+      });
+    } catch (error: any) {
+      console.error('Create payment error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Capture PayPal payment and update pool financials
+  app.post("/api/pools/:poolId/capture-payment", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { poolMembers, lotteryPools, poolTransactions } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      const { payPalClient } = await import('./paypal');
+      const { OrdersController } = await import('@paypal/paypal-server-sdk');
+      
+      const poolId = req.params.poolId;
+      const { memberId, orderId } = req.body;
+      
+      // Get member details FIRST to validate expected amount
+      const [member] = await db.select()
+        .from(poolMembers)
+        .where(eq(poolMembers.id, memberId))
+        .limit(1);
+      
+      if (!member) {
+        return res.status(404).json({ success: false, message: 'Member not found' });
+      }
+      
+      // Capture the payment
+      const ordersController = new OrdersController(payPalClient);
+      const capture = await ordersController.ordersCapture({
+        id: orderId
+      });
+      
+      const captureId = capture.result.purchaseUnits[0].payments.captures[0].id;
+      const amount = capture.result.purchaseUnits[0].payments.captures[0].amount.value;
+      
+      // CRITICAL VALIDATION: Ensure captured amount matches expected contribution
+      const expectedAmount = parseFloat(member.contributionAmount);
+      const actualAmount = parseFloat(amount);
+      
+      if (Math.abs(actualAmount - expectedAmount) > 0.01) {
+        console.error(`Payment amount mismatch: expected ${expectedAmount}, got ${actualAmount}`);
+        return res.status(400).json({
+          success: false,
+          message: `Payment amount mismatch. Expected $${expectedAmount}, received $${actualAmount}`
+        });
+      }
+      
+      // Update member payment status
+      await db.update(poolMembers)
+        .set({
+          paymentStatus: 'paid',
+          paymentMethod: 'paypal',
+          paypalTransactionId: captureId,
+          status: 'active'
+        })
+        .where(eq(poolMembers.id, memberId));
+      
+      // Get member details
+      const [member] = await db.select()
+        .from(poolMembers)
+        .where(eq(poolMembers.id, memberId))
+        .limit(1);
+      
+      // Record transaction
+      await db.insert(poolTransactions).values({
+        poolId,
+        memberId,
+        type: 'contribution',
+        amount,
+        currency: 'USD',
+        paymentProvider: 'paypal',
+        providerTransactionId: captureId,
+        status: 'completed',
+        notes: `PayPal order ${orderId} captured`,
+        processedAt: new Date()
+      });
+      
+      // Update pool financial totals
+      const [pool] = await db.select()
+        .from(lotteryPools)
+        .where(eq(lotteryPools.id, poolId))
+        .limit(1);
+      
+      const newTotalContributions = parseFloat(pool.totalContributions) + parseFloat(amount);
+      const adminFee = newTotalContributions * (parseFloat(pool.adminFeePercent) / 100);
+      const netAmount = newTotalContributions - adminFee;
+      
+      // Count paid members only
+      const paidMembers = await db.select()
+        .from(poolMembers)
+        .where(eq(poolMembers.poolId, poolId));
+      
+      const paidCount = paidMembers.filter(m => m.paymentStatus === 'paid').length;
+      
+      await db.update(lotteryPools)
+        .set({
+          currentMembers: paidCount,
+          totalContributions: newTotalContributions.toString(),
+          adminFeeCollected: adminFee.toString(),
+          netPoolAmount: netAmount.toString(),
+          status: paidCount >= pool.maxMembers ? 'full' : 'open'
+        })
+        .where(eq(lotteryPools.id, poolId));
+      
+      res.json({ 
+        success: true, 
+        message: 'Payment captured successfully',
+        adminFeeCollected: adminFee.toFixed(2),
+        netPoolAmount: netAmount.toFixed(2)
+      });
+    } catch (error: any) {
+      console.error('Capture payment error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Generate tickets for pool
+  app.post("/api/pools/:poolId/generate-tickets", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { lotteryPools, poolTickets, generatedTickets } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const poolId = req.params.poolId;
+      const { method = 'balanced', count = 10 } = req.body;
+      
+      // Get pool details
+      const [pool] = await db.select()
+        .from(lotteryPools)
+        .where(eq(lotteryPools.id, poolId))
+        .limit(1);
+      
+      if (!pool) {
+        return res.status(404).json({ success: false, message: 'Pool not found' });
+      }
+      
+      // Calculate how many tickets we can buy with net pool amount
+      const ticketPrice = 2; // $2 per ticket
+      const maxTickets = Math.floor(parseFloat(pool.netPoolAmount) / ticketPrice);
+      const ticketsToGenerate = Math.min(count, maxTickets);
+      
+      if (ticketsToGenerate <= 0) {
+        return res.status(400).json({ success: false, message: 'Insufficient funds for tickets' });
+      }
+      
+      // Generate tickets using the analysis engine
+      const { AdvancedLotteryStrategies } = await import('./analysisEngine');
+      const strategies = new AdvancedLotteryStrategies();
+      
+      const tickets = [];
+      for (let i = 0; i < ticketsToGenerate; i++) {
+        const prediction = await strategies.generateBalancedPrediction(pool.game);
+        
+        // Save to generated_tickets
+        const [ticket] = await db.insert(generatedTickets).values({
+          game: pool.game,
+          method,
+          mainNumbers: prediction.mainNumbers,
+          bonusNumber: prediction.bonusNumber
+        }).returning();
+        
+        // Link to pool
+        await db.insert(poolTickets).values({
+          poolId,
+          ticketId: ticket.id,
+          game: pool.game,
+          mainNumbers: prediction.mainNumbers,
+          bonusNumber: prediction.bonusNumber,
+          generationMethod: method
+        });
+        
+        tickets.push(prediction);
+      }
+      
+      // Update pool
+      await db.update(lotteryPools)
+        .set({
+          totalTicketsPurchased: pool.totalTicketsPurchased + ticketsToGenerate,
+          status: 'active'
+        })
+        .where(eq(lotteryPools.id, poolId));
+      
+      res.json({ success: true, ticketsGenerated: ticketsToGenerate, tickets });
+    } catch (error: any) {
+      console.error('Generate pool tickets error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // ==================== REFERRAL PROGRAM ====================
+  
+  // Generate or get user's referral code
+  app.get("/api/referral/my-code", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { referralCodes } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+      
+      // Check if user already has a referral code
+      let [code] = await db.select()
+        .from(referralCodes)
+        .where(eq(referralCodes.referrerId, userId))
+        .limit(1);
+      
+      // Generate new code if doesn't exist
+      if (!code) {
+        const newCode = `RUSSELL${Date.now().toString(36).toUpperCase()}`;
+        [code] = await db.insert(referralCodes).values({
+          referrerId: userId,
+          referralCode: newCode,
+          rewardType: 'free_generation',
+          rewardValue: 3,
+          status: 'pending'
+        }).returning();
+      }
+      
+      res.json({ success: true, code });
+    } catch (error: any) {
+      console.error('Get referral code error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Track referral usage
+  app.post("/api/referral/track", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { referralCodes } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const { referralCode } = req.body;
+      
+      if (!referralCode) {
+        return res.status(400).json({ success: false, message: 'Referral code required' });
+      }
+      
+      // Find the referral code
+      const [code] = await db.select()
+        .from(referralCodes)
+        .where(eq(referralCodes.referralCode, referralCode))
+        .limit(1);
+      
+      if (!code) {
+        return res.status(404).json({ success: false, message: 'Invalid referral code' });
+      }
+      
+      // Store in session for later conversion tracking
+      if (req.session) {
+        req.session.referralCode = referralCode;
+        req.session.referralCodeId = code.id;
+      }
+      
+      res.json({ success: true, reward: { type: code.rewardType, value: code.rewardValue } });
+    } catch (error: any) {
+      console.error('Track referral error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Get referral stats for user
+  app.get("/api/referral/stats", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { referralCodes } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+      
+      // Get all referrals by this user
+      const referrals = await db.select()
+        .from(referralCodes)
+        .where(eq(referralCodes.referrerId, userId));
+      
+      const stats = {
+        totalReferrals: referrals.length,
+        pendingReferrals: referrals.filter(r => r.status === 'pending').length,
+        completedReferrals: referrals.filter(r => r.status === 'completed').length,
+        totalRewards: referrals.filter(r => r.status === 'completed')
+          .reduce((sum, r) => sum + r.rewardValue, 0)
+      };
+      
+      res.json({ success: true, stats, referrals });
+    } catch (error: any) {
+      console.error('Get referral stats error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // Email Subscription: Subscribe to draw day reminders
   app.post("/api/email/subscribe", async (req, res) => {
     try {

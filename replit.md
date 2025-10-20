@@ -40,6 +40,51 @@ The platform features a responsive design with a mobile-first approach, utilizin
 - **Educational Value**: Large sample size provides statistically significant data for educational analysis purposes
 - **Study Scope**: Comprehensive historical analysis for educational lottery number frequency patterns
 
+### Revenue Generation Features (October 2025)
+
+**1. Jackpocket Affiliate Integration** ✅
+- Prominent CTA button on number generation results
+- Full click tracking with database logging (user/session/IP)
+- API endpoint `/api/affiliate/track` for conversion monitoring
+- Database table: `jackpocket_affiliate_clicks`
+
+**2. Daily Spin-to-Win Gamification** ✅
+- Animated spinning wheel with 8 weighted prize segments
+- Prizes: 3 free picks (5%), 1 free (25%), 2 free (15%), 10% discount (15%), 7-day trial (8%), try again (30%), bonus (2%)
+- Race condition protection via database unique constraints on userId/sessionId + spinDate
+- Streak tracking and countdown timer
+- API endpoints: `/api/spin/status`, `/api/spin/daily`
+- Database table: `daily_spins`
+
+**3. Email Notification System** ✅
+- SendGrid integration with draw day reminder templates
+- Scheduled reminders: Powerball (Mon/Wed/Sat), MegaMillions (Tue/Fri)
+- Subscription management (subscribe, unsubscribe, preferences)
+- API endpoints: `/api/email/subscribe`, `/api/email/preferences/:email`, `/api/email/unsubscribe`
+- Database tables: `email_preferences`, `email_send_log`
+- Note: Requires SENDGRID_API_KEY to activate (currently logs to console)
+
+**4. Community Lottery Pools** ✅
+- Pool creation with authentication requirement, 5-10% admin fee validation, minimum $5 contribution
+- PayPal payment integration (create order → capture payment → update financials)
+- Payment validation ensures captured amount matches expected contribution
+- Admin fee automatically calculated and tracked (default 7.5%)
+- Pool management: browsing, creating, joining, member tracking
+- Ticket generation for pools using analysis engine
+- API endpoints: `/api/pools`, `/api/pools/:id`, `/api/pools/create`, `/api/pools/:id/join`, `/api/pools/:id/create-payment`, `/api/pools/:id/capture-payment`, `/api/pools/:id/generate-tickets`
+- Database tables: `lottery_pools`, `pool_members`, `pool_tickets`, `pool_transactions`, `pool_winnings`
+- Frontend: `/pools` page with create/join/payment UI
+- Known limitation: Frontend payment flow is simplified for development; production should use PayPal JS SDK for checkout UI
+
+**5. Referral Program** ✅
+- Automatic referral code generation (`RUSSELL` + timestamp)
+- Social sharing (Twitter, Facebook, LinkedIn)
+- Reward system: 3 free number generations per successful referral
+- Referral tracking and stats dashboard
+- API endpoints: `/api/referral/my-code`, `/api/referral/track`, `/api/referral/stats`
+- Database table: `referral_codes`
+- Frontend: `ReferralWidget` component with copy-to-clipboard and social share buttons
+
 ## External Dependencies
 
 ### Database

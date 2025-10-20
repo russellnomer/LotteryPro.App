@@ -19,6 +19,7 @@ export default function Navigation() {
 
   const navItems = [
     { path: "/home", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },
+    { path: "/pools", icon: Users, label: "Community Pools", description: "Join lottery pools" },
     { path: "/music", icon: Music, label: "Russell's Music", description: "ASCAP artist catalog" },
     { path: "/books", icon: BookOpen, label: "Books", description: "35-book collection" },
     { path: "/performance", icon: TrendingUp, label: "Performance", description: "Track record & stats" },

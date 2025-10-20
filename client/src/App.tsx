@@ -14,6 +14,7 @@ import Auth from "@/pages/auth";
 import Admin from "@/pages/admin";
 import PrivacyPolicy from "@/pages/privacy";
 import SocialMarketing from "@/pages/social-marketing";
+import Pools from "@/pages/pools";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/admin" component={Admin} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/social-marketing" component={SocialMarketing} />
+          <Route path="/pools" component={Pools} />
           <Route component={NotFound} />
         </Switch>
       </main>
