@@ -27,7 +27,7 @@ const PRIZES: Prize[] = [
   { type: 'no_prize', value: 'better_luck', displayName: 'Try Again Tomorrow', color: '#6b7280', icon: X },
 ];
 
-export function SpinWheel() {
+export default function SpinWheel() {
   const { toast } = useToast();
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);

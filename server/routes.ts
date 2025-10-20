@@ -381,6 +381,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email Subscription: Subscribe to draw day reminders
+  app.post("/api/email/subscribe", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { emailPreferences } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const { email, powerballReminders, megamillionsReminders, weeklyDigest, promotionalEmails } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required' });
+      }
+      
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      // Check if email already exists
+      const existing = await db.select()
+        .from(emailPreferences)
+        .where(eq(emailPreferences.email, email))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        // Update existing preferences
+        await db.update(emailPreferences)
+          .set({
+            powerballReminders: powerballReminders ?? 1,
+            megamillionsReminders: megamillionsReminders ?? 1,
+            weeklyDigest: weeklyDigest ?? 1,
+            promotionalEmails: promotionalEmails ?? 1,
+            updatedAt: new Date()
+          })
+          .where(eq(emailPreferences.email, email));
+          
+        return res.json({ success: true, message: 'Email preferences updated' });
+      }
+      
+      // Create new subscription
+      await db.insert(emailPreferences).values({
+        userId,
+        sessionId,
+        email,
+        powerballReminders: powerballReminders ?? 1,
+        megamillionsReminders: megamillionsReminders ?? 1,
+        weeklyDigest: weeklyDigest ?? 1,
+        promotionalEmails: promotionalEmails ?? 1
+      });
+      
+      res.json({ success: true, message: 'Successfully subscribed to email notifications' });
+      
+    } catch (error: any) {
+      console.error('Email subscription error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Email Subscription: Get preferences
+  app.get("/api/email/preferences/:email", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { emailPreferences } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const email = decodeURIComponent(req.params.email);
+      
+      const prefs = await db.select()
+        .from(emailPreferences)
+        .where(eq(emailPreferences.email, email))
+        .limit(1);
+      
+      if (prefs.length === 0) {
+        return res.status(404).json({ success: false, message: 'Email not found' });
+      }
+      
+      res.json({ success: true, preferences: prefs[0] });
+      
+    } catch (error: any) {
+      console.error('Get preferences error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Email Subscription: Unsubscribe
+  app.post("/api/email/unsubscribe", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { emailPreferences } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required' });
+      }
+      
+      await db.update(emailPreferences)
+        .set({
+          powerballReminders: 0,
+          megamillionsReminders: 0,
+          weeklyDigest: 0,
+          promotionalEmails: 0,
+          updatedAt: new Date()
+        })
+        .where(eq(emailPreferences.email, email));
+      
+      res.json({ success: true, message: 'Successfully unsubscribed from all emails' });
+      
+    } catch (error: any) {
+      console.error('Unsubscribe error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // Daily Spin-to-Win: Execute spin
   app.post("/api/spin/daily", async (req, res) => {
     try {
