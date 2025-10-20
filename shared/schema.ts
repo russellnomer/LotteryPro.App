@@ -9,7 +9,8 @@ import {
   decimal,
   boolean,
   date,
-  index
+  index,
+  unique
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -158,12 +159,17 @@ export const dailySpins = pgTable("daily_spins", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => userAccounts.id),
   sessionId: text("session_id"), // For guest tracking
+  spinDate: text("spin_date").notNull(), // YYYY-MM-DD format for unique constraint
   prizeType: text("prize_type").notNull(), // 'free_generation', 'discount_code', 'premium_trial', 'no_prize'
   prizeValue: text("prize_value"), // Description of prize
   spunAt: timestamp("spun_at").default(sql`now()`),
   claimed: integer("claimed").notNull().default(0), // 0 = unclaimed, 1 = claimed
   claimedAt: timestamp("claimed_at"),
-});
+}, (table) => ({
+  // Unique constraint to prevent multiple spins per day - race condition protection
+  uniqueUserSpin: unique("unique_user_daily_spin").on(table.userId, table.spinDate),
+  uniqueSessionSpin: unique("unique_session_daily_spin").on(table.sessionId, table.spinDate),
+}));
 
 // Revenue Generation: Referral Program
 export const referralCodes = pgTable("referral_codes", {
@@ -255,6 +261,7 @@ export const insertDailySpinSchema = createInsertSchema(dailySpins).omit({
   id: true,
   spunAt: true,
   claimedAt: true,
+  spinDate: true, // Auto-generated from current date
 });
 
 export const insertReferralCodeSchema = createInsertSchema(referralCodes).omit({

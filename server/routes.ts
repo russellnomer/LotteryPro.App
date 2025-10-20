@@ -309,6 +309,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Daily Spin-to-Win: Check spin status
+  app.get("/api/spin/status", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { dailySpins } = await import('@shared/schema');
+      const { desc, eq, and, sql } = await import('drizzle-orm');
+      
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      // Get today's date in YYYY-MM-DD format
+      const todayDate = new Date().toISOString().split('T')[0];
+      
+      const todaySpins = await db.select()
+        .from(dailySpins)
+        .where(
+          and(
+            userId ? eq(dailySpins.userId, userId) : eq(dailySpins.sessionId, sessionId),
+            eq(dailySpins.spinDate, todayDate)
+          )
+        )
+        .orderBy(desc(dailySpins.spunAt))
+        .limit(1);
+      
+      // Calculate consecutive day streak
+      const allSpins = await db.select()
+        .from(dailySpins)
+        .where(userId ? eq(dailySpins.userId, userId) : eq(dailySpins.sessionId, sessionId))
+        .orderBy(desc(dailySpins.spunAt));
+      
+      let spinStreak = 0;
+      if (allSpins.length > 0) {
+        let currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        
+        for (const spin of allSpins) {
+          const spinDate = new Date(spin.spunAt);
+          spinDate.setHours(0, 0, 0, 0);
+          
+          const daysDiff = Math.floor((currentDate.getTime() - spinDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff === spinStreak) {
+            spinStreak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+      
+      const canSpin = todaySpins.length === 0;
+      
+      // Calculate hours until next spin based on the actual spin timestamp
+      let hoursUntilNextSpin = 0;
+      if (!canSpin && todaySpins[0]) {
+        const lastSpinTime = new Date(todaySpins[0].spunAt);
+        const nextSpinTime = new Date(lastSpinTime.getTime() + 24 * 60 * 60 * 1000);
+        hoursUntilNextSpin = Math.max(0, Math.ceil((nextSpinTime.getTime() - Date.now()) / (1000 * 60 * 60)));
+      }
+      
+      res.json({
+        canSpin,
+        hoursUntilNextSpin,
+        spinStreak,
+        lastSpin: todaySpins[0] || null
+      });
+    } catch (error: any) {
+      console.error('Spin status error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Daily Spin-to-Win: Execute spin
+  app.post("/api/spin/daily", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { dailySpins } = await import('@shared/schema');
+      const { eq, and } = await import('drizzle-orm');
+      
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      // Get today's date in YYYY-MM-DD format
+      const todayDate = new Date().toISOString().split('T')[0];
+      
+      // Weighted prize distribution
+      const prizePool = [
+        { type: 'free_generation', value: '3', weight: 5 },      // 5% - 3 free picks
+        { type: 'no_prize', value: 'better_luck', weight: 30 },  // 30% - no prize
+        { type: 'free_generation', value: '1', weight: 25 },     // 25% - 1 free pick
+        { type: 'discount_code', value: 'LUCKY10', weight: 15 }, // 15% - 10% discount
+        { type: 'free_generation', value: '2', weight: 15 },     // 15% - 2 free picks
+        { type: 'premium_trial', value: '7', weight: 8 },        // 8% - 7-day trial
+        { type: 'free_generation', value: '1', weight: 2 },      // 2% - 1 free pick (duplicate position)
+      ];
+      
+      const totalWeight = prizePool.reduce((sum, p) => sum + p.weight, 0);
+      const random = Math.random() * totalWeight;
+      
+      let cumulativeWeight = 0;
+      let wonPrize = prizePool[0];
+      
+      for (const prize of prizePool) {
+        cumulativeWeight += prize.weight;
+        if (random <= cumulativeWeight) {
+          wonPrize = prize;
+          break;
+        }
+      }
+      
+      // Record the spin - DB will enforce uniqueness via constraint
+      // This prevents race conditions from multiple parallel requests
+      let spin;
+      try {
+        [spin] = await db.insert(dailySpins).values({
+          userId,
+          sessionId,
+          spinDate: todayDate,
+          prizeType: wonPrize.type,
+          prizeValue: wonPrize.value,
+          claimed: 0
+        }).returning();
+      } catch (error: any) {
+        // Unique constraint violation means already spun today
+        if (error.code === '23505') { // PostgreSQL unique violation code
+          return res.status(429).json({ 
+            success: false, 
+            message: 'You have already spun today. Come back tomorrow!' 
+          });
+        }
+        throw error; // Re-throw other errors
+      }
+      
+      res.json({
+        success: true,
+        spinId: spin.id,
+        prizeType: wonPrize.type,
+        prizeValue: wonPrize.value
+      });
+    } catch (error: any) {
+      console.error('Daily spin error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // Get analysis data for a game (with real-time data updates)
   app.get("/api/analysis/:game", async (req, res) => {
     try {
