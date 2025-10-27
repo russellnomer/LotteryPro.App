@@ -80,7 +80,7 @@ export default function PoolsPage() {
         description: "Complete your payment to secure your spot in the pool.",
       });
     },
-    onError: (error: any) {
+    onError: (error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to join pool",

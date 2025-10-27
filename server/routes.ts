@@ -2179,6 +2179,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== LOTTERY DATA UPDATE ====================
+  
+  // Admin endpoint: Update lottery data with actual winning numbers
+  app.post("/api/admin/update-lottery-data", async (req, res) => {
+    try {
+      const { LotteryDataService } = await import('./lotteryDataService');
+      const dataService = new LotteryDataService();
+      
+      // October 2025 Actual Winning Numbers
+      const actualResults = [
+        // Powerball October 2025
+        { game: 'powerball', drawDate: '2025-10-25', mainNumbers: [2, 12, 22, 39, 67], bonusNumber: 15, jackpot: '$343.9 Million' },
+        { game: 'powerball', drawDate: '2025-10-22', mainNumbers: [18, 37, 52, 54, 60], bonusNumber: 12, jackpot: '$320 Million' },
+        { game: 'powerball', drawDate: '2025-10-20', mainNumbers: [32, 38, 66, 67, 69], bonusNumber: 19, jackpot: '$304 Million' },
+        { game: 'powerball', drawDate: '2025-10-15', mainNumbers: [10, 13, 28, 34, 47], bonusNumber: 15, jackpot: '$273 Million' },
+        { game: 'powerball', drawDate: '2025-10-08', mainNumbers: [8, 10, 44, 48, 54], bonusNumber: 14, jackpot: '$223 Million' },
+        { game: 'powerball', drawDate: '2025-10-06', mainNumbers: [28, 29, 32, 66, 67], bonusNumber: 3, jackpot: '$207 Million' },
+        { game: 'powerball', drawDate: '2025-10-01', mainNumbers: [8, 17, 22, 28, 55], bonusNumber: 14, jackpot: '$175 Million' },
+        
+        // Mega Millions October 2025
+        { game: 'megamillions', drawDate: '2025-10-24', mainNumbers: [11, 18, 31, 51, 56], bonusNumber: 24, jackpot: '$680 Million' },
+        { game: 'megamillions', drawDate: '2025-10-21', mainNumbers: [2, 18, 27, 34, 59], bonusNumber: 18, jackpot: '$650 Million' },
+      ];
+      
+      const addedCount = await dataService.addActualWinningNumbers(actualResults);
+      
+      res.json({
+        success: true,
+        message: `Successfully updated lottery data with ${addedCount} new draws`,
+        added: addedCount,
+        total: actualResults.length
+      });
+    } catch (error: any) {
+      console.error('Error updating lottery data:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || 'Failed to update lottery data' 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

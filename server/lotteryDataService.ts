@@ -273,6 +273,36 @@ export class LotteryDataService {
   }
 
   /**
+   * Add actual winning numbers from official lottery sources
+   */
+  async addActualWinningNumbers(results: LotteryApiResponse[]): Promise<number> {
+    let addedCount = 0;
+    
+    for (const result of results) {
+      try {
+        await storage.createDraw({
+          game: result.game as any,
+          drawDate: new Date(result.drawDate),
+          mainNumbers: result.mainNumbers,
+          bonusNumber: result.bonusNumber,
+          jackpot: result.jackpot || null
+        });
+        addedCount++;
+        console.log(`✅ Added ${result.game} draw for ${result.drawDate}: ${result.mainNumbers.join(', ')} | Bonus: ${result.bonusNumber}`);
+      } catch (error: any) {
+        // Skip if already exists
+        if (error.message?.includes('duplicate') || error.message?.includes('UNIQUE')) {
+          console.log(`⏭️  Skipped ${result.game} draw for ${result.drawDate} (already exists)`);
+        } else {
+          console.error(`❌ Error adding ${result.game} draw:`, error.message || error);
+        }
+      }
+    }
+    
+    return addedCount;
+  }
+
+  /**
    * Get statistical analysis for a game
    */
   async getStatisticalAnalysis(game: 'powerball' | 'megamillions'): Promise<any> {
