@@ -1734,6 +1734,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stripe webhook for payment verification
+  app.post("/webhooks/stripe", async (req, res) => {
+    try {
+      const { handleStripeWebhook } = await import('./stripe');
+      await handleStripeWebhook(req, res);
+    } catch (error) {
+      console.error('Stripe webhook error:', error);
+      res.status(500).json({ success: false, message: 'Stripe webhook processing failed' });
+    }
+  });
+
   // Usage enforcement endpoint
   app.post("/api/check-usage", requireAuth, async (req, res) => {
     try {

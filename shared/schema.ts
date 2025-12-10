@@ -708,6 +708,17 @@ export const poolWinnings = pgTable("pool_winnings", {
   poolIdIdx: index("pool_winnings_pool_idx").on(table.poolId),
 }));
 
+// Stripe event logging for payment verification
+export const stripeEvents = pgTable("stripe_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull().unique(),
+  eventType: text("event_type").notNull(),
+  customerIdentifier: text("customer_identifier"),
+  tier: text("tier"),
+  status: text("status"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Type exports for Community Pools
 export type LotteryPool = typeof lotteryPools.$inferSelect;
 export type InsertLotteryPool = typeof lotteryPools.$inferInsert;
