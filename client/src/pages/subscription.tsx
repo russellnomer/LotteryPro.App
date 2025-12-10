@@ -1,12 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PayPalButton from "@/components/PayPalButton";
-import { useState } from "react";
-import { CheckCircle, Star, Zap, Users, TrendingUp } from "lucide-react";
+import { CheckCircle, Star, Zap, Users, TrendingUp, CreditCard } from "lucide-react";
+
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/8x28wO2Xq5gbgGX6Se9IQ00";
 
 export default function SubscriptionPage() {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   const plans = [
     {
@@ -95,8 +94,9 @@ Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure enter
             <Card 
               key={plan.id} 
               className={`relative transition-all duration-300 hover:shadow-lg ${
-                selectedPlan === plan.id ? 'ring-2 ring-blue-500 shadow-lg' : ''
-              } ${plan.badge === "Most Popular" ? 'border-blue-500 border-2' : ''}`}
+                plan.badge === "Most Popular" ? 'border-blue-500 border-2' : ''
+              } ${plan.badge === "Best Value" ? 'border-purple-500 border-2' : ''}`}
+              data-testid={`card-plan-${plan.id}`}
             >
               {plan.badge && (
                 <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500">
@@ -136,29 +136,22 @@ Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure enter
                 
                 <div className="space-y-3">
                   {plan.id === "free" ? (
-                    <Button className="w-full" onClick={() => window.location.href = "/"}>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => window.location.href = "/"}
+                      data-testid="button-start-free"
+                    >
                       Start Free
                     </Button>
                   ) : (
-                    <>
-                      <Button 
-                        onClick={() => setSelectedPlan(plan.id)}
-                        className="w-full"
-                        variant={selectedPlan === plan.id ? "default" : "outline"}
-                      >
-                        {selectedPlan === plan.id ? "Selected" : "Select Plan"}
-                      </Button>
-                      
-                      {selectedPlan === plan.id && (
-                        <div className="mt-4">
-                          <PayPalButton 
-                            amount={plan.price}
-                            currency="USD"
-                            intent="CAPTURE"
-                          />
-                        </div>
-                      )}
-                    </>
+                    <Button 
+                      onClick={() => window.open(STRIPE_PAYMENT_LINK, '_blank')}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      data-testid={`button-subscribe-${plan.id}`}
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Subscribe Now
+                    </Button>
                   )}
                 </div>
               </CardContent>
