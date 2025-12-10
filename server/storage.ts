@@ -71,6 +71,8 @@ export interface IStorage {
   // Session management  
   createUserSession(session: InsertUserSession): Promise<UserSession>;
   getUserSession(sessionToken: string): Promise<UserSession | undefined>;
+  deleteUserSession(sessionToken: string): Promise<void>;
+  cleanupExpiredSessions(): Promise<number>;
   
   // VIP code management (Russell's god-like powers)
   createVipCode(vipCode: InsertVipCode): Promise<VipCode>;
@@ -273,6 +275,14 @@ export class MemStorage implements IStorage {
 
   async getUserSession(sessionToken: string): Promise<UserSession | undefined> {
     return undefined;
+  }
+
+  async deleteUserSession(sessionToken: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async cleanupExpiredSessions(): Promise<number> {
+    return 0; // No sessions in memory storage
   }
 
   // VIP code management stub implementations
@@ -622,6 +632,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userSessions.sessionToken, sessionToken))
       .limit(1);
     return session;
+  }
+
+  async deleteUserSession(sessionToken: string): Promise<void> {
+    await db.delete(userSessions)
+      .where(eq(userSessions.sessionToken, sessionToken));
+  }
+
+  async cleanupExpiredSessions(): Promise<number> {
+    const result = await db.delete(userSessions)
+      .where(sql`${userSessions.expiresAt} < now()`);
+    return result.rowCount || 0;
   }
 
   // VIP code management (Russell's god-like powers)

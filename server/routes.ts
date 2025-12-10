@@ -7,7 +7,7 @@ import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/sch
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
-import { register, login, setupMFA, verifyMFASetup, requireAuth, requireAdmin, requireBasic, requirePro, requirePremium } from "./auth";
+import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, requireAdmin, requireBasic, requirePro, requirePremium } from "./auth";
 import { 
   createPayPalSubscription, 
   activatePayPalSubscription,
@@ -1789,6 +1789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes with rate limiting
   app.post("/api/auth/register", authRateLimit, register);
   app.post("/api/auth/login", authRateLimit, login);
+  app.post("/api/auth/logout", logout);
   app.post("/api/auth/mfa/setup", authRateLimit, setupMFA);
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
 

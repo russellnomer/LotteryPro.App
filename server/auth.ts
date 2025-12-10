@@ -186,6 +186,9 @@ export async function setupMFA(req: Request, res: Response) {
 
     // Generate MFA secret
     const { secret, qrCodeUrl } = MFAService.generateMFASecret(user.email);
+    if (!qrCodeUrl) {
+      return res.status(500).json({ error: 'Failed to generate MFA secret' });
+    }
     const qrCodeImage = await MFAService.generateQRCode(qrCodeUrl);
 
     // Store secret temporarily (not enabled yet)
@@ -244,6 +247,25 @@ export async function verifyMFASetup(req: Request, res: Response) {
 
 function generateSessionToken(): string {
   return require('crypto').randomBytes(32).toString('hex');
+}
+
+// Logout - invalidate session
+export async function logout(req: Request, res: Response) {
+  try {
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    if (!sessionToken) {
+      return res.status(400).json({ error: 'No session to invalidate' });
+    }
+
+    await storage.deleteUserSession(sessionToken);
+    
+    res.json({ 
+      success: true, 
+      message: 'Logged out successfully' 
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Logout failed' });
+  }
 }
 
 // Middleware to check authentication and MFA
