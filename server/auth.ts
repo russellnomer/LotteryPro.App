@@ -276,3 +276,108 @@ export async function requireAuth(req: Request, res: Response, next: any) {
     res.status(500).json({ error: 'Authentication error' });
   }
 }
+
+// Subscription tier hierarchy: premium > pro > basic > free
+const tierHierarchy: Record<string, number> = {
+  'free': 0,
+  'basic': 1,
+  'pro': 2,
+  'premium': 3,
+  'admin': 99
+};
+
+// Middleware to require a minimum subscription tier
+export function requireTier(minTier: 'basic' | 'pro' | 'premium') {
+  return async (req: Request, res: Response, next: any) => {
+    try {
+      // First check authentication
+      const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+      if (!sessionToken) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const session = await storage.getUserSession(sessionToken);
+      if (!session || session.expiresAt < new Date()) {
+        return res.status(401).json({ error: 'Session expired' });
+      }
+
+      const user = await storage.getUserById(session.userId);
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+
+      if (!session.mfaVerified) {
+        return res.status(401).json({ error: 'MFA verification required' });
+      }
+
+      // Check subscription status
+      if (user.subscriptionStatus !== 'active') {
+        return res.status(403).json({ 
+          error: 'Subscription required',
+          message: 'Please activate your subscription to access this feature'
+        });
+      }
+
+      // Check tier level
+      const userTierLevel = tierHierarchy[user.subscriptionTier || 'free'] || 0;
+      const requiredTierLevel = tierHierarchy[minTier] || 0;
+
+      if (userTierLevel < requiredTierLevel) {
+        return res.status(403).json({ 
+          error: 'Upgrade required',
+          message: `This feature requires ${minTier} tier or higher. Your current tier: ${user.subscriptionTier || 'free'}`,
+          currentTier: user.subscriptionTier || 'free',
+          requiredTier: minTier
+        });
+      }
+
+      req.user = user;
+      req.session = session;
+      next();
+    } catch (error) {
+      res.status(500).json({ error: 'Authorization error' });
+    }
+  };
+}
+
+// Convenience middleware exports
+export const requireBasic = requireTier('basic');
+export const requirePro = requireTier('pro');
+export const requirePremium = requireTier('premium');
+
+// Admin middleware - requires admin role
+export async function requireAdmin(req: Request, res: Response, next: any) {
+  try {
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    if (!sessionToken) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const session = await storage.getUserSession(sessionToken);
+    if (!session || session.expiresAt < new Date()) {
+      return res.status(401).json({ error: 'Session expired' });
+    }
+
+    const user = await storage.getUserById(session.userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    if (!session.mfaVerified) {
+      return res.status(401).json({ error: 'MFA verification required' });
+    }
+
+    // Check for admin role (stored in subscriptionTier as 'admin' or a specific admin flag)
+    const isAdmin = user.subscriptionTier === 'admin' || user.email === 'admin@lotterypro.com';
+    
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    req.user = user;
+    req.session = session;
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Authorization error' });
+  }
+}

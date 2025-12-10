@@ -7,7 +7,7 @@ import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/sch
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
-import { register, login, setupMFA, verifyMFASetup, requireAuth } from "./auth";
+import { register, login, setupMFA, verifyMFASetup, requireAuth, requireAdmin, requireBasic, requirePro, requirePremium } from "./auth";
 import { 
   createPayPalSubscription, 
   activatePayPalSubscription,
@@ -125,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Force refresh all data (admin endpoint)
-  app.post("/api/loading/refresh", async (req, res) => {
+  app.post("/api/loading/refresh", requireAdmin, async (req, res) => {
     try {
       await progressiveLoader.forceRefresh();
       res.json({ message: "Data refresh initiated", timestamp: new Date().toISOString() });
@@ -460,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new pool (requires authentication for accountability)
-  app.post("/api/pools/create", async (req, res) => {
+  app.post("/api/pools/create", requireAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { lotteryPools } = await import('@shared/schema');
@@ -533,8 +533,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Join a pool
-  app.post("/api/pools/:poolId/join", async (req, res) => {
+  // Join a pool (requires authentication)
+  app.post("/api/pools/:poolId/join", requireAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { lotteryPools, poolMembers } = await import('@shared/schema');
@@ -601,7 +601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create PayPal payment order for pool membership
-  app.post("/api/pools/:poolId/create-payment", async (req, res) => {
+  app.post("/api/pools/:poolId/create-payment", requireAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { lotteryPools, poolMembers } = await import('@shared/schema');
@@ -660,7 +660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Capture PayPal payment and update pool financials
-  app.post("/api/pools/:poolId/capture-payment", async (req, res) => {
+  app.post("/api/pools/:poolId/capture-payment", requireAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { poolMembers, lotteryPools, poolTransactions } = await import('@shared/schema');
@@ -766,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate tickets for pool
-  app.post("/api/pools/:poolId/generate-tickets", async (req, res) => {
+  app.post("/api/pools/:poolId/generate-tickets", requireAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { lotteryPools, poolTickets, generatedTickets } = await import('@shared/schema');
@@ -1237,8 +1237,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Advertisement Management Routes
-  app.get('/api/admin/campaigns', async (req, res) => {
+  // Advertisement Management Routes (Admin only)
+  app.get('/api/admin/campaigns', requireAdmin, async (req, res) => {
     try {
       const { adManager } = await import('./adManagement');
       const campaigns = await adManager.getAllCampaigns();
@@ -1249,7 +1249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/campaigns', async (req, res) => {
+  app.post('/api/admin/campaigns', requireAdmin, async (req, res) => {
     try {
       const { adManager } = await import('./adManagement');
       const campaign = await adManager.createCampaign(req.body);
@@ -1260,7 +1260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/campaigns/:id', async (req, res) => {
+  app.patch('/api/admin/campaigns/:id', requireAdmin, async (req, res) => {
     try {
       const { adManager } = await import('./adManagement');
       const campaign = await adManager.updateCampaign(req.params.id, req.body);
@@ -1271,7 +1271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/campaigns/:id', async (req, res) => {
+  app.delete('/api/admin/campaigns/:id', requireAdmin, async (req, res) => {
     try {
       const { adManager } = await import('./adManagement');
       await adManager.deleteCampaign(req.params.id);
@@ -1282,7 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/ad-revenue', async (req, res) => {
+  app.get('/api/admin/ad-revenue', requireAdmin, async (req, res) => {
     try {
       const { adManager } = await import('./adManagement');
       const report = await adManager.getRevenueReport();
@@ -1329,7 +1329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin route for creating new users
-  app.post('/api/admin/create-user', async (req, res) => {
+  app.post('/api/admin/create-user', requireAdmin, async (req, res) => {
     try {
       const { createNewUser } = await import('./vipManagement');
       const userData = {
@@ -1346,8 +1346,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add new draw and evaluate predictions
-  // Admin routes for VIP code management
-  app.get('/api/admin/totp-info', async (req, res) => {
+  // Admin routes for VIP code management (Admin only)
+  app.get('/api/admin/totp-info', requireAdmin, async (req, res) => {
     try {
       const { getCurrentTotpToken, getTotpTimeRemaining } = await import('./vipManagement');
       
@@ -1361,7 +1361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/users', async (req, res) => {
+  app.get('/api/admin/users', requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -1371,7 +1371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/vip-codes', async (req, res) => {
+  app.get('/api/admin/vip-codes', requireAdmin, async (req, res) => {
     try {
       const { getVipCodesByAdmin } = await import('./vipManagement');
       const adminEmail = 'russell@russellnomer.com'; // Default admin
@@ -1383,7 +1383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/logs', async (req, res) => {
+  app.get('/api/admin/logs', requireAdmin, async (req, res) => {
     try {
       const { getAdminLogs } = await import('./vipManagement');
       const logs = await getAdminLogs(50);
@@ -1394,7 +1394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/generate-vip', async (req, res) => {
+  app.post('/api/admin/generate-vip', requireAdmin, async (req, res) => {
     try {
       const { generateSecureVipCode } = await import('./vipManagement');
       const { targetEmail, currentTier, targetTier, adminNotes } = req.body;
@@ -1427,7 +1427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/update-user-tier', async (req, res) => {
+  app.post('/api/admin/update-user-tier', requireAdmin, async (req, res) => {
     try {
       const { email, tier } = req.body;
       
@@ -1835,7 +1835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/youtube', youtubeRoutes);
 
   // Advanced lottery strategies
-  app.get('/api/advanced-strategies/:game', async (req, res) => {
+  app.get('/api/advanced-strategies/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
       if (!['powerball', 'megamillions'].includes(game)) {
@@ -1859,7 +1859,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Wheeling systems
-  app.get('/api/wheeling-systems/:game', async (req, res) => {
+  app.get('/api/wheeling-systems/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
       if (!['powerball', 'megamillions'].includes(game)) {
@@ -1881,7 +1881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced lottery analysis with latest results
-  app.get('/api/enhanced-analysis/:game', async (req, res) => {
+  app.get('/api/enhanced-analysis/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
       if (!['powerball', 'megamillions'].includes(game)) {
@@ -1910,7 +1910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Combined educational analysis combining all strategies
-  app.get('/api/combined-analysis/:game', async (req, res) => {
+  app.get('/api/combined-analysis/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
       if (!['powerball', 'megamillions'].includes(game)) {
@@ -2182,7 +2182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== LOTTERY DATA UPDATE ====================
   
   // Admin endpoint: Update lottery data with actual winning numbers
-  app.post("/api/admin/update-lottery-data", async (req, res) => {
+  app.post("/api/admin/update-lottery-data", requireAdmin, async (req, res) => {
     try {
       const { LotteryDataService } = await import('./lotteryDataService');
       const dataService = new LotteryDataService();
