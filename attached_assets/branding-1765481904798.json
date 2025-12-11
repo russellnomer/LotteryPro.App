@@ -1,0 +1,98 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Arial",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#2162A1",
+    "accent": "#FFD814",
+    "background": "#FFFFFF",
+    "textPrimary": "#0F1111",
+    "link": "#FFD814"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Arial",
+      "heading": "Arial"
+    },
+    "fontStacks": {
+      "heading": [
+        "Arial",
+        "sans-serif"
+      ],
+      "body": [
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "14px",
+      "h2": "14px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 10,
+    "borderRadius": "0px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "0px"
+    },
+    "buttonPrimary": {
+      "background": "#FFD814",
+      "textColor": "#0F1111",
+      "borderColor": "#FFD814",
+      "borderRadius": "100px",
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#232F3E",
+      "textColor": "#004B91",
+      "borderColor": "#848688",
+      "borderRadius": "3px",
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.svg",
+    "favicon": null,
+    "ogImage": null
+  },
+  "__framework_hints": [],
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 3,
+      "text": "Add to cart",
+      "reasoning": "Button #3 ('Add to cart') has a vibrant background color (#FFD814) and action-oriented text, making it the primary call-to-action. It stands out due to its bright color and is clearly intended for a significant action."
+    },
+    "secondary": {
+      "index": 1,
+      "text": "United States",
+      "reasoning": "Button #1 ('United States') has a neutral background color (#232F3E) which is different from the primary button's color. It serves a secondary function, likely for navigation rather than a direct action, making it suitable as the secondary button."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "professional",
+    "energy": "medium",
+    "targetAudience": "general consumers"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  }
+}

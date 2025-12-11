@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Music, Play, Pause, ExternalLink, Youtube, Headphones, ShoppingBag } from "lucide-react";
-import { SiSoundcloud, SiBandcamp, SiSpotify } from "react-icons/si";
+import { Music, Play, Pause, ExternalLink, Youtube, Headphones, ShoppingBag, BookOpen } from "lucide-react";
+import { SiSoundcloud, SiBandcamp, SiSpotify, SiAmazon } from "react-icons/si";
 
 interface RussellSong {
   title: string;
@@ -129,6 +129,15 @@ export default function RussellMusicPlayer() {
               <ShoppingBag className="h-5 w-5" />
               Merch Store
             </a>
+            <a
+              href="https://amzn.to/4aGToS3"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <SiAmazon className="h-5 w-5" />
+              Books (46 Titles)
+            </a>
           </div>
         </CardContent>
       </Card>
@@ -220,6 +229,15 @@ export default function RussellMusicPlayer() {
           >
             <ShoppingBag className="h-4 w-4" />
             Merch
+          </a>
+          <a
+            href="https://amzn.to/4aGToS3"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full text-sm font-medium transition-colors"
+          >
+            <SiAmazon className="h-4 w-4" />
+            Books
           </a>
         </div>
       </CardHeader>
