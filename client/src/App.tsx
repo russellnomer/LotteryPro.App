@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/Navigation";
+import CookieConsent from "@/components/CookieConsent";
 import Home from "@/pages/home";
 import SimpleTest from "@/pages/simple-test";
 import MusicHome from "@/pages/music-home";
@@ -13,6 +14,8 @@ import Subscription from "@/pages/subscription";
 import Auth from "@/pages/auth";
 import Admin from "@/pages/admin";
 import PrivacyPolicy from "@/pages/privacy";
+import TermsOfService from "@/pages/terms";
+import Support from "@/pages/support";
 import SocialMarketing from "@/pages/social-marketing";
 import Pools from "@/pages/pools";
 import NotFound from "@/pages/not-found";
@@ -33,6 +36,8 @@ function Router() {
           <Route path="/auth" component={Auth} />
           <Route path="/admin" component={Admin} />
           <Route path="/privacy" component={PrivacyPolicy} />
+          <Route path="/terms" component={TermsOfService} />
+          <Route path="/support" component={Support} />
           <Route path="/social-marketing" component={SocialMarketing} />
           <Route path="/pools" component={Pools} />
           <Route component={NotFound} />
@@ -48,6 +53,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <CookieConsent />
       </TooltipProvider>
     </QueryClientProvider>
   );

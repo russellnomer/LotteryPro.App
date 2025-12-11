@@ -2232,6 +2232,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== SUPPORT TICKET SYSTEM ====================
+  
+  // Public endpoint: Submit a support ticket
+  app.post("/api/support/tickets", async (req, res) => {
+    try {
+      const { userEmail, userName, subject, category, description } = req.body;
+      
+      if (!userEmail || !subject || !description || !category) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      // Get user ID if authenticated
+      let userId: string | undefined;
+      const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+      if (sessionToken) {
+        const session = await storage.getUserSession(sessionToken);
+        if (session) {
+          userId = session.userId;
+        }
+      }
+      
+      // Create the ticket
+      const ticket = await storage.createSupportTicket({
+        userId,
+        userEmail,
+        userName,
+        subject,
+        category,
+        description,
+        status: 'new',
+        priority: 'normal',
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      // Add initial message
+      await storage.createSupportMessage({
+        ticketId: ticket.id,
+        message: description,
+        isFromUser: true,
+        senderEmail: userEmail,
+        senderName: userName,
+      });
+      
+      // TODO: AI triage and auto-response will be added here
+      // For now, log the ticket for manual review
+      console.log(`📩 New support ticket: ${ticket.id} - ${subject} (${category})`);
+      
+      res.json({ 
+        success: true, 
+        ticketId: ticket.id,
+        message: 'Support ticket submitted successfully'
+      });
+    } catch (error: any) {
+      console.error('Error creating support ticket:', error);
+      res.status(500).json({ error: 'Failed to create support ticket' });
+    }
+  });
+  
+  // Get ticket by ID (for users to check their ticket status)
+  app.get("/api/support/tickets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const ticket = await storage.getSupportTicket(id);
+      
+      if (!ticket) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+      
+      const messages = await storage.getTicketMessages(id);
+      
+      res.json({ 
+        success: true, 
+        ticket,
+        messages
+      });
+    } catch (error: any) {
+      console.error('Error fetching support ticket:', error);
+      res.status(500).json({ error: 'Failed to fetch support ticket' });
+    }
+  });
+  
+  // Admin: Get all support tickets
+  app.get("/api/admin/support/tickets", requireAdmin, async (req, res) => {
+    try {
+      const { status, priority } = req.query;
+      const tickets = await storage.getSupportTickets({
+        status: status as string,
+        priority: priority as string,
+      });
+      
+      res.json({ 
+        success: true, 
+        tickets,
+        total: tickets.length
+      });
+    } catch (error: any) {
+      console.error('Error fetching support tickets:', error);
+      res.status(500).json({ error: 'Failed to fetch support tickets' });
+    }
+  });
+  
+  // Admin: Update ticket status/priority
+  app.patch("/api/admin/support/tickets/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, priority, resolution, assignedTo, requiresHumanEscalation, escalationReason } = req.body;
+      
+      const updates: any = {};
+      if (status) updates.status = status;
+      if (priority) updates.priority = priority;
+      if (resolution) {
+        updates.resolution = resolution;
+        updates.resolvedAt = new Date();
+      }
+      if (assignedTo) updates.assignedTo = assignedTo;
+      if (requiresHumanEscalation !== undefined) updates.requiresHumanEscalation = requiresHumanEscalation;
+      if (escalationReason) updates.escalationReason = escalationReason;
+      
+      const ticket = await storage.updateSupportTicket(id, updates);
+      
+      if (!ticket) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+      
+      res.json({ success: true, ticket });
+    } catch (error: any) {
+      console.error('Error updating support ticket:', error);
+      res.status(500).json({ error: 'Failed to update support ticket' });
+    }
+  });
+  
+  // Admin: Add response to ticket
+  app.post("/api/admin/support/tickets/:id/reply", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { message } = req.body;
+      const adminEmail = req.user?.email || 'admin@lotterypro.com';
+      
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+      
+      const ticket = await storage.getSupportTicket(id);
+      if (!ticket) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+      
+      const response = await storage.createSupportMessage({
+        ticketId: id,
+        message,
+        isFromUser: false,
+        senderEmail: adminEmail,
+        senderName: 'LotteryPro Support',
+      });
+      
+      // Update ticket status to in_progress if it was new
+      if (ticket.status === 'new') {
+        await storage.updateSupportTicket(id, { status: 'in_progress' });
+      }
+      
+      res.json({ success: true, message: response });
+    } catch (error: any) {
+      console.error('Error adding reply to support ticket:', error);
+      res.status(500).json({ error: 'Failed to add reply' });
+    }
+  });
+  
+  // Record user consent
+  app.post("/api/consent", async (req, res) => {
+    try {
+      const { termsAccepted, privacyAccepted, marketingOptIn, dataProcessingConsent, sessionId } = req.body;
+      
+      // Get user ID if authenticated
+      let userId: string | undefined;
+      const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+      if (sessionToken) {
+        const session = await storage.getUserSession(sessionToken);
+        if (session) {
+          userId = session.userId;
+        }
+      }
+      
+      const consent = await storage.recordUserConsent({
+        userId,
+        sessionId,
+        termsAccepted: termsAccepted || false,
+        privacyAccepted: privacyAccepted || false,
+        marketingOptIn: marketingOptIn || false,
+        dataProcessingConsent: dataProcessingConsent || false,
+        termsVersion: '1.0',
+        privacyVersion: '1.0',
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({ success: true, consentId: consent.id });
+    } catch (error: any) {
+      console.error('Error recording consent:', error);
+      res.status(500).json({ error: 'Failed to record consent' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

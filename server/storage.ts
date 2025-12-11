@@ -17,6 +17,12 @@ import {
   type InsertMusicContent,
   type BookRecommendation,
   type InsertBookRecommendation,
+  type SupportTicket,
+  type InsertSupportTicket,
+  type SupportMessage,
+  type InsertSupportMessage,
+  type UserConsent,
+  type InsertUserConsent,
   lotteryDraws,
   generatedTickets,
   predictionResults,
@@ -25,7 +31,10 @@ import {
   userSessions,
   vipCodes,
   musicContent,
-  bookRecommendations
+  bookRecommendations,
+  supportTickets,
+  supportMessages,
+  userConsents
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -99,6 +108,18 @@ export interface IStorage {
   // Book recommendations
   getBookRecommendations(): Promise<BookRecommendation[]>;
   createBookRecommendation(book: InsertBookRecommendation): Promise<BookRecommendation>;
+  
+  // Support ticket management
+  createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket>;
+  getSupportTicket(id: string): Promise<SupportTicket | undefined>;
+  getSupportTickets(filters?: { status?: string; priority?: string; userId?: string }): Promise<SupportTicket[]>;
+  updateSupportTicket(id: string, updates: Partial<InsertSupportTicket>): Promise<SupportTicket | undefined>;
+  createSupportMessage(message: InsertSupportMessage): Promise<SupportMessage>;
+  getTicketMessages(ticketId: string): Promise<SupportMessage[]>;
+  
+  // User consent management
+  recordUserConsent(consent: InsertUserConsent): Promise<UserConsent>;
+  getUserConsent(userId?: string, sessionId?: string): Promise<UserConsent | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -359,6 +380,40 @@ export class MemStorage implements IStorage {
 
   async createBookRecommendation(book: InsertBookRecommendation): Promise<BookRecommendation> {
     throw new Error("Book recommendations not supported in memory storage");
+  }
+
+  // Support ticket management stub implementations
+  async createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket> {
+    throw new Error("Support tickets not supported in memory storage");
+  }
+
+  async getSupportTicket(id: string): Promise<SupportTicket | undefined> {
+    return undefined;
+  }
+
+  async getSupportTickets(filters?: { status?: string; priority?: string; userId?: string }): Promise<SupportTicket[]> {
+    return [];
+  }
+
+  async updateSupportTicket(id: string, updates: Partial<InsertSupportTicket>): Promise<SupportTicket | undefined> {
+    return undefined;
+  }
+
+  async createSupportMessage(message: InsertSupportMessage): Promise<SupportMessage> {
+    throw new Error("Support messages not supported in memory storage");
+  }
+
+  async getTicketMessages(ticketId: string): Promise<SupportMessage[]> {
+    return [];
+  }
+
+  // User consent management stub implementations
+  async recordUserConsent(consent: InsertUserConsent): Promise<UserConsent> {
+    throw new Error("User consent not supported in memory storage");
+  }
+
+  async getUserConsent(userId?: string, sessionId?: string): Promise<UserConsent | undefined> {
+    return undefined;
   }
 
 }
@@ -916,6 +971,89 @@ export class DatabaseStorage implements IStorage {
       usageCount,
       usageLimit
     };
+  }
+
+  // Support ticket management
+  async createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket> {
+    const [newTicket] = await db.insert(supportTickets)
+      .values(ticket)
+      .returning();
+    return newTicket;
+  }
+
+  async getSupportTicket(id: string): Promise<SupportTicket | undefined> {
+    const [ticket] = await db.select().from(supportTickets)
+      .where(eq(supportTickets.id, id))
+      .limit(1);
+    return ticket;
+  }
+
+  async getSupportTickets(filters?: { status?: string; priority?: string; userId?: string }): Promise<SupportTicket[]> {
+    let query = db.select().from(supportTickets);
+    
+    const conditions = [];
+    if (filters?.status) {
+      conditions.push(eq(supportTickets.status, filters.status));
+    }
+    if (filters?.priority) {
+      conditions.push(eq(supportTickets.priority, filters.priority));
+    }
+    if (filters?.userId) {
+      conditions.push(eq(supportTickets.userId, filters.userId));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(supportTickets.createdAt));
+  }
+
+  async updateSupportTicket(id: string, updates: Partial<InsertSupportTicket>): Promise<SupportTicket | undefined> {
+    const [updated] = await db.update(supportTickets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(supportTickets.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createSupportMessage(message: InsertSupportMessage): Promise<SupportMessage> {
+    const [newMessage] = await db.insert(supportMessages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+
+  async getTicketMessages(ticketId: string): Promise<SupportMessage[]> {
+    return await db.select().from(supportMessages)
+      .where(eq(supportMessages.ticketId, ticketId))
+      .orderBy(supportMessages.createdAt);
+  }
+
+  // User consent management
+  async recordUserConsent(consent: InsertUserConsent): Promise<UserConsent> {
+    const [newConsent] = await db.insert(userConsents)
+      .values(consent)
+      .returning();
+    return newConsent;
+  }
+
+  async getUserConsent(userId?: string, sessionId?: string): Promise<UserConsent | undefined> {
+    if (userId) {
+      const [consent] = await db.select().from(userConsents)
+        .where(eq(userConsents.userId, userId))
+        .orderBy(desc(userConsents.createdAt))
+        .limit(1);
+      return consent;
+    }
+    if (sessionId) {
+      const [consent] = await db.select().from(userConsents)
+        .where(eq(userConsents.sessionId, sessionId))
+        .orderBy(desc(userConsents.createdAt))
+        .limit(1);
+      return consent;
+    }
+    return undefined;
   }
 
 }
