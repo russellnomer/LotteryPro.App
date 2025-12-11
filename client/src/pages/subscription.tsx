@@ -1,11 +1,21 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Star, Zap, Users, TrendingUp, CreditCard } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CheckCircle, Star, Zap, Users, TrendingUp, CreditCard, AlertTriangle, Info, ExternalLink, Gift } from "lucide-react";
+import { Link } from "wouter";
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/8x28wO2Xq5gbgGX6Se9IQ00";
+const JACKPOCKET_REFERRAL_LINK = "https://lottery.jackpocket.com/r/lotto/russellnomer/LOTTERY/US-NY";
 
 export default function SubscriptionPage() {
+  const [ageVerified, setAgeVerified] = useState(false);
+  const [stateConfirmed, setStateConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const canPurchase = ageVerified && stateConfirmed && termsAccepted;
 
   const plans = [
     {
@@ -87,6 +97,54 @@ export default function SubscriptionPage() {
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
 Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure entertainment - no actual magic!)
           </p>
+          
+          <Alert className="max-w-2xl mx-auto mt-6 bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm">
+              <strong>Educational Entertainment Only:</strong> LotteryPro is for educational and entertainment purposes only. We make no claims about improving your odds of winning. Past number patterns do not predict future results. Play responsibly.
+            </AlertDescription>
+          </Alert>
+        </div>
+        
+        <div className="max-w-3xl mx-auto mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Before purchasing, please confirm:</p>
+          <div className="space-y-3">
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="subAgeVerify" 
+                checked={ageVerified}
+                onCheckedChange={(checked) => setAgeVerified(checked === true)}
+                data-testid="checkbox-sub-age-verify"
+              />
+              <label htmlFor="subAgeVerify" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
+                I confirm I am 18 years of age or older
+              </label>
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="subStateConfirm" 
+                checked={stateConfirmed}
+                onCheckedChange={(checked) => setStateConfirmed(checked === true)}
+                data-testid="checkbox-sub-state-confirm"
+              />
+              <label htmlFor="subStateConfirm" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
+                I confirm I do not reside in AL, AK, HI, MS, NV, or UT (where lottery services are prohibited)
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="subTermsAccept" 
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                data-testid="checkbox-sub-terms-accept"
+              />
+              <label htmlFor="subTermsAccept" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
+                I agree to the <Link href="/terms"><span className="text-primary hover:underline">Terms of Service</span></Link> and <Link href="/privacy"><span className="text-primary hover:underline">Privacy Policy</span></Link>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-4 gap-6 mb-12">
@@ -147,16 +205,53 @@ Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure enter
                     <Button 
                       onClick={() => window.open(STRIPE_PAYMENT_LINK, '_blank')}
                       className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      disabled={!canPurchase}
                       data-testid={`button-subscribe-${plan.id}`}
                     >
                       <CreditCard className="w-4 h-4 mr-2" />
-                      Subscribe Now
+                      {canPurchase ? 'Subscribe Now' : 'Confirm Above to Subscribe'}
                     </Button>
                   )}
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Jackpocket Referral - Premium Partner CTA */}
+        <div className="mb-12 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 rounded-xl p-8 text-white shadow-xl">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                <Gift className="h-6 w-6" />
+                <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-300">NEW USER BONUS</Badge>
+              </div>
+              <h2 className="text-3xl font-bold mb-3">Ready to Play Your Numbers?</h2>
+              <p className="text-lg opacity-90 mb-4">
+                Use Jackpocket - America's #1 lottery app! New users get bonus lottery credits when you sign up through our link.
+              </p>
+              <ul className="text-sm opacity-80 space-y-1 mb-4">
+                <li>✓ Play official state lottery games from your phone</li>
+                <li>✓ Available in 17+ states</li>
+                <li>✓ Secure, regulated, and legal</li>
+                <li>✓ Get $20 in lottery credits for new accounts</li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button
+                size="lg"
+                className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-6 shadow-lg"
+                onClick={() => window.open(JACKPOCKET_REFERRAL_LINK, '_blank')}
+                data-testid="button-jackpocket-subscription"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                Get Jackpocket Now
+              </Button>
+              <p className="text-xs text-center opacity-60 italic">
+                Affiliate Link - We may earn a commission
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Features highlight section */}

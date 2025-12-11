@@ -7,12 +7,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Smartphone, Lock, Eye, EyeOff, AlertTriangle, CheckCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
+
+const PROHIBITED_STATES = [
+  'AL', 'AK', 'HI', 'MS', 'NV', 'UT'
+];
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [authStep, setAuthStep] = useState<'login' | 'register' | 'mfa-setup' | 'mfa-verify'>('login');
+  const [ageVerified, setAgeVerified] = useState(false);
+  const [stateConfirmed, setStateConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -363,6 +372,51 @@ export default function AuthPage() {
             </Select>
           </div>
 
+          <div className="space-y-3 border-t pt-4">
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="ageVerify" 
+                checked={ageVerified}
+                onCheckedChange={(checked) => setAgeVerified(checked === true)}
+                data-testid="checkbox-age-verify"
+              />
+              <label htmlFor="ageVerify" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
+                I confirm I am 18 years of age or older
+              </label>
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="stateConfirm" 
+                checked={stateConfirmed}
+                onCheckedChange={(checked) => setStateConfirmed(checked === true)}
+                data-testid="checkbox-state-confirm"
+              />
+              <label htmlFor="stateConfirm" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
+                I confirm I do not reside in AL, AK, HI, MS, NV, or UT (where lottery services are prohibited)
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="termsAccept" 
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                data-testid="checkbox-terms-accept"
+              />
+              <label htmlFor="termsAccept" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
+                I agree to the <Link href="/terms"><span className="text-primary hover:underline">Terms of Service</span></Link> and <Link href="/privacy"><span className="text-primary hover:underline">Privacy Policy</span></Link>
+              </label>
+            </div>
+          </div>
+
+          <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200 text-xs">
+              <strong>Educational Entertainment Only:</strong> LotteryPro is for educational and entertainment purposes only. We make no claims about improving your odds of winning. Past number patterns do not predict future results.
+            </AlertDescription>
+          </Alert>
+
           <Alert>
             <Lock className="h-4 w-4" />
             <AlertDescription>
@@ -370,7 +424,12 @@ export default function AuthPage() {
             </AlertDescription>
           </Alert>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button 
+            type="submit" 
+            disabled={isLoading || !ageVerified || !stateConfirmed || !termsAccepted} 
+            className="w-full"
+            data-testid="button-create-account"
+          >
             {isLoading ? 'Creating account...' : 'Create Account'}
           </Button>
         </form>

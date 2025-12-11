@@ -2,6 +2,23 @@ import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 import Stripe from 'stripe';
 
+// Map Stripe Price IDs to subscription tiers
+// These should match the prices configured in your Stripe dashboard
+const PRICE_ID_TO_TIER: Record<string, 'basic' | 'pro' | 'premium'> = {
+  // Add your actual Stripe Price IDs here once created
+  // Example: 'price_1ABC123': 'basic',
+  // For now, we'll also check product metadata and fallback to amount
+};
+
+// Fallback: Map amounts (in cents) to tiers
+const AMOUNT_TO_TIER = (amountCents: number): 'basic' | 'pro' | 'premium' => {
+  const amount = amountCents / 100;
+  if (amount >= 35) return 'premium';  // $39.99
+  if (amount >= 15) return 'pro';       // $19.99
+  if (amount >= 5) return 'basic';      // $9.99
+  return 'basic';
+};
+
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string, uuid: string): Promise<void> {
     if (!Buffer.isBuffer(payload)) {

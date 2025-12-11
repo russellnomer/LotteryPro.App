@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Cookie, X, Shield } from "lucide-react";
+import { Cookie, X, Shield, Ban } from "lucide-react";
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
@@ -34,6 +34,17 @@ export default function CookieConsent() {
     setShowBanner(false);
   };
 
+  const rejectAll = () => {
+    localStorage.setItem("cookie_consent", JSON.stringify({
+      essential: true,
+      analytics: false,
+      marketing: false,
+      rejected: true,
+      timestamp: new Date().toISOString(),
+    }));
+    setShowBanner(false);
+  };
+
   if (!showBanner) return null;
 
   return (
@@ -48,15 +59,25 @@ export default function CookieConsent() {
             <div>
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 We use cookies to enhance your experience, analyze site usage, and assist with our 
-                marketing efforts. By continuing to use LotteryPro, you consent to our use of cookies 
-                as described in our{" "}
+                marketing efforts. You can choose to accept all cookies, essential cookies only, 
+                or reject non-essential cookies entirely. See our{" "}
                 <Link href="/privacy">
-                  <a className="text-primary hover:underline">Privacy Policy</a>
-                </Link>.
+                  <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>
+                </Link>{" "}for details.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={rejectAll}
+              className="text-gray-500 hover:text-gray-700"
+              data-testid="button-reject-cookies"
+            >
+              <Ban className="w-4 h-4 mr-1" />
+              Reject All
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 

@@ -13,6 +13,7 @@ import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analys
 import { apiRequest } from "@/lib/queryClient";
 import { GameType, TicketGeneration } from "@shared/schema";
 import AdSpace from "@/components/AdSpace";
+import JackpocketBanner from "@/components/JackpocketBanner";
 // import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer"; // Replaced with RussellMusicPlayer
 // Lazy load non-critical components for better initial performance
 const BookRecommendations = lazy(() => import("@/components/BookRecommendations"));
@@ -37,6 +38,23 @@ export default function Home() {
   const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
   const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
   const [userEmail] = useState<string>("russell@russellnomer.com"); // Russell's account for testing unlimited access
+  const [showFloatingJackpocket, setShowFloatingJackpocket] = useState(false);
+
+  // Show floating Jackpocket banner after 10 seconds
+  useEffect(() => {
+    const hasSeenBanner = sessionStorage.getItem('jackpocket_banner_seen');
+    if (!hasSeenBanner) {
+      const timer = setTimeout(() => {
+        setShowFloatingJackpocket(true);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const dismissFloatingBanner = () => {
+    setShowFloatingJackpocket(false);
+    sessionStorage.setItem('jackpocket_banner_seen', 'true');
+  };
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -397,8 +415,8 @@ export default function Home() {
                           } catch (e) {
                             console.error('Tracking error:', e);
                           }
-                          // Open Jackpocket (will use affiliate link once you sign up)
-                          window.open('https://www.jackpocket.com/?utm_source=lotterypro&utm_medium=affiliate&utm_campaign=number_generator', '_blank');
+                          // Open Jackpocket affiliate link
+                          window.open('https://lottery.jackpocket.com/r/lotto/russellnomer/LOTTERY/US-NY', '_blank');
                         }}
                         data-testid="button-play-jackpocket"
                       >
@@ -407,6 +425,9 @@ export default function Home() {
                       </Button>
                       <div className="mt-3 text-center text-xs opacity-75">
                         Available in 17+ states • Secure & Regulated • Instant Play
+                      </div>
+                      <div className="mt-2 text-center text-xs opacity-60 italic">
+                        Affiliate Link - We may earn a commission at no extra cost to you
                       </div>
                     </div>
                   </div>
@@ -891,6 +912,11 @@ export default function Home() {
           <FanLoyaltyContest compact={false} />
         </Suspense>
       </div>
+
+      {/* Floating Jackpocket Banner - Appears after 10 seconds */}
+      {showFloatingJackpocket && (
+        <JackpocketBanner variant="floating" onDismiss={dismissFloatingBanner} />
+      )}
     </div>
   );
 }
