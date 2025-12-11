@@ -23,6 +23,14 @@ import {
   type InsertSupportMessage,
   type UserConsent,
   type InsertUserConsent,
+  type CustomerProfile,
+  type InsertCustomerProfile,
+  type CustomerActivity,
+  type InsertCustomerActivity,
+  type EmailVerificationCode,
+  type InsertEmailVerificationCode,
+  type SmsVerificationCode,
+  type InsertSmsVerificationCode,
   lotteryDraws,
   generatedTickets,
   predictionResults,
@@ -34,7 +42,11 @@ import {
   bookRecommendations,
   supportTickets,
   supportMessages,
-  userConsents
+  userConsents,
+  customerProfiles,
+  customerActivity,
+  emailVerificationCodes,
+  smsVerificationCodes
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -120,6 +132,26 @@ export interface IStorage {
   // User consent management
   recordUserConsent(consent: InsertUserConsent): Promise<UserConsent>;
   getUserConsent(userId?: string, sessionId?: string): Promise<UserConsent | undefined>;
+  
+  // Customer profile management
+  createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile>;
+  getCustomerProfile(id: string): Promise<CustomerProfile | undefined>;
+  getCustomerProfileByEmail(emailHash: string): Promise<CustomerProfile | undefined>;
+  updateCustomerProfile(id: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined>;
+  
+  // Customer activity tracking
+  createCustomerActivity(activity: InsertCustomerActivity): Promise<CustomerActivity>;
+  getCustomerActivities(customerId: string): Promise<CustomerActivity[]>;
+  
+  // Email verification codes
+  createEmailVerificationCode(code: InsertEmailVerificationCode): Promise<EmailVerificationCode>;
+  getEmailVerificationCode(emailHash: string, code: string): Promise<EmailVerificationCode | undefined>;
+  markEmailVerificationAsUsed(id: string): Promise<void>;
+  
+  // SMS verification codes
+  createSmsVerificationCode(code: InsertSmsVerificationCode): Promise<SmsVerificationCode>;
+  getSmsVerificationCode(mobileNumberHash: string, code: string): Promise<SmsVerificationCode | undefined>;
+  markSmsVerificationAsUsed(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -414,6 +446,55 @@ export class MemStorage implements IStorage {
 
   async getUserConsent(userId?: string, sessionId?: string): Promise<UserConsent | undefined> {
     return undefined;
+  }
+
+  // Customer profile stub implementations
+  async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> {
+    throw new Error("Customer profiles not supported in memory storage");
+  }
+
+  async getCustomerProfile(id: string): Promise<CustomerProfile | undefined> {
+    return undefined;
+  }
+
+  async getCustomerProfileByEmail(emailHash: string): Promise<CustomerProfile | undefined> {
+    return undefined;
+  }
+
+  async updateCustomerProfile(id: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined> {
+    return undefined;
+  }
+
+  async createCustomerActivity(activity: InsertCustomerActivity): Promise<CustomerActivity> {
+    throw new Error("Customer activity not supported in memory storage");
+  }
+
+  async getCustomerActivities(customerId: string): Promise<CustomerActivity[]> {
+    return [];
+  }
+
+  async createEmailVerificationCode(code: InsertEmailVerificationCode): Promise<EmailVerificationCode> {
+    throw new Error("Email verification not supported in memory storage");
+  }
+
+  async getEmailVerificationCode(emailHash: string, code: string): Promise<EmailVerificationCode | undefined> {
+    return undefined;
+  }
+
+  async markEmailVerificationAsUsed(id: string): Promise<void> {
+    throw new Error("Email verification not supported in memory storage");
+  }
+
+  async createSmsVerificationCode(code: InsertSmsVerificationCode): Promise<SmsVerificationCode> {
+    throw new Error("SMS verification not supported in memory storage");
+  }
+
+  async getSmsVerificationCode(mobileNumberHash: string, code: string): Promise<SmsVerificationCode | undefined> {
+    return undefined;
+  }
+
+  async markSmsVerificationAsUsed(id: string): Promise<void> {
+    throw new Error("SMS verification not supported in memory storage");
   }
 
 }
@@ -1054,6 +1135,98 @@ export class DatabaseStorage implements IStorage {
       return consent;
     }
     return undefined;
+  }
+
+  // Customer profile management
+  async createCustomerProfile(profile: InsertCustomerProfile): Promise<CustomerProfile> {
+    const [newProfile] = await db.insert(customerProfiles)
+      .values(profile)
+      .returning();
+    return newProfile;
+  }
+
+  async getCustomerProfile(id: string): Promise<CustomerProfile | undefined> {
+    const [profile] = await db.select().from(customerProfiles)
+      .where(eq(customerProfiles.id, id))
+      .limit(1);
+    return profile;
+  }
+
+  async getCustomerProfileByEmail(emailHash: string): Promise<CustomerProfile | undefined> {
+    const [profile] = await db.select().from(customerProfiles)
+      .where(eq(customerProfiles.emailHash, emailHash))
+      .limit(1);
+    return profile;
+  }
+
+  async updateCustomerProfile(id: string, updates: Partial<InsertCustomerProfile>): Promise<CustomerProfile | undefined> {
+    const [updated] = await db.update(customerProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customerProfiles.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Customer activity tracking
+  async createCustomerActivity(activity: InsertCustomerActivity): Promise<CustomerActivity> {
+    const [newActivity] = await db.insert(customerActivity)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  async getCustomerActivities(customerId: string): Promise<CustomerActivity[]> {
+    return await db.select().from(customerActivity)
+      .where(eq(customerActivity.customerId, customerId))
+      .orderBy(desc(customerActivity.createdAt));
+  }
+
+  // Email verification codes
+  async createEmailVerificationCode(code: InsertEmailVerificationCode): Promise<EmailVerificationCode> {
+    const [newCode] = await db.insert(emailVerificationCodes)
+      .values(code)
+      .returning();
+    return newCode;
+  }
+
+  async getEmailVerificationCode(emailHash: string, code: string): Promise<EmailVerificationCode | undefined> {
+    const [verificationCode] = await db.select().from(emailVerificationCodes)
+      .where(and(
+        eq(emailVerificationCodes.emailHash, emailHash),
+        eq(emailVerificationCodes.verificationCode, code)
+      ))
+      .limit(1);
+    return verificationCode;
+  }
+
+  async markEmailVerificationAsUsed(id: string): Promise<void> {
+    await db.update(emailVerificationCodes)
+      .set({ isUsed: true })
+      .where(eq(emailVerificationCodes.id, id));
+  }
+
+  // SMS verification codes
+  async createSmsVerificationCode(code: InsertSmsVerificationCode): Promise<SmsVerificationCode> {
+    const [newCode] = await db.insert(smsVerificationCodes)
+      .values(code)
+      .returning();
+    return newCode;
+  }
+
+  async getSmsVerificationCode(mobileNumberHash: string, code: string): Promise<SmsVerificationCode | undefined> {
+    const [verificationCode] = await db.select().from(smsVerificationCodes)
+      .where(and(
+        eq(smsVerificationCodes.mobileNumberHash, mobileNumberHash),
+        eq(smsVerificationCodes.verificationCode, code)
+      ))
+      .limit(1);
+    return verificationCode;
+  }
+
+  async markSmsVerificationAsUsed(id: string): Promise<void> {
+    await db.update(smsVerificationCodes)
+      .set({ isUsed: true })
+      .where(eq(smsVerificationCodes.id, id));
   }
 
 }
