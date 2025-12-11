@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Music, Play, Pause, ExternalLink, Youtube } from "lucide-react";
+import { Music, Play, Pause, ExternalLink, Youtube, Headphones } from "lucide-react";
+import { SiSoundcloud, SiBandcamp, SiSpotify } from "react-icons/si";
 
 interface RussellSong {
   title: string;
@@ -73,22 +74,53 @@ export default function RussellMusicPlayer() {
             🎵 Russell Nomer Music
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-6 space-y-4">
           <Alert className="bg-amber-50 border-amber-300">
             <Youtube className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
               <strong>Unable to load Russell's live catalog.</strong> 
-              <br />Visit Russell's YouTube Channel directly: 
-              <a 
-                href="https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="underline ml-1 font-medium"
-              >
-                @russellnomermusic
-              </a>
+              <br />Visit Russell's channels directly:
             </AlertDescription>
           </Alert>
+          
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="https://open.spotify.com/artist/54D6nzRoPPr5OWrefGMrQI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <SiSpotify className="h-5 w-5" />
+              Spotify
+            </a>
+            <a
+              href="https://russellnomer.bandcamp.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <SiBandcamp className="h-5 w-5" />
+              Bandcamp (Best Quality)
+            </a>
+            <a
+              href="https://soundcloud.com/russell-nomer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <SiSoundcloud className="h-5 w-5" />
+              SoundCloud
+            </a>
+            <a
+              href="https://youtube.com/@russellnomermusic"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Youtube className="h-5 w-5" />
+              YouTube
+            </a>
+          </div>
         </CardContent>
       </Card>
     );
@@ -120,6 +152,46 @@ export default function RussellMusicPlayer() {
             Every subscriber makes a real difference! 
             <strong className="text-red-200">It's FREE and helps immensely!</strong>
           </div>
+        </div>
+        
+        {/* Alternative Streaming Platforms */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          <a
+            href="https://open.spotify.com/artist/54D6nzRoPPr5OWrefGMrQI"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+          >
+            <SiSpotify className="h-4 w-4" />
+            Spotify
+          </a>
+          <a
+            href="https://russellnomer.bandcamp.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-full text-sm font-medium transition-colors"
+          >
+            <SiBandcamp className="h-4 w-4" />
+            Bandcamp
+          </a>
+          <a
+            href="https://soundcloud.com/russell-nomer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-sm font-medium transition-colors"
+          >
+            <SiSoundcloud className="h-4 w-4" />
+            SoundCloud
+          </a>
+          <a
+            href="https://youtube.com/@russellnomermusic"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-medium transition-colors"
+          >
+            <Youtube className="h-4 w-4" />
+            YouTube
+          </a>
         </div>
       </CardHeader>
       

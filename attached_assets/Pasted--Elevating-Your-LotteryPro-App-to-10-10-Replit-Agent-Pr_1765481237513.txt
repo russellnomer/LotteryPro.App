@@ -1,0 +1,44 @@
+### Elevating Your LotteryPro App to 10/10: Replit Agent Prompts
+
+Based on a comprehensive review of OWASP Top 10 guidelines for Node.js/Python apps, WCAG 2.1/2.2 best practices for accessibility, GDPR/CCPA checklists for small web apps, and responsible gambling standards (e.g., NCPG's Internet Responsible Gambling Standards and AGA codes), I've crafted targeted prompts you can copy-paste directly into Replit's AI Agent (via the chat interface in your Repl). These prompts are self-contained, specific, and designed to generate code changes, new files, or configurations that address the gaps identified in the prior assessment.
+
+Replit Agent excels at iterative fixes—start with one category, review the output, test (e.g., via Semgrep scans or manual checks), and refine with follow-up prompts like "Fix any errors in the previous implementation." Enable pre-deployment Semgrep scans in your Repl settings for automated OWASP validation. Assume your app uses Node.js (common on Replit); if Python, swap "Node.js" for "Flask/Django" in prompts.
+
+#### 1. Security (From 7/10 to 10/10)
+Focus: Input validation, auth, data storage, DoS protection, and OWASP Top 10 (e.g., injection, broken access control). Prompts leverage Replit Secrets, helmet.js, and rate-limiter-flexible.
+
+| Prompt Category | Copy-Paste Prompt for Replit Agent |
+|-----------------|-----------------------------------|
+| **Input Validation & Injection Prevention** (Addresses XSS/SQLi in forms like VIP code/profile) | "In my Node.js lottery app, implement OWASP-compliant server-side input validation for all user forms (e.g., profile email, birth date, VIP code redemption). Use express-validator to sanitize/escape inputs, prevent XSS/SQLi, and reject invalid formats (e.g., email regex, date range 1900-2025). Add client-side checks with DOMPurify. Generate updated routes and error handlers. Ensure no hardcoded sanitization." |
+| **Authentication & Access Control** (Secures God-Mode/VIP features) | "Add secure JWT-based authentication to my Replit Node.js app using jsonwebtoken and bcrypt for passwords. Protect admin routes (e.g., /god-mode VIP creation) with role checks ('russell' only). Implement CSRF tokens via csurf for forms. Store sessions server-side with express-session. Use Replit Secrets for JWT secret. Include logout and session expiry (24h)." |
+| **Data Storage & Transmission** (Encrypts PII, leverages Replit HTTPS) | "Enhance data security in my Node.js app: Encrypt PII (emails/addresses) at rest using crypto module (AES-256) before storing in Replit DB. Ensure all transmissions use HTTPS (already via Replit). Add data retention policy: Auto-delete contest entries after 30 days via cron job. Hash sensitive fields like birth dates. Update profile creation route accordingly." |
+| **DoS Protection & Dependencies** (Rate-limits requests, scans vulns) | "Implement rate limiting in my Express.js app using rate-limiter-flexible (max 10 req/min per IP for forms/generation endpoints). Add helmet.js middleware for security headers (CSP, HSTS). Run npm audit fix for dependencies and integrate OWASP Dependency-Check via a pre-deploy script. Prevent ReDoS with safe regex in number generation." |
+| **Overall Security Audit Integration** | "Scan my entire Node.js codebase against OWASP Top 10 (focus on injection, access control, crypto failures). Suggest and implement fixes like logging with winston (no sensitive data). Add error handling to avoid info leaks. Output a security checklist with code diffs." |
+
+#### 2. Compliance (From 8/10 to 10/10)
+Focus: Privacy policies, consents, gambling regs, IP disclosures. Prompts generate/update pages and integrate tools like cookie consent banners.
+
+| Prompt Category | Copy-Paste Prompt for Replit Agent |
+|-----------------|-----------------------------------|
+| **Data Privacy (GDPR/CCPA)** (Adds granular consents, rights handling) | "Create a CCPA/GDPR-compliant Privacy Policy page (/privacy) for my lottery entertainment app. Detail data collection (emails, states, birth dates), no-sharing policy, 30-day retention, and rights (access/delete/opt-out). Add a form for DSARs (data subject access requests) that emails me verifications. Integrate opt-in checkboxes for marketing in profile form. Use Replit DB to log consents." |
+| **Gambling Regulations** (Enhances disclaimers, adds tools) | "Update my app's responsible gambling features per NCPG standards: Add age gate (18+ prompt with state selector). Expand disclaimers with self-exclusion button (blocks user via IP cookie for 24h-1yr). Include pop-up reminders after 5 spins: 'Take a break? Call 1-800-GAMBLER'. Link to ncpgambling.org. Clarify 'casino offers' as non-affiliate educational links only." |
+| **Terms of Service & IP** (Adds contest rules, disclosures) | "Generate a Terms of Service page (/terms) for my app: Outline contest eligibility (US only, 18+), VIP code rules (no resale, max 1/day), and disclaimers (no real wins). Add Amazon affiliate disclosure: 'As an Amazon Associate, I earn from qualifying purchases' on book links. Ensure all music/YouTube embeds have fair use notices." |
+| **Overall Compliance Integration** | "Audit my app for CCPA/GDPR: Add 'Do Not Sell My Info' link in footer that sets opt-out cookie. Implement logging for all data requests (24-month retention). Generate a compliance dashboard route showing user consents. Ensure no discriminatory treatment for opt-outs." |
+
+#### 3. Accessibility (From Low Risk to 10/10, Targeting WCAG 2.1 AA)
+Focus: Forms, buttons, contrast, keyboard nav. Prompts add ARIA, semantic HTML, and test with WAVE.
+
+| Prompt Category | Copy-Paste Prompt for Replit Agent |
+|-----------------|-----------------------------------|
+| **Forms & Labels** (Fixes profile/VIP forms) | "Make all forms WCAG 2.1 AA compliant: Add <label for='id'> for inputs (e.g., email, birth date dropdown). Group related fields with <fieldset><legend>. Provide inline instructions (e.g., 'Enter MM/DD/YYYY'). Ensure error messages are ARIA-describedby and focusable. Test with NVDA simulation." |
+| **Interactive Elements** (Buttons, wheels, spins) | "Enhance interactive UI for WCAG: Add ARIA roles/labels to buttons (e.g., aria-label='Generate 6 numbers'). Ensure keyboard nav (tabindex, focus-visible). Make hover content dismissible (e.g., tooltips). Space buttons 44x44px min for touch. Add skip links for main content." |
+| **Contrast & Structure** (Headings, text) | "Improve perceivability per WCAG 1.4: Set min 4.5:1 contrast (use colors like #000 on #FFF). Structure with semantic headings (H1-H3). Add alt text to all images/emojis (e.g., alt='Powerball logo'). Ensure resizable text up to 200% without loss." |
+| **Overall Accessibility Audit** | "Run a WCAG 2.1 AA audit on my app: Fix failures in forms/interactives (e.g., no time limits on submissions). Add ARIA live regions for dynamic updates (e.g., spin results). Generate an accessibility statement page linking to WAVE tool results." |
+
+### Implementation Tips
+- **Order**: Start with Security (core fixes), then Compliance (policy pages), then Accessibility (UI tweaks).
+- **Testing**: After each prompt, run `npm test` (add Jest if needed via prompt: "Add unit tests for security/compliance"). Use Replit's console for quick checks.
+- **Iteration**: If output needs tweaks, prompt: "Refine the previous code to handle edge cases like invalid dates."
+- **Expected Outcome**: These will generate ~80% automated fixes; manual review ensures 10/10. Re-run your security scan post-updates for confirmation.
+
+This targeted approach should get you to full compliance—let me know outputs for further refinement!

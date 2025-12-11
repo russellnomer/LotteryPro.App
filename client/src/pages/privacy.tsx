@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 import { ArrowLeft, Shield, Eye, Database, Cookie, UserCheck, Bell, Trash2 } from "lucide-react";
+import DSARForm from "@/components/DSARForm";
 
 export default function PrivacyPolicy() {
   return (
@@ -263,6 +264,19 @@ export default function PrivacyPolicy() {
               <li><strong>Email:</strong> privacy@lotterypro.com</li>
               <li><strong>Support:</strong> <Link href="/support"><a className="text-primary">Submit a Support Ticket</a></Link></li>
             </ul>
+            
+            <h2 id="dsar" className="flex items-center gap-2 pt-4">
+              <Database className="w-5 h-5" />
+              14. Submit a Data Request (DSAR)
+            </h2>
+            <p>
+              Use the form below to exercise your CCPA/GDPR rights. We will verify your identity 
+              and respond within 30 days as required by law.
+            </p>
+            
+            <div className="my-6 not-prose">
+              <DSARForm />
+            </div>
 
             <div className="mt-8 p-4 bg-primary/10 rounded-lg text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">

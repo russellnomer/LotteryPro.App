@@ -1,0 +1,151 @@
+{
+  "colorScheme": "dark",
+  "fonts": [
+    {
+      "family": "Circular Std",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "Hiragino Sans",
+      "role": "body"
+    },
+    {
+      "family": "Arial",
+      "role": "body"
+    },
+    {
+      "family": "Hiragino Kaku Gothic ProN",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#1ED760",
+    "accent": "#FFFFFF",
+    "background": "#121212",
+    "textPrimary": "#121212",
+    "link": "#0000EE"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Circular Std",
+      "heading": "Circular Std"
+    },
+    "fontStacks": {
+      "heading": [
+        "SpotifyMixUI",
+        "CircularSp-Arab",
+        "CircularSp-Hebr",
+        "CircularSp-Cyrl",
+        "CircularSp-Grek",
+        "CircularSp-Deva",
+        "Helvetica Neue",
+        "helvetica",
+        "Arial",
+        "Hiragino Sans",
+        "Hiragino Kaku Gothic ProN",
+        "Meiryo",
+        "MS Gothic"
+      ],
+      "body": [
+        "SpotifyMixUI",
+        "CircularSp-Arab",
+        "CircularSp-Hebr",
+        "CircularSp-Cyrl",
+        "CircularSp-Grek",
+        "CircularSp-Deva",
+        "Helvetica Neue",
+        "helvetica",
+        "Arial",
+        "Hiragino Sans",
+        "Hiragino Kaku Gothic ProN",
+        "Meiryo",
+        "MS Gothic",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "SpotifyMixUI",
+        "CircularSp-Arab",
+        "CircularSp-Hebr",
+        "CircularSp-Cyrl",
+        "CircularSp-Grek",
+        "CircularSp-Deva",
+        "Helvetica Neue",
+        "helvetica",
+        "Arial",
+        "Hiragino Sans",
+        "Hiragino Kaku Gothic ProN",
+        "Meiryo",
+        "MS Gothic"
+      ]
+    },
+    "fontSizes": {
+      "h1": "16px",
+      "h2": "24px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "0px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "0px"
+    },
+    "buttonPrimary": {
+      "background": "#FFFFFF",
+      "textColor": "#000000",
+      "borderRadius": "9999px",
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#000000",
+      "textColor": "#B3B3B3",
+      "borderRadius": "9999px",
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.svg",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": null
+  },
+  "__framework_hints": [],
+  "__llm_logo_reasoning": {
+    "selectedIndex": 6,
+    "reasoning": "Logo #6 is the only one that visually represents 'Spotify' and is located in the header, linking to the homepage, making it the main brand logo.",
+    "confidence": 0.98
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 1,
+      "text": "Sign up free",
+      "reasoning": "Button #1 has a vibrant white background with black text, making it stand out as a primary call-to-action. The text 'Sign up free' is action-oriented, which aligns with typical primary button characteristics."
+    },
+    "secondary": {
+      "index": 0,
+      "text": "Sign up free",
+      "reasoning": "Button #0 has a dark background and muted text, making it less prominent than Button #1. It serves as a secondary action, as it is visually distinct from the primary button and has a different color group."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "high",
+    "targetAudience": "music enthusiasts"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  }
+}

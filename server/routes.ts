@@ -2463,6 +2463,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to record consent' });
     }
   });
+  
+  // DSAR (Data Subject Access Request) endpoint - GDPR/CCPA compliance
+  app.post("/api/dsar/submit", async (req, res) => {
+    try {
+      const { email, name, requestType, details } = req.body;
+      
+      if (!email || !name || !requestType) {
+        return res.status(400).json({ error: 'Email, name, and request type are required' });
+      }
+      
+      const validTypes = ['access', 'delete', 'portability', 'opt-out', 'correction'];
+      if (!validTypes.includes(requestType)) {
+        return res.status(400).json({ error: 'Invalid request type' });
+      }
+      
+      const dsarRequest = {
+        id: crypto.randomUUID(),
+        email: email.trim().toLowerCase(),
+        name: name.trim(),
+        requestType,
+        details: details?.trim() || '',
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('User-Agent'),
+      };
+      
+      console.log(`[DSAR] New ${requestType} request from ${email}:`, dsarRequest);
+      
+      res.json({ 
+        success: true, 
+        message: 'Your request has been submitted. We will respond within 30 days.',
+        requestId: dsarRequest.id
+      });
+    } catch (error: any) {
+      console.error('Error processing DSAR request:', error);
+      res.status(500).json({ error: 'Failed to submit request' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

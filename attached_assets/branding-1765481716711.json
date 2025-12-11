@@ -1,0 +1,80 @@
+{
+  "colorScheme": "dark",
+  "fonts": [
+    {
+      "family": "Roboto",
+      "role": "body"
+    },
+    {
+      "family": "CerebriSans",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#17262B",
+    "accent": "#FFB4AB",
+    "background": "#1F1F1F",
+    "textPrimary": "#1F1F1F",
+    "link": "#FFB4AB"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Roboto",
+      "heading": "CerebriSans"
+    },
+    "fontStacks": {
+      "heading": [
+        "CerebriSans",
+        "sans-serif"
+      ],
+      "body": [
+        "Roboto",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Roboto",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "24px",
+      "h2": "32px",
+      "body": "16px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "3px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "3px"
+    }
+  },
+  "images": {
+    "logo": "https://pfy-prod-image-storage.s3.us-east-2.amazonaws.com/18521022/bfbc0a9c-08e4-422f-93d0-564c097f4595",
+    "favicon": "File saved at: attached_assets/favicon.ico",
+    "ogImage": "https://pfy-prod-image-storage.s3.us-east-2.amazonaws.com/18521022/bfbc0a9c-08e4-422f-93d0-564c097f4595"
+  },
+  "__framework_hints": [],
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Logo #0 matches the brand name 'Store of Russell Nomer Music' and is located in the header, linking to the homepage, making it the most suitable choice.",
+    "confidence": 0.9
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "music enthusiasts and artists"
+  },
+  "designSystem": {
+    "framework": "unknown",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.5,
+    "colors": 0.8,
+    "overall": 0.65
+  }
+}

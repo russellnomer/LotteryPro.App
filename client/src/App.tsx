@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/Navigation";
 import CookieConsent from "@/components/CookieConsent";
 import DisclaimerModal from "@/components/DisclaimerModal";
+import AgeGateModal from "@/components/AgeGateModal";
+import Footer from "@/components/Footer";
+import Accessibility from "@/pages/accessibility";
 import Home from "@/pages/home";
 import SimpleTest from "@/pages/simple-test";
 import MusicHome from "@/pages/music-home";
@@ -23,9 +26,9 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navigation />
-      <main>
+      <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/home" component={Home} />
@@ -41,9 +44,11 @@ function Router() {
           <Route path="/support" component={Support} />
           <Route path="/social-marketing" component={SocialMarketing} />
           <Route path="/pools" component={Pools} />
+          <Route path="/accessibility" component={Accessibility} />
           <Route component={NotFound} />
         </Switch>
       </main>
+      <Footer />
     </div>
   );
 }
@@ -52,6 +57,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AgeGateModal />
         <DisclaimerModal />
         <Toaster />
         <Router />

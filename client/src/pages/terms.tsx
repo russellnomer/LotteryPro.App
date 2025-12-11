@@ -75,6 +75,14 @@ export default function TermsOfService() {
               and warrant that you meet this age requirement. We reserve the right to terminate accounts 
               of users who do not meet eligibility requirements.
             </p>
+            
+            <h3>3.1 Contest Eligibility</h3>
+            <ul>
+              <li><strong>Location:</strong> Contests are open to legal residents of the United States only</li>
+              <li><strong>Age:</strong> Participants must be 18 years or older</li>
+              <li><strong>Account:</strong> One entry per person/household for any contest</li>
+              <li><strong>No Real Winnings:</strong> All contests are for entertainment purposes only and do not result in actual lottery winnings</li>
+            </ul>
 
             <h2>4. Account Registration and Security</h2>
             <p>
@@ -102,6 +110,15 @@ export default function TermsOfService() {
             <p>
               We reserve the right to modify pricing with 30 days' notice to existing subscribers.
             </p>
+            
+            <h3>5.1 VIP Code Rules</h3>
+            <ul>
+              <li><strong>Personal Use:</strong> VIP codes are non-transferable and for personal use only</li>
+              <li><strong>No Resale:</strong> Selling or trading VIP codes is strictly prohibited</li>
+              <li><strong>Limit:</strong> Maximum one VIP code redemption per user per day</li>
+              <li><strong>Expiration:</strong> VIP codes expire 5 minutes after generation for security</li>
+              <li><strong>Revocation:</strong> We reserve the right to revoke VIP access for violations</li>
+            </ul>
 
             <h2>6. User Conduct</h2>
             <p>
@@ -141,6 +158,29 @@ export default function TermsOfService() {
               Our Service may contain links to or integrations with third-party services (e.g., Stripe 
               for payments, Jackpocket for ticket purchases). We are not responsible for the content, 
               terms, or practices of these third parties. Your use of such services is at your own risk.
+            </p>
+            
+            <h3>9.1 Affiliate Disclosures</h3>
+            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border-l-4 border-amber-500">
+              <p className="text-sm mb-2">
+                <strong>Amazon Associates:</strong> As an Amazon Associate, I earn from qualifying purchases. 
+                Book links on this site may be affiliate links.
+              </p>
+              <p className="text-sm mb-2">
+                <strong>Jackpocket:</strong> We may receive compensation when you sign up for Jackpocket 
+                through our referral links. This does not affect your purchase price.
+              </p>
+              <p className="text-sm">
+                <strong>Casino Offers:</strong> Any casino-related links are for informational/educational 
+                purposes only and are not affiliate partnerships unless explicitly disclosed.
+              </p>
+            </div>
+            
+            <h3>9.2 Music and Media</h3>
+            <p>
+              All embedded YouTube videos and music content are subject to YouTube's terms of service. 
+              Music by Russell Nomer is used with permission. Any third-party content is used under 
+              fair use provisions for educational and commentary purposes.
             </p>
 
             <h2>10. Disclaimer of Warranties</h2>
