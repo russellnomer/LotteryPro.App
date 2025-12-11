@@ -114,6 +114,10 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
           );
         })}
         
+        <p className="mt-3 font-bold text-center" style={{ color: "#DC3545", fontSize: "12px" }}>
+          #ad Affiliate link: I may earn a commission from qualifying purchases at no extra cost to you (FTC compliant).
+        </p>
+        
         <div className="mt-4 p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border border-blue-200">
           <h4 className="font-semibold text-blue-800 mb-2 flex items-center text-sm">
             <BookOpenIcon className="h-3 w-3 mr-1" />

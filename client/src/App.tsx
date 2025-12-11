@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/Navigation";
 import CookieConsent from "@/components/CookieConsent";
+import DisclaimerModal from "@/components/DisclaimerModal";
 import Home from "@/pages/home";
 import SimpleTest from "@/pages/simple-test";
 import MusicHome from "@/pages/music-home";
@@ -51,6 +52,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <DisclaimerModal />
         <Toaster />
         <Router />
         <CookieConsent />

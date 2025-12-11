@@ -71,7 +71,9 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
           <ExternalLink className="w-4 h-4 mr-2" />
           Get Started Free
         </Button>
-        <p className="text-center text-xs opacity-50 mt-2 italic">Affiliate Link</p>
+        <p className="text-center mt-2 font-bold" style={{ color: "#DC3545", fontSize: "10px" }}>
+          #ad Affiliate link: I may earn a commission at no extra cost to you (FTC compliant).
+        </p>
       </div>
     );
   }
@@ -97,7 +99,9 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
             Play Now
           </Button>
         </div>
-        <p className="text-xs opacity-60 mt-1 italic">Affiliate Link - New users get $20 in lottery credits</p>
+        <p className="mt-1 font-bold" style={{ color: "#FFCCCB", fontSize: "10px" }}>
+          #ad Affiliate link: I may earn a commission at no extra cost to you (FTC compliant).
+        </p>
       </div>
     );
   }
@@ -128,7 +132,9 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
           Get Jackpocket
         </Button>
       </div>
-      <p className="text-center text-xs opacity-50 mt-3 italic">Affiliate Link - We may earn a commission at no extra cost to you</p>
+      <p className="text-center mt-3 font-bold" style={{ color: "#FFCCCB", fontSize: "10px" }}>
+        #ad Affiliate link: I may earn a commission at no extra cost to you (FTC compliant).
+      </p>
     </div>
   );
 }
