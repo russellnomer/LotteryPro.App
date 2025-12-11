@@ -156,10 +156,21 @@ export default function RussellMusicPlayer() {
         
         {/* YouTube Subscription Call-to-Action */}
         <div className="bg-red-500/30 rounded-lg p-3 mt-3 border border-red-400/50">
-          <div className="text-white text-sm font-medium">
-            🔔 <strong>SUBSCRIBE to @russellnomermusic!</strong> Get notified of new releases & help support Russell's recovery journey. 
-            Every subscriber makes a real difference! 
-            <strong className="text-red-200">It's FREE and helps immensely!</strong>
+          <div className="text-white text-sm font-medium flex flex-wrap items-center gap-2">
+            <span>
+              🔔 <strong>SUBSCRIBE to @russellnomermusic!</strong> Get notified of new releases & help support Russell's recovery journey. 
+              <strong className="text-red-200">It's FREE and helps immensely!</strong>
+            </span>
+            <a
+              href="https://www.youtube.com/@russellnomermusic?sub_confirmation=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-colors animate-pulse"
+              data-testid="youtube-subscribe-btn"
+            >
+              <Youtube className="h-4 w-4" />
+              SUBSCRIBE NOW
+            </a>
           </div>
         </div>
         
