@@ -61,9 +61,7 @@ export default function CookieConsent() {
                 We use cookies to enhance your experience, analyze site usage, and assist with our 
                 marketing efforts. You can choose to accept all cookies, essential cookies only, 
                 or reject non-essential cookies entirely. See our{" "}
-                <Link href="/privacy">
-                  <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>
-                </Link>{" "}for details.
+                <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>{" "}for details.
               </p>
             </div>
           </div>
