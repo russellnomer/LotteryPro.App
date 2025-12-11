@@ -1,4 +1,4 @@
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
+import { getStripeSync, getUncachableStripeClient, isStripeIntegrationAvailable } from './stripeClient';
 import { storage } from './storage';
 import Stripe from 'stripe';
 
@@ -21,6 +21,11 @@ const AMOUNT_TO_TIER = (amountCents: number): 'basic' | 'pro' | 'premium' => {
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string, uuid: string): Promise<void> {
+    if (!isStripeIntegrationAvailable()) {
+      console.log('⚠️ Stripe not configured - webhook ignored');
+      return;
+    }
+
     if (!Buffer.isBuffer(payload)) {
       throw new Error(
         'STRIPE WEBHOOK ERROR: Payload must be a Buffer. ' +
