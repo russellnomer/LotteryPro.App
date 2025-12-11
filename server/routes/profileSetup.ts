@@ -1,10 +1,16 @@
 import express, { Router } from 'express';
-import { customerDataService } from '../customerDataService';
-import { storage } from '../storage';
 import type { Request, Response } from 'express';
 import crypto from 'crypto';
 
 const router = Router();
+
+// In-memory verification codes (simple implementation)
+const verificationCodes = new Map<string, { code: string; expiresAt: Date; attempts: number }>();
+
+// Simple hash function for verification
+function createSimpleHash(data: string): string {
+  return crypto.createHmac('sha256', 'lottery-verification-salt').update(data).digest('hex').slice(0, 16);
+}
 
 // Create customer profile with comprehensive data
 router.post('/profile', async (req: Request, res: Response) => {
@@ -34,8 +40,31 @@ router.post('/profile', async (req: Request, res: Response) => {
       });
     }
 
-    // Create customer profile
-    const profileData = {
+    // Generate a simple profile ID (in production, this would be from database)
+    const profileId = crypto.randomUUID();
+    
+    // Generate verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    // Store verification code in memory
+    const verificationKey = preferredVerification === 'email' ? email : mobileNumber;
+    verificationCodes.set(verificationKey, { 
+      code: verificationCode, 
+      expiresAt, 
+      attempts: 0 
+    });
+    
+    // Log verification code (in production, send via email/SMS)
+    if (preferredVerification === 'email') {
+      console.log(`📧 Email verification code for ${email}: ${verificationCode}`);
+    } else {
+      console.log(`📱 SMS verification code for ${mobileNumber}: ${verificationCode}`);
+    }
+
+    // Store profile data in session for later use
+    req.session.pendingProfile = {
+      id: profileId,
       email,
       firstName,
       lastName,
@@ -45,56 +74,13 @@ router.post('/profile', async (req: Request, res: Response) => {
       zipCode,
       mobileNumber,
       marketingOptIn: marketingOptIn || false,
-      registrationSource: 'web',
-      interests: {
-        lotteryGames: ['powerball', 'megamillions'],
-        casinoInterest: true,
-        cruiseInterest: true,
-        gamblingEducationInterest: true
-      },
-      demographics: {
-        source: 'lottery_player',
-        registrationDate: new Date().toISOString()
-      }
+      verified: false,
+      createdAt: new Date().toISOString()
     };
-
-    const profile = await customerDataService.createOrUpdateCustomerProfile(profileData);
-    
-    // Send verification code immediately
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-    
-    if (preferredVerification === 'email') {
-      // Store email verification code
-      await storage.createEmailVerificationCode({
-        email,
-        emailHash: customerDataService.createHash(email),
-        verificationCode,
-        expiresAt,
-        isUsed: false,
-        attempts: 0
-      });
-      
-      // In a real app, send email here
-      console.log(`Email verification code for ${email}: ${verificationCode}`);
-    } else {
-      // Store SMS verification code
-      await storage.createSmsVerificationCode({
-        mobileNumber,
-        mobileNumberHash: customerDataService.createHash(mobileNumber),
-        verificationCode,
-        expiresAt,
-        isUsed: false,
-        attempts: 0
-      });
-      
-      // In a real app, send SMS here
-      console.log(`SMS verification code for ${mobileNumber}: ${verificationCode}`);
-    }
 
     res.json({ 
       success: true, 
-      customerId: profile.id,
+      customerId: profileId,
       message: `Verification code sent via ${preferredVerification}`
     });
 
@@ -107,38 +93,28 @@ router.post('/profile', async (req: Request, res: Response) => {
 // Send verification code
 router.post('/send-verification', async (req: Request, res: Response) => {
   try {
-    const { customerId, method } = req.body;
+    const { email, mobileNumber, method } = req.body;
     
-    const profile = await storage.getCustomerProfile(customerId);
-    if (!profile) {
-      return res.status(404).json({ message: 'Customer profile not found' });
-    }
-
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     
+    const verificationKey = method === 'email' ? email : mobileNumber;
+    
+    if (!verificationKey) {
+      return res.status(400).json({ message: `Missing ${method} for verification` });
+    }
+    
+    // Store in memory
+    verificationCodes.set(verificationKey, { 
+      code: verificationCode, 
+      expiresAt, 
+      attempts: 0 
+    });
+    
     if (method === 'email') {
-      await storage.createEmailVerificationCode({
-        email: profile.email,
-        emailHash: profile.emailHash,
-        verificationCode,
-        expiresAt,
-        isUsed: false,
-        attempts: 0
-      });
-      
-      console.log(`Email verification code for ${profile.email}: ${verificationCode}`);
+      console.log(`📧 Email verification code for ${email}: ${verificationCode}`);
     } else {
-      await storage.createSmsVerificationCode({
-        mobileNumber: profile.mobileNumber,
-        mobileNumberHash: profile.mobileNumberHash,
-        verificationCode,
-        expiresAt,
-        isUsed: false,
-        attempts: 0
-      });
-      
-      console.log(`SMS verification code for ${profile.mobileNumber}: ${verificationCode}`);
+      console.log(`📱 SMS verification code for ${mobileNumber}: ${verificationCode}`);
     }
 
     res.json({ success: true, message: `Verification code sent via ${method}` });
@@ -152,53 +128,47 @@ router.post('/send-verification', async (req: Request, res: Response) => {
 // Verify code and approve account
 router.post('/verify', async (req: Request, res: Response) => {
   try {
-    const { customerId, code, method } = req.body;
+    const { email, mobileNumber, code, method } = req.body;
     
-    const profile = await storage.getCustomerProfile(customerId);
-    if (!profile) {
-      return res.status(404).json({ message: 'Customer profile not found' });
-    }
-
-    let isValid = false;
+    const verificationKey = method === 'email' ? email : mobileNumber;
     
-    if (method === 'email') {
-      const verificationRecord = await storage.getEmailVerificationCode(profile.emailHash, code);
-      if (verificationRecord && !verificationRecord.isUsed && verificationRecord.expiresAt > new Date()) {
-        isValid = true;
-        await storage.markEmailVerificationAsUsed(verificationRecord.id);
-        await storage.updateCustomerProfile(customerId, {
-          emailVerified: true,
-          accountApproved: true,
-          isProfileComplete: true
-        });
-      }
-    } else {
-      const verificationRecord = await storage.getSmsVerificationCode(profile.mobileNumberHash, code);
-      if (verificationRecord && !verificationRecord.isUsed && verificationRecord.expiresAt > new Date()) {
-        isValid = true;
-        await storage.markSmsVerificationAsUsed(verificationRecord.id);
-        await storage.updateCustomerProfile(customerId, {
-          mobileVerified: true,
-          accountApproved: true,
-          isProfileComplete: true
-        });
-      }
+    if (!verificationKey) {
+      return res.status(400).json({ message: `Missing ${method} for verification` });
     }
-
-    if (!isValid) {
-      return res.status(400).json({ message: 'Invalid or expired verification code' });
+    
+    const storedVerification = verificationCodes.get(verificationKey);
+    
+    if (!storedVerification) {
+      return res.status(400).json({ message: 'No verification code found. Please request a new one.' });
     }
-
-    // Track successful verification activity
-    await customerDataService.trackActivity({
-      customerId,
-      activityType: 'account_verified',
-      activityData: {
-        verificationMethod: method,
-        verifiedAt: new Date().toISOString()
-      },
-      req
-    });
+    
+    // Check if expired
+    if (storedVerification.expiresAt < new Date()) {
+      verificationCodes.delete(verificationKey);
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+    
+    // Check attempts
+    if (storedVerification.attempts >= 3) {
+      verificationCodes.delete(verificationKey);
+      return res.status(400).json({ message: 'Too many attempts. Please request a new code.' });
+    }
+    
+    // Verify code
+    if (storedVerification.code !== code) {
+      storedVerification.attempts++;
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+    
+    // Success - remove the code
+    verificationCodes.delete(verificationKey);
+    
+    // Mark profile as verified in session
+    if (req.session.pendingProfile) {
+      req.session.pendingProfile.verified = true;
+      req.session.verifiedProfile = req.session.pendingProfile;
+      delete req.session.pendingProfile;
+    }
 
     res.json({ 
       success: true, 
