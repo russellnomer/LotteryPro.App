@@ -163,6 +163,7 @@ export default function SpinWheel() {
             disabled={spinning}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xl px-12 py-6 shadow-lg hover:shadow-xl transition-all"
             data-testid="button-spin-wheel"
+            aria-label={spinning ? "Wheel is spinning, please wait" : "Spin the wheel to win prizes"}
           >
             {spinning ? (
               <>

@@ -49,6 +49,10 @@ export default function AgeGateModal() {
       state: selectedState,
       timestamp: new Date().toISOString()
     }));
+    
+    // Set 30-day cookie for age verification
+    document.cookie = `age_verified=true; max-age=${30 * 24 * 60 * 60}; path=/; SameSite=Lax`;
+    
     setIsVisible(false);
   };
 

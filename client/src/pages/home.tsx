@@ -271,16 +271,16 @@ export default function Home() {
         <div className="mb-8">
           <Tabs value={selectedGame} onValueChange={(value) => setSelectedGame(value as GameType)}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="powerball" className="bg-red-600 text-white hover:bg-red-700 data-[state=active]:bg-red-600">
+              <TabsTrigger value="powerball" className="bg-red-600 text-white hover:bg-red-700 data-[state=active]:bg-red-600" aria-label="Select Powerball lottery game">
                 <div className="text-center">
-                  <i className="fas fa-bolt text-2xl mb-2 block"></i>
+                  <i className="fas fa-bolt text-2xl mb-2 block" aria-hidden="true"></i>
                   <div className="text-lg font-semibold">Powerball</div>
                   <div className="text-sm opacity-90">5 from 1-69 + 1 from 1-26</div>
                 </div>
               </TabsTrigger>
-              <TabsTrigger value="megamillions" className="bg-blue-600 text-white hover:bg-blue-700 data-[state=active]:bg-blue-600">
+              <TabsTrigger value="megamillions" className="bg-blue-600 text-white hover:bg-blue-700 data-[state=active]:bg-blue-600" aria-label="Select MegaMillions lottery game">
                 <div className="text-center">
-                  <i className="fas fa-gem text-2xl mb-2 block"></i>
+                  <i className="fas fa-gem text-2xl mb-2 block" aria-hidden="true"></i>
                   <div className="text-lg font-semibold">MegaMillions</div>
                   <div className="text-sm opacity-90">5 from 1-70 + 1 from 1-24</div>
                 </div>
@@ -304,8 +304,10 @@ export default function Home() {
                       onClick={handleGenerateNumbers}
                       disabled={isGenerating || (userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations)}
                       className="bg-primary hover:bg-blue-700"
+                      data-testid="button-generate-numbers"
+                      aria-label={`Generate 6 lottery numbers for ${selectedGame === 'powerball' ? 'Powerball' : 'MegaMillions'}`}
                     >
-                      <i className="fas fa-sync-alt mr-2"></i>
+                      <i className="fas fa-sync-alt mr-2" aria-hidden="true"></i>
                       {isGenerating ? 'Generating...' : 
                        userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations ? 
                        'Daily Limit Reached' : 'Generate 6 Numbers'}
@@ -520,7 +522,10 @@ export default function Home() {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="text-md font-semibold text-gray-800 mb-4">Which Numbers Show Up Most Often? (Spoiler: It Doesn't Matter!)</h4>
                       <div className="h-64">
-                        <Chart data={formatChartData(analysis.frequencyData)} />
+                        <Chart 
+                          data={formatChartData(analysis.frequencyData)} 
+                          ariaLabel={`${selectedGame === 'powerball' ? 'Powerball' : 'MegaMillions'} historical number frequency chart showing how often each number has appeared`}
+                        />
                       </div>
                     </div>
                   </>

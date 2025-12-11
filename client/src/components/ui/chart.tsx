@@ -18,9 +18,10 @@ interface ChartProps {
   data: ChartData<'bar', number[], string>;
   options?: ChartOptions<'bar'>;
   className?: string;
+  ariaLabel?: string;
 }
 
-export function Chart({ data, options = {}, className = "" }: ChartProps) {
+export function Chart({ data, options = {}, className = "", ariaLabel = "Bar chart displaying lottery number frequency data" }: ChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<ChartJS<'bar', number[], string> | null>(null);
 
@@ -64,5 +65,12 @@ export function Chart({ data, options = {}, className = "" }: ChartProps) {
     };
   }, [data, options]);
 
-  return <canvas ref={canvasRef} className={className} />;
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className={className}
+      role="img"
+      aria-label={ariaLabel}
+    />
+  );
 }
