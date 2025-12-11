@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Music, Play, Pause, ExternalLink, Youtube, Headphones } from "lucide-react";
+import { Music, Play, Pause, ExternalLink, Youtube, Headphones, ShoppingBag } from "lucide-react";
 import { SiSoundcloud, SiBandcamp, SiSpotify } from "react-icons/si";
 
 interface RussellSong {
@@ -120,6 +120,15 @@ export default function RussellMusicPlayer() {
               <Youtube className="h-5 w-5" />
               YouTube
             </a>
+            <a
+              href="https://russell-nomer-music.printify.me/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              Merch Store
+            </a>
           </div>
         </CardContent>
       </Card>
@@ -191,6 +200,15 @@ export default function RussellMusicPlayer() {
           >
             <Youtube className="h-4 w-4" />
             YouTube
+          </a>
+          <a
+            href="https://russell-nomer-music.printify.me/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-full text-sm font-medium transition-colors"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Merch
           </a>
         </div>
       </CardHeader>
