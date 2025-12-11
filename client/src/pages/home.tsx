@@ -165,20 +165,6 @@ export default function Home() {
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
               <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
               <a href="/social-marketing" className="text-gray-600 hover:text-primary transition-colors">Social Marketing</a>
-              <a href="/admin" className="text-red-600 hover:text-red-700 transition-colors font-semibold">🔑 Admin</a>
-              
-              {/* Demo User Tier Switcher (for testing) */}
-              <select 
-                value={userTier} 
-                onChange={(e) => setUserTier(e.target.value as any)}
-                className="px-2 py-1 text-xs border border-gray-300 rounded"
-              >
-                <option value="free">Free</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="premium">Premium</option>
-                <option value="unlimited">Unlimited (Russell)</option>
-              </select>
             </nav>
           </div>
         </div>
