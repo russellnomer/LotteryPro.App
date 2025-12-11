@@ -3,27 +3,51 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Shield } from "lucide-react";
 import StateCombobox from "./StateCombobox";
 
+// Helper function to check if age_verified cookie exists
+function hasAgeVerifiedCookie(): boolean {
+  return document.cookie.split(';').some(item => item.trim().startsWith('age_verified='));
+}
+
 export default function AgeGateModal() {
-  const [isVisible, setIsVisible] = useState(false);
+  // Default to visible=true, then hide if verified
+  const [isVisible, setIsVisible] = useState(true);
   const [selectedState, setSelectedState] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const ageVerified = localStorage.getItem("age_verified");
-    const selfExcluded = localStorage.getItem("self_excluded");
+    console.log('[AgeGate] Checking verification status...');
     
+    // Check self-exclusion first
+    const selfExcluded = localStorage.getItem("self_excluded");
     if (selfExcluded) {
-      const exclusionData = JSON.parse(selfExcluded);
-      const expiryDate = new Date(exclusionData.expiresAt);
-      if (expiryDate > new Date()) {
-        return;
-      } else {
+      try {
+        const exclusionData = JSON.parse(selfExcluded);
+        const expiryDate = new Date(exclusionData.expiresAt);
+        if (expiryDate > new Date()) {
+          console.log('[AgeGate] User is self-excluded, redirecting...');
+          window.location.href = "https://www.ncpgambling.org";
+          return;
+        } else {
+          localStorage.removeItem("self_excluded");
+        }
+      } catch (e) {
         localStorage.removeItem("self_excluded");
       }
     }
     
-    if (!ageVerified) {
+    // Check BOTH cookie AND localStorage - require cookie to be present
+    const hasCookie = hasAgeVerifiedCookie();
+    const hasLocalStorage = localStorage.getItem("age_verified");
+    
+    console.log('[AgeGate] Cookie present:', hasCookie, '| LocalStorage present:', !!hasLocalStorage);
+    
+    // Only hide modal if BOTH are verified (cookie takes priority)
+    if (hasCookie && hasLocalStorage) {
+      console.log('[AgeGate] User verified, hiding modal');
+      setIsVisible(false);
+    } else {
+      console.log('[AgeGate] User NOT verified, showing modal');
       setIsVisible(true);
     }
   }, []);
@@ -54,7 +78,7 @@ export default function AgeGateModal() {
 
   return (
     <div 
-      className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90"
       role="dialog"
       aria-modal="true"
       aria-labelledby="age-gate-title"
@@ -75,7 +99,7 @@ export default function AgeGateModal() {
         </h2>
         
         <p className="text-center text-gray-600 dark:text-gray-300 mb-4 text-sm">
-          You must be 18 years or older to access this site. This is an entertainment platform for lottery education only.
+          LotteryPro is a statistical analysis tool for informational purposes only. We are not a gambling operator and do not accept wagers. You must be 18+ to use this tool and participate in lottery games.
         </p>
         
         <div className="mb-4">

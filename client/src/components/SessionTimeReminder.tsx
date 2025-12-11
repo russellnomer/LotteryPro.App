@@ -13,7 +13,10 @@ export default function SessionTimeReminder({ spinCount, threshold = 5 }: Sessio
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    console.log(`[SessionReminder] spinCount=${spinCount}, threshold=${threshold}, dismissed=${dismissed}`);
+    
     if (spinCount > 0 && spinCount % threshold === 0 && !dismissed) {
+      console.log('[SessionReminder] Triggering break reminder!');
       setShowReminder(true);
     }
   }, [spinCount, threshold, dismissed]);

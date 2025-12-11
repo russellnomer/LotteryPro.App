@@ -117,8 +117,8 @@ export default function Footer() {
             <p className="text-xs text-gray-500">
               © 2025 LotteryPro by Russell Nomer. All rights reserved. 18+ Only.
             </p>
-            <p className="text-xs text-gray-500 text-center">
-              Entertainment only. No guaranteed wins. Odds: Powerball 1:292M | Mega Millions 1:302M
+            <p className="text-xs text-gray-500 text-center max-w-2xl">
+              LotteryPro is a statistical analysis tool for informational purposes only. We are not a gambling operator and do not accept wagers. You must be 18+ to use this tool and participate in lottery games. Play Responsibly.
             </p>
           </div>
         </div>
