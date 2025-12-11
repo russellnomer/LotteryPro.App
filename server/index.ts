@@ -11,8 +11,51 @@ import {
   secureErrorHandler,
   validateDependencyIntegrity
 } from "./middleware/security";
+import { runMigrations } from 'stripe-replit-sync';
+import { getStripeSync, isStripeIntegrationAvailable } from './stripeClient';
+import { WebhookHandlers } from './webhookHandlers';
 
 const app = express();
+
+async function initStripe() {
+  if (!isStripeIntegrationAvailable()) {
+    console.log('⚠️ Stripe integration not available - payment features disabled');
+    return;
+  }
+
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.log('⚠️ DATABASE_URL not set - Stripe sync disabled');
+    return;
+  }
+
+  try {
+    console.log('🔧 Initializing Stripe schema...');
+    await runMigrations({ databaseUrl });
+    console.log('✅ Stripe schema ready');
+
+    const stripeSync = await getStripeSync();
+
+    console.log('🔧 Setting up managed webhook...');
+    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+    const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
+      `${webhookBaseUrl}/api/stripe/webhook`,
+      {
+        enabled_events: ['*'],
+        description: 'LotteryPro managed webhook for Stripe sync',
+      }
+    );
+    console.log(`✅ Webhook configured: ${webhook.url}`);
+
+    stripeSync.syncBackfill()
+      .then(() => console.log('✅ Stripe data synced'))
+      .catch((err: any) => console.error('❌ Stripe sync error:', err));
+  } catch (error) {
+    console.error('❌ Stripe initialization failed:', error);
+  }
+}
+
+initStripe();
 
 // Validate dependencies on startup - OWASP A08:2021
 validateDependencyIntegrity();
@@ -25,6 +68,37 @@ app.use(sanitizeInput);
 
 // Only apply rate limiting to API routes, not static assets
 app.use('/api', apiRateLimit);
+
+// Stripe webhook route MUST be registered BEFORE express.json()
+// because webhooks need the raw Buffer body for signature verification
+app.post(
+  '/api/stripe/webhook/:uuid',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+
+      if (!Buffer.isBuffer(req.body)) {
+        console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
+        return res.status(500).json({ error: 'Webhook processing error' });
+      }
+
+      const { uuid } = req.params;
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig, uuid);
+
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
 
 app.use(express.json({ limit: '10mb' })); // DoS protection
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));

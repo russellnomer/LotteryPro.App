@@ -1,15 +1,27 @@
 import { Request, Response } from 'express';
 import { storage } from './storage';
+import Stripe from 'stripe';
 
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
-interface StripeEvent {
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY, {
+  apiVersion: '2025-11-17.clover',
+}) : null;
+
+interface StripeWebhookEvent {
   id: string;
   type: string;
   data: {
     object: any;
   };
 }
+
+const priceToPlanMapping: Record<string, 'basic' | 'pro' | 'premium'> = {
+  'price_basic': 'basic',
+  'price_pro': 'pro', 
+  'price_premium': 'premium',
+};
 
 const productToPlanMapping: Record<string, 'basic' | 'pro' | 'premium'> = {
   'Lottery Pro Basic': 'basic',
@@ -25,7 +37,35 @@ const productToPlanMapping: Record<string, 'basic' | 'pro' | 'premium'> = {
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   try {
-    const event = req.body as StripeEvent;
+    let event: StripeWebhookEvent;
+    
+    if (STRIPE_WEBHOOK_SECRET && stripe) {
+      const sig = req.headers['stripe-signature'] as string;
+      
+      if (!sig) {
+        console.error('❌ Missing Stripe signature header');
+        return res.status(400).json({ error: 'Missing stripe-signature header' });
+      }
+      
+      try {
+        const rawBody = (req as any).rawBody || req.body;
+        const bodyString = typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody);
+        
+        event = stripe.webhooks.constructEvent(
+          bodyString,
+          sig,
+          STRIPE_WEBHOOK_SECRET
+        ) as StripeWebhookEvent;
+        
+        console.log(`✅ Stripe signature verified for event: ${event.id}`);
+      } catch (err: any) {
+        console.error(`❌ Webhook signature verification failed: ${err.message}`);
+        return res.status(400).json({ error: `Webhook signature verification failed: ${err.message}` });
+      }
+    } else {
+      console.warn('⚠️ STRIPE_WEBHOOK_SECRET not configured - skipping signature verification (INSECURE)');
+      event = req.body as StripeWebhookEvent;
+    }
     
     console.log(`📧 Stripe webhook received: ${event.type}`);
 
@@ -38,18 +78,33 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         console.log(`💳 Checkout completed for: ${customerEmail}, status: ${paymentStatus}`);
         
         if (paymentStatus === 'paid' && customerEmail) {
-          const productName = session.line_items?.data?.[0]?.description || 
-                             session.metadata?.plan || 
-                             'basic';
+          let tier: 'basic' | 'pro' | 'premium' = 'basic';
           
-          const tier = productToPlanMapping[productName] || 'basic';
+          const priceId = session.line_items?.data?.[0]?.price?.id;
+          if (priceId && priceToPlanMapping[priceId]) {
+            tier = priceToPlanMapping[priceId];
+          } else {
+            const productName = session.line_items?.data?.[0]?.description || 
+                               session.metadata?.plan || 
+                               'basic';
+            tier = productToPlanMapping[productName] || 'basic';
+          }
+          
+          const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
+          if (amountTotal >= 39) {
+            tier = 'premium';
+          } else if (amountTotal >= 19) {
+            tier = 'pro';
+          } else if (amountTotal >= 9) {
+            tier = 'basic';
+          }
           
           let user = await storage.getUserByEmail(customerEmail);
           
           if (user) {
             await storage.updateUserSubscriptionTier(user.id, tier);
             await storage.updateUserSubscriptionStatus(user.id, 'active');
-            console.log(`✅ Updated subscription for ${customerEmail} to ${tier}`);
+            console.log(`✅ Updated subscription for ${customerEmail} to ${tier} ($${amountTotal})`);
           } else {
             console.log(`ℹ️ User ${customerEmail} not found - they need to register first`);
           }
@@ -64,13 +119,21 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         const subscription = event.data.object;
         const customerId = subscription.customer;
         const status = subscription.status;
-        const productName = subscription.items?.data?.[0]?.price?.product?.name || 
-                          subscription.items?.data?.[0]?.plan?.nickname || 
-                          'basic';
         
-        console.log(`📋 Subscription ${event.type}: customer=${customerId}, status=${status}`);
+        let tier: 'basic' | 'pro' | 'premium' = 'basic';
         
-        const tier = productToPlanMapping[productName] || 'basic';
+        const priceId = subscription.items?.data?.[0]?.price?.id;
+        if (priceId && priceToPlanMapping[priceId]) {
+          tier = priceToPlanMapping[priceId];
+        } else {
+          const productName = subscription.items?.data?.[0]?.price?.product?.name || 
+                            subscription.items?.data?.[0]?.plan?.nickname || 
+                            'basic';
+          tier = productToPlanMapping[productName] || 'basic';
+        }
+        
+        console.log(`📋 Subscription ${event.type}: customer=${customerId}, status=${status}, tier=${tier}`);
+        
         const subscriptionStatus = status === 'active' ? 'active' : 
                                    status === 'canceled' ? 'cancelled' : 
                                    status === 'past_due' ? 'suspended' : 'pending';
@@ -157,5 +220,13 @@ async function logStripeEvent(
 }
 
 export function isStripeConfigured(): boolean {
-  return !!STRIPE_WEBHOOK_SECRET;
+  return !!STRIPE_SECRET_KEY && !!STRIPE_WEBHOOK_SECRET;
+}
+
+export function getStripeStatus() {
+  return {
+    secretKeyConfigured: !!STRIPE_SECRET_KEY,
+    webhookSecretConfigured: !!STRIPE_WEBHOOK_SECRET,
+    fullyConfigured: !!STRIPE_SECRET_KEY && !!STRIPE_WEBHOOK_SECRET,
+  };
 }
