@@ -90,7 +90,7 @@ export default function Footer() {
           </div>
           
           <div>
-            <h4 className="font-semibold text-white mb-3">Support</h4>
+            <h4 className="font-semibold text-white mb-3">Support & Contact</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/support" className="hover:text-white" data-testid="link-footer-support">
@@ -102,7 +102,13 @@ export default function Footer() {
                   Data Requests (DSAR)
                 </Link>
               </li>
+              <li className="text-gray-400">
+                Legal: legal [at] russellnomer.com
+              </li>
             </ul>
+            <p className="text-xs text-gray-500 mt-3">
+              GDPR/CCPA Compliant | 30-day data retention
+            </p>
           </div>
         </div>
         
