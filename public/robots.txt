@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /god-mode
+
+Sitemap: https://lotterypro.replit.app/sitemap.xml

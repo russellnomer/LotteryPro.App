@@ -91,16 +91,30 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://pagead2.googlesyndication.com", "https://www.googletagservices.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://pagead2.googlesyndication.com", "https://www.googletagservices.com", "https://js.stripe.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'", "https://api.stripe.com", "https://www.ncpgambling.org"],
-      frameSrc: ["'self'", "https://js.stripe.com"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://www.ncpgambling.org", "wss:", "ws:"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://www.youtube.com", "https://youtube.com"],
+      frameAncestors: ["'self'"],
+      formAction: ["'self'"],
+      baseUri: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  xXssProtection: true,
+  noSniff: true,
+  dnsPrefetchControl: { allow: false },
+  ieNoOpen: true,
+  frameguard: { action: "sameorigin" },
 }));
 
 // Security middleware - OWASP, CIS, NIST compliance

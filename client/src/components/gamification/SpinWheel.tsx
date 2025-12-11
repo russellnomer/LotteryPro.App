@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Sparkles, Gift, Crown, Ticket, X } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import SessionTimeReminder from '@/components/SessionTimeReminder';
 
 interface Prize {
   type: 'free_generation' | 'discount_code' | 'premium_trial' | 'no_prize';
@@ -32,6 +33,8 @@ export default function SpinWheel() {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
+  const [spinCount, setSpinCount] = useState(0);
+  const [spinAnnouncement, setSpinAnnouncement] = useState('');
 
   const { data: spinStatus } = useQuery({
     queryKey: ['/api/spin/status'],
@@ -52,6 +55,8 @@ export default function SpinWheel() {
       setTimeout(() => {
         setSpinning(false);
         setWonPrize(PRIZES[prizeIndex]);
+        setSpinCount(prev => prev + 1);
+        setSpinAnnouncement(`Spin complete! You won: ${PRIZES[prizeIndex].displayName}`);
         queryClient.invalidateQueries({ queryKey: ['/api/spin/status'] });
         
         toast({
@@ -81,9 +86,20 @@ export default function SpinWheel() {
 
   return (
     <Card className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-2 border-purple-200 dark:border-purple-800">
+      <div 
+        role="status" 
+        aria-live="polite" 
+        aria-atomic="true" 
+        className="sr-only"
+      >
+        {spinAnnouncement}
+      </div>
+      
+      <SessionTimeReminder spinCount={spinCount} threshold={5} />
+      
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold text-purple-900 dark:text-purple-100 mb-2">
-          <Sparkles className="inline mr-2 mb-1" />
+          <Sparkles className="inline mr-2 mb-1" aria-hidden="true" />
           Daily Lucky Spin
         </h2>
         <p className="text-gray-600 dark:text-gray-300">

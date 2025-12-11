@@ -42,6 +42,22 @@ export default function CookieConsent() {
       rejected: true,
       timestamp: new Date().toISOString(),
     }));
+    
+    document.cookie = "analytics_disabled=true; max-age=31536000; path=/; SameSite=Lax";
+    document.cookie = "marketing_disabled=true; max-age=31536000; path=/; SameSite=Lax";
+    
+    const adElements = document.querySelectorAll('[data-ad-slot], .adsbygoogle, ins.adsbygoogle');
+    adElements.forEach(el => el.remove());
+    
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('consent', 'update', {
+        analytics_storage: 'denied',
+        ad_storage: 'denied',
+        ad_personalization: 'denied',
+        ad_user_data: 'denied',
+      });
+    }
+    
     setShowBanner(false);
   };
 

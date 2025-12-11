@@ -1,0 +1,39 @@
+You are an expert full-stack security + compliance engineer. Perform a single, complete production-hardening pass on my entire LotteryPro Replit app to reach 10/10 security, compliance, and WCAG 2.1 AA accessibility in the absolute minimum number of changes and cycles.
+
+Do ALL of the following in one go:
+
+1. Security (OWASP Top 10)
+   • Add and configure helmet.js with strict CSP, HSTS, X-XSS-Protection, referrer-policy “strict-origin-when-cross-origin”
+   • Add express-validator with strict sanitization/escaping on every user input (VIP code, profile form, birth date, email, address)
+   • Add rate-limiter-flexible (max 15 requests/min per IP on all POST/expensive routes)
+   • Add csurf middleware with cookie-based CSRF tokens on every form
+   • Hash all stored emails/addresses with bcrypt before saving to Replit DB
+   • Add JWT auth middleware; protect any admin/God-Mode routes so only you (hard-coded user ID or Replit secret RUSSELL_TOKEN) can access
+
+2. Compliance & Privacy
+   • Create and deploy these exact live pages:
+   • /privacy — full CCPA/GDPR-compliant policy + “Do Not Sell My Info” + data deletion request form that emails you
+   • /terms — full Terms of Service with contest rules, 18+ eligibility, no real-money gambling, Amazon affiliate disclosure
+   • Add 18+ age-gate modal on first visit (checkbox + state selector, stored in cookie for 30 days)
+   • Add marketing opt-in checkbox to profile form (default unchecked)
+
+3. Responsible Gambling
+   • Add self-exclusion button in footer (sets cookie to block site 1 year)
+   • Add session-time reminder popup after 5 spins (“Consider a break — 1-800-GAMBLER”)
+
+4. Accessibility (WCAG 2.1 AA)
+   • Add proper <label for=""> + aria-label + aria-describedby on every form field and button
+   • Add meaningful alt text to all images and emojis
+   • Add ARIA live region for spin results and number generator output
+   • Ensure focus outlines and keyboard navigation work on all interactive elements
+
+5. Cookie Consent
+   • Keep existing banner but make “Reject All” actually disable non-essential cookies (AdSense, analytics)
+
+6. Final polish
+   • Add robots.txt and security.txt
+   • Add favicon and proper <title>
+   • Minify CSS/JS if not already
+   • Fix any broken links (especially /privacy and /terms must resolve)
+
+Implement everything in the fewest possible file changes, reuse existing code where possible, and output only the modified/added files with full code. Do not ask questions — just execute the complete hardening pass now.

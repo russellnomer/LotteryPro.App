@@ -38,7 +38,42 @@ import fanContestRoutes from "./routes/fanContest";
 import ascapNetworkingRoutes from "./routes/ascapNetworking";
 import { z } from "zod";
 
+import path from "path";
+import express from "express";
+import fs from "fs";
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Serve static files from public directory (robots.txt, security.txt)
+  const publicPath = path.resolve(process.cwd(), "public");
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  }
+  
+  // Explicit routes for security files
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain').send(`User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /god-mode
+
+Sitemap: https://lotterypro.replit.app/sitemap.xml
+`);
+  });
+  
+  app.get('/security.txt', (req, res) => {
+    res.redirect('/.well-known/security.txt');
+  });
+  
+  app.get('/.well-known/security.txt', (req, res) => {
+    res.type('text/plain').send(`# LotteryPro Security Policy
+Contact: mailto:security@lotterypro.com
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://lotterypro.replit.app/.well-known/security.txt
+`);
+  });
   
   // Admin authentication routes - server-side security
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'default-change-me';

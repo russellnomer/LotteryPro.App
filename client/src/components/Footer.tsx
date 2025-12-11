@@ -30,24 +30,18 @@ export default function Footer() {
             <h4 className="font-semibold text-white mb-3">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/privacy">
-                  <a className="hover:text-white flex items-center gap-1" data-testid="link-footer-privacy">
-                    <Shield className="w-3 h-3" /> Privacy Policy
-                  </a>
+                <Link href="/privacy" className="hover:text-white flex items-center gap-1" data-testid="link-footer-privacy">
+                  <Shield className="w-3 h-3" aria-hidden="true" /> Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms">
-                  <a className="hover:text-white flex items-center gap-1" data-testid="link-footer-terms">
-                    <FileText className="w-3 h-3" /> Terms of Service
-                  </a>
+                <Link href="/terms" className="hover:text-white flex items-center gap-1" data-testid="link-footer-terms">
+                  <FileText className="w-3 h-3" aria-hidden="true" /> Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/accessibility">
-                  <a className="hover:text-white flex items-center gap-1" data-testid="link-footer-accessibility">
-                    <Accessibility className="w-3 h-3" /> Accessibility
-                  </a>
+                <Link href="/accessibility" className="hover:text-white flex items-center gap-1" data-testid="link-footer-accessibility">
+                  <Accessibility className="w-3 h-3" aria-hidden="true" /> Accessibility
                 </Link>
               </li>
               <li>
@@ -99,13 +93,13 @@ export default function Footer() {
             <h4 className="font-semibold text-white mb-3">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/support">
-                  <a className="hover:text-white">Contact Support</a>
+                <Link href="/support" className="hover:text-white" data-testid="link-footer-support">
+                  Contact Support
                 </Link>
               </li>
               <li>
-                <Link href="/privacy#dsar">
-                  <a className="hover:text-white">Data Requests (DSAR)</a>
+                <Link href="/privacy#dsar" className="hover:text-white" data-testid="link-footer-dsar">
+                  Data Requests (DSAR)
                 </Link>
               </li>
             </ul>
