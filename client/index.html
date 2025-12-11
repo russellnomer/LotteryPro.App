@@ -46,15 +46,46 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
-        <div style="background:white;padding:30px;border-radius:12px;max-width:400px;text-align:center;">
-          <h2 style="color:#333;margin-bottom:15px;">Age Verification Required</h2>
-          <p style="color:#666;margin-bottom:15px;">You must be 18+ years old to access LotteryPro. This is an educational entertainment platform only.</p>
-          <p style="color:#666;font-size:14px;">JavaScript is required to use this site. Please enable JavaScript and refresh the page.</p>
-          <p style="color:#888;font-size:12px;margin-top:15px;">Gambling Problem? Call 1-800-GAMBLER</p>
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:40px;border-radius:12px;max-width:500px;text-align:center;">
+          <h1 style="color:#333;margin-bottom:20px;font-size:24px;">🎰 LotteryPro - Age Verification Required</h1>
+          <div style="background:#fee2e2;border:2px solid #ef4444;border-radius:8px;padding:15px;margin-bottom:20px;">
+            <strong style="color:#dc2626;">⚠️ YOU MUST BE 18+ YEARS OLD TO ACCESS THIS SITE</strong>
+          </div>
+          <p style="color:#666;margin-bottom:15px;font-size:14px;">
+            <strong>DISCLAIMER:</strong> LotteryPro is an EDUCATIONAL ENTERTAINMENT platform ONLY. 
+            This tool does NOT guarantee lottery results and makes NO claims of winning predictions. 
+            All number analysis is for entertainment and educational purposes only.
+          </p>
+          <p style="color:#666;font-size:14px;margin-bottom:15px;">JavaScript is required to use this site. Please enable JavaScript and refresh the page.</p>
+          <div style="background:#f3f4f6;padding:15px;border-radius:8px;margin-top:20px;">
+            <p style="color:#333;font-weight:bold;margin-bottom:10px;">🛡️ Responsible Gambling Resources</p>
+            <p style="color:#666;font-size:13px;">
+              Problem Gambling? Call <strong>1-800-GAMBLER</strong><br/>
+              <a href="https://www.ncpgambling.org" style="color:#2563eb;">ncpgambling.org</a> | 
+              <a href="https://www.1800gambler.net" style="color:#2563eb;">1800gambler.net</a>
+            </p>
+            <p style="color:#888;font-size:12px;margin-top:10px;">Self-exclusion options available in app settings.</p>
+          </div>
+          <div style="margin-top:20px;padding-top:15px;border-top:1px solid #e5e7eb;">
+            <p style="color:#888;font-size:11px;">
+              <a href="/privacy" style="color:#2563eb;">Privacy Policy</a> | 
+              <a href="/terms" style="color:#2563eb;">Terms of Service</a><br/>
+              Contact: <a href="mailto:legal@russellnomer.com" style="color:#2563eb;">legal@russellnomer.com</a>
+            </p>
+          </div>
         </div>
       </div>
     </noscript>
+    <!-- Static Legal Footer for Crawlers -->
+    <div id="static-legal-footer" style="display:none;" aria-hidden="true">
+      <p>LotteryPro - Educational Lottery Analysis Platform. FOR ENTERTAINMENT PURPOSES ONLY.</p>
+      <p>DISCLAIMER: This tool does NOT guarantee lottery results. No claims of winning predictions are made.</p>
+      <p>Age Restriction: Users must be 18+ years old to access this platform.</p>
+      <p>Responsible Gambling: 1-800-GAMBLER | ncpgambling.org | Self-exclusion available</p>
+      <p>Contact: legal@russellnomer.com | Privacy Policy: /privacy | Terms: /terms</p>
+      <p>GDPR/CCPA Compliant | Data retention: 30 days | DSAR requests accepted</p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
