@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, Shield } from "lucide-react";
-
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-  "Wisconsin", "Wyoming"
-];
+import StateCombobox from "./StateCombobox";
 
 export default function AgeGateModal() {
   const [isVisible, setIsVisible] = useState(false);
@@ -89,19 +78,16 @@ export default function AgeGateModal() {
         </p>
         
         <div className="mb-4">
-          <label htmlFor="state-select" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
             Select Your State
           </label>
-          <Select value={selectedState} onValueChange={setSelectedState}>
-            <SelectTrigger id="state-select" data-testid="select-state">
-              <SelectValue placeholder="Choose your state..." />
-            </SelectTrigger>
-            <SelectContent className="max-h-60">
-              {US_STATES.map(state => (
-                <SelectItem key={state} value={state}>{state}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <StateCombobox
+            value={selectedState}
+            onChange={setSelectedState}
+            placeholder="Type to search your state..."
+            returnFormat="name"
+            data-testid="age-gate-state-combobox"
+          />
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
         

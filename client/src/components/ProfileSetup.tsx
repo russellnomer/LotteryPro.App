@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { UserPlus, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Send } from 'lucide-react';
+import { UserPlus, Mail, MapPin, Shield, CheckCircle, AlertTriangle, Send } from 'lucide-react';
+import StateCombobox from './StateCombobox';
 
 interface ProfileSetupProps {
   onComplete?: (customerId: string) => void;
@@ -42,15 +42,6 @@ export default function ProfileSetup({ onComplete, compact = false }: ProfileSet
 
   const [customerId, setCustomerId] = useState<string>('');
   const { toast } = useToast();
-
-  // US States for dropdown
-  const usStates = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-  ];
 
   // Create profile mutation
   const createProfileMutation = useMutation({
@@ -359,20 +350,14 @@ export default function ProfileSetup({ onComplete, compact = false }: ProfileSet
               </div>
               
               <div>
-                <Label htmlFor="state">State *</Label>
-                <Select 
-                  value={profileData.state} 
-                  onValueChange={(value) => setProfileData(prev => ({ ...prev, state: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select State" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usStates.map(state => (
-                      <SelectItem key={state} value={state}>{state}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>State *</Label>
+                <StateCombobox
+                  value={profileData.state}
+                  onChange={(value) => setProfileData(prev => ({ ...prev, state: value }))}
+                  placeholder="Type to search..."
+                  returnFormat="abbr"
+                  data-testid="profile-state-combobox"
+                />
               </div>
               
               <div>
@@ -445,6 +430,7 @@ export default function ProfileSetup({ onComplete, compact = false }: ProfileSet
             type="submit" 
             className="w-full" 
             disabled={createProfileMutation.isPending}
+            data-testid="button-create-profile"
           >
             {createProfileMutation.isPending ? 'Creating Profile...' : 'Create Profile & Send Verification'}
           </Button>
