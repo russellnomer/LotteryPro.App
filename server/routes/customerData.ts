@@ -4,32 +4,6 @@ import type { Request, Response } from 'express';
 
 const router = Router();
 
-// Create or update customer profile
-router.post('/profile', async (req: Request, res: Response) => {
-  try {
-    const profile = await customerDataService.createOrUpdateCustomerProfile({
-      ...req.body,
-      userId: req.user?.claims?.sub // If user is logged in
-    });
-
-    // Track the profile creation activity
-    await customerDataService.trackActivity({
-      customerId: profile.id,
-      activityType: 'profile_created',
-      activityData: {
-        trigger: req.body.trigger || 'manual',
-        source: 'web'
-      },
-      req
-    });
-
-    res.json(profile);
-  } catch (error) {
-    console.error('Error creating customer profile:', error);
-    res.status(500).json({ message: 'Failed to create customer profile' });
-  }
-});
-
 // Track customer activity
 router.post('/activity', async (req: Request, res: Response) => {
   try {
