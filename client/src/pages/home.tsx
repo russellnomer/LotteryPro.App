@@ -34,10 +34,10 @@ export default function Home() {
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
   const [selectedWheelType, setSelectedWheelType] = useState<string>('single');
-  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium' | 'unlimited'>('unlimited'); // Russell's unlimited access
+  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium' | 'unlimited'>('free'); // Default to free tier for all users
   const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
   const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
-  const [userEmail] = useState<string>("russell@russellnomer.com"); // Russell's account for testing unlimited access
+  const [userEmail, setUserEmail] = useState<string>(""); // Empty by default - user must authenticate
   const [showFloatingJackpocket, setShowFloatingJackpocket] = useState(false);
 
   // Show floating Jackpocket banner after 10 seconds

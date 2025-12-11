@@ -16,6 +16,8 @@ import {
 
 export default function Navigation() {
   const [location] = useLocation();
+  
+  const isAdminAuthenticated = sessionStorage.getItem("admin_authenticated") === "true";
 
   const navItems = [
     { path: "/home", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },
@@ -73,43 +75,48 @@ export default function Navigation() {
               );
             })}
 
-            <Separator orientation="vertical" className="h-8 bg-white/20" />
-
-            {/* Admin Section */}
-            {adminItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location === item.path;
-              
-              return (
-                <Link href={item.path} key={item.path}>
-                  <Button
-                    variant={isActive ? "destructive" : "ghost"}
-                    size="sm"
-                    className={`flex items-center space-x-2 ${
-                      isActive 
-                        ? "bg-red-600 text-white" 
-                        : "text-red-200 hover:text-white hover:bg-red-600/20 border border-red-400/30"
-                    }`}
-                  >
-                    <Icon size={16} />
-                    <span className="hidden lg:inline">🔑 Admin</span>
-                    <Badge variant="outline" className="ml-1 text-xs border-red-300 text-red-200">
-                      Russell
-                    </Badge>
-                  </Button>
-                </Link>
-              );
-            })}
+            {/* Admin Section - Only show when authenticated */}
+            {isAdminAuthenticated && (
+              <>
+                <Separator orientation="vertical" className="h-8 bg-white/20" />
+                {adminItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location === item.path;
+                  
+                  return (
+                    <Link href={item.path} key={item.path}>
+                      <Button
+                        variant={isActive ? "destructive" : "ghost"}
+                        size="sm"
+                        className={`flex items-center space-x-2 ${
+                          isActive 
+                            ? "bg-red-600 text-white" 
+                            : "text-red-200 hover:text-white hover:bg-red-600/20 border border-red-400/30"
+                        }`}
+                      >
+                        <Icon size={16} />
+                        <span className="hidden lg:inline">🔑 Admin</span>
+                        <Badge variant="outline" className="ml-1 text-xs border-red-300 text-red-200">
+                          Russell
+                        </Badge>
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <Link href="/admin">
-              <Button variant="outline" size="sm" className="border-red-400 text-red-200 hover:bg-red-600">
-                🔑 Admin
-              </Button>
-            </Link>
-          </div>
+          {/* Mobile Menu Button - Only show admin when authenticated */}
+          {isAdminAuthenticated && (
+            <div className="md:hidden">
+              <Link href="/admin">
+                <Button variant="outline" size="sm" className="border-red-400 text-red-200 hover:bg-red-600">
+                  🔑 Admin
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile Navigation */}
