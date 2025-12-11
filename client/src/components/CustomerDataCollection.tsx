@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { UserIcon, PhoneIcon, MapPinIcon, DollarSignIcon } from "lucide-react";
+import { validateEmail, validatePhone, validateZipCode, sanitizeInput, FormErrors, clearFormError } from "@/lib/formValidation";
 
 interface CustomerDataCollectionProps {
   trigger?: "registration" | "subscription" | "profile_update";
@@ -47,6 +48,7 @@ export default function CustomerDataCollection({
     referralCode: ""
   });
 
+  const [errors, setErrors] = useState<FormErrors>({});
   const { toast } = useToast();
 
   const submitMutation = useMutation({
@@ -87,7 +89,49 @@ export default function CustomerDataCollection({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    submitMutation.mutate(formData);
+    
+    const newErrors: FormErrors = {};
+    
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.valid) {
+      newErrors.email = emailValidation.error;
+    }
+    
+    const phoneValidation = validatePhone(formData.phone);
+    if (!phoneValidation.valid) {
+      newErrors.phone = phoneValidation.error;
+    }
+    
+    const zipValidation = validateZipCode(formData.zipCode);
+    if (!zipValidation.valid) {
+      newErrors.zipCode = zipValidation.error;
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
+    
+    const sanitizedData = {
+      ...formData,
+      email: sanitizeInput(formData.email),
+      firstName: sanitizeInput(formData.firstName),
+      lastName: sanitizeInput(formData.lastName),
+      phone: sanitizeInput(formData.phone),
+      zipCode: sanitizeInput(formData.zipCode),
+      referralCode: sanitizeInput(formData.referralCode)
+    };
+    
+    submitMutation.mutate(sanitizedData);
+  };
+  
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(clearFormError(errors, field));
+    }
   };
 
   const updateInterest = (interest: string, value: boolean | string) => {
@@ -127,17 +171,22 @@ export default function CustomerDataCollection({
                   placeholder="Email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
+                  className={`text-sm ${errors.email ? 'border-red-500' : ''}`}
+                  data-testid="input-compact-email"
                   required
-                  className="text-sm"
                 />
+                {errors.email && (
+                  <p className="text-xs text-red-500 font-medium mt-1">{errors.email}</p>
+                )}
               </div>
               <div>
                 <Input
                   placeholder="First Name"
                   value={formData.firstName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                  onChange={(e) => handleFieldChange('firstName', e.target.value)}
                   className="text-sm"
+                  data-testid="input-compact-firstname"
                 />
               </div>
             </div>
@@ -201,9 +250,14 @@ export default function CustomerDataCollection({
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
+                  className={errors.email ? 'border-red-500' : ''}
+                  data-testid="input-profile-email"
                   required
                 />
+                {errors.email && (
+                  <p className="text-xs text-red-500 font-medium mt-1" data-testid="error-profile-email">{errors.email}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
@@ -211,15 +265,21 @@ export default function CustomerDataCollection({
                   id="phone"
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => handleFieldChange('phone', e.target.value)}
+                  className={errors.phone ? 'border-red-500' : ''}
+                  data-testid="input-profile-phone"
                 />
+                {errors.phone && (
+                  <p className="text-xs text-red-500 font-medium mt-1" data-testid="error-profile-phone">{errors.phone}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                  onChange={(e) => handleFieldChange('firstName', e.target.value)}
+                  data-testid="input-profile-firstname"
                 />
               </div>
               <div>
@@ -227,7 +287,8 @@ export default function CustomerDataCollection({
                 <Input
                   id="lastName"
                   value={formData.lastName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                  onChange={(e) => handleFieldChange('lastName', e.target.value)}
+                  data-testid="input-profile-lastname"
                 />
               </div>
             </div>
@@ -245,8 +306,13 @@ export default function CustomerDataCollection({
                 <Input
                   id="zipCode"
                   value={formData.zipCode}
-                  onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
+                  onChange={(e) => handleFieldChange('zipCode', e.target.value)}
+                  className={errors.zipCode ? 'border-red-500' : ''}
+                  data-testid="input-profile-zipcode"
                 />
+                {errors.zipCode && (
+                  <p className="text-xs text-red-500 font-medium mt-1" data-testid="error-profile-zipcode">{errors.zipCode}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="state">State</Label>

@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Check, AlertCircle, Key, Copy, Mail } from "lucide-react";
+import { validateEmail, validateVipCode, sanitizeInput, FormErrors, clearFormError } from "@/lib/formValidation";
 
 interface VipCodeRedemptionProps {
   userEmail?: string;
@@ -15,6 +16,7 @@ interface VipCodeRedemptionProps {
 export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps) {
   const [vipCode, setVipCode] = useState("");
   const [email, setEmail] = useState(userEmail || "");
+  const [errors, setErrors] = useState<FormErrors>({});
   const { toast } = useToast();
 
   const redeemMutation = useMutation({
@@ -50,25 +52,42 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
   });
 
   const handleRedeem = () => {
-    if (!vipCode.trim()) {
-      toast({
-        title: "Missing VIP Code",
-        description: "Please enter a VIP code to redeem",
-        variant: "destructive",
-      });
+    const newErrors: FormErrors = {};
+    
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      newErrors.email = emailValidation.error;
+    }
+    
+    const codeValidation = validateVipCode(vipCode);
+    if (!codeValidation.valid) {
+      newErrors.vipCode = codeValidation.error;
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-
-    if (!email.trim()) {
-      toast({
-        title: "Missing Email",
-        description: "Please enter your email address",
-        variant: "destructive",
-      });
-      return;
+    
+    setErrors({});
+    redeemMutation.mutate({ 
+      code: sanitizeInput(vipCode), 
+      email: sanitizeInput(email) 
+    });
+  };
+  
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (errors.email) {
+      setErrors(clearFormError(errors, 'email'));
     }
-
-    redeemMutation.mutate({ code: vipCode, email });
+  };
+  
+  const handleVipCodeChange = (value: string) => {
+    setVipCode(value);
+    if (errors.vipCode) {
+      setErrors(clearFormError(errors, 'vipCode'));
+    }
   };
 
   const handlePaste = async () => {
@@ -109,10 +128,14 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
               type="email"
               placeholder="your-email@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              onChange={(e) => handleEmailChange(e.target.value)}
+              className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+              data-testid="input-vip-email"
             />
           </div>
+          {errors.email && (
+            <p className="text-xs text-red-500 font-medium" data-testid="error-vip-email">{errors.email}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -122,8 +145,9 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
               type="text"
               placeholder="Nomerati123456abc12345"
               value={vipCode}
-              onChange={(e) => setVipCode(e.target.value)}
-              className="font-mono text-sm"
+              onChange={(e) => handleVipCodeChange(e.target.value)}
+              className={`font-mono text-sm ${errors.vipCode ? 'border-red-500' : ''}`}
+              data-testid="input-vip-code"
             />
             <Button
               type="button"
@@ -135,6 +159,9 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
               <Copy className="w-4 h-4" />
             </Button>
           </div>
+          {errors.vipCode && (
+            <p className="text-xs text-red-500 font-medium" data-testid="error-vip-code">{errors.vipCode}</p>
+          )}
           <p className="text-xs text-gray-500">
             VIP codes start with "Nomerati" and are account-specific
           </p>
