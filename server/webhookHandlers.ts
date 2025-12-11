@@ -1,5 +1,6 @@
-import { getStripeSync } from './stripeClient';
+import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
+import Stripe from 'stripe';
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string, uuid: string): Promise<void> {
@@ -13,7 +14,35 @@ export class WebhookHandlers {
     }
 
     const sync = await getStripeSync();
+    
+    // Process webhook through stripe-replit-sync (handles signature verification and DB storage)
     await sync.processWebhook(payload, signature, uuid);
+    
+    // Parse the event to trigger custom business logic
+    const stripe = await getUncachableStripeClient();
+    const webhookSecret = await sync.getWebhookSecret(uuid);
+    
+    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    
+    console.log(`📨 Stripe webhook event: ${event.type}`);
+    
+    // Handle specific events for our business logic
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await WebhookHandlers.handleCheckoutCompleted(event.data.object);
+        break;
+      case 'customer.subscription.updated':
+        await WebhookHandlers.handleSubscriptionUpdated(event.data.object);
+        break;
+      case 'invoice.payment_succeeded':
+        await WebhookHandlers.handlePaymentSucceeded(event.data.object);
+        break;
+      case 'invoice.payment_failed':
+        await WebhookHandlers.handlePaymentFailed(event.data.object);
+        break;
+      default:
+        console.log(`ℹ️ Unhandled event type: ${event.type}`);
+    }
     
     console.log('✅ Stripe webhook processed successfully');
   }

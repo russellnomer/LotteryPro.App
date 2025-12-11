@@ -1,0 +1,126 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Arial",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "Roboto",
+      "role": "body"
+    },
+    {
+      "family": "Sohne Var",
+      "role": "body"
+    },
+    {
+      "family": "Segoe UI",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#3C4257",
+    "accent": "#635BFF",
+    "background": "#FFFFFF",
+    "textPrimary": "#635BFF",
+    "link": "#635BFF"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Arial",
+      "heading": "Arial"
+    },
+    "fontStacks": {
+      "heading": [
+        "sohne-var",
+        "sohne-woff",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "body": [
+        "sohne-var",
+        "sohne-woff",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "sohne-var",
+        "sohne-woff",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "14px",
+      "h2": "14px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "4px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "4px"
+    },
+    "buttonPrimary": {
+      "background": "#635BFF",
+      "textColor": "#FFFFFF",
+      "borderRadius": "4px",
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#FFFFFF",
+      "textColor": "#353A44",
+      "borderRadius": "6px",
+      "shadow": "rgba(16, 17, 26, 0.16) 0px 1px 1px 0px, rgb(216, 222, 228) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.svg",
+    "favicon": "https://dashboard.stripe.com/favicon.ico",
+    "ogImage": null
+  },
+  "__framework_hints": [],
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "The logo 'Stripe Login' matches the brand name and is located in the header, making it the main brand logo.",
+    "confidence": 0.98
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "Sign in",
+      "reasoning": "Button #0 has a vibrant blue background (#635BFF), which is the brand color, and action-oriented text 'Sign in'. This makes it the primary call-to-action button."
+    },
+    "secondary": {
+      "index": 1,
+      "text": "Sign in with Google",
+      "reasoning": "Button #1 has a white background (#FFFFFF) and is less prominent compared to Button #0. It offers an alternative sign-in method, making it suitable as the secondary button."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "professional",
+    "energy": "medium",
+    "targetAudience": "businesses and developers"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  }
+}
