@@ -22,11 +22,7 @@ export default function AdminPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (password: string) => {
-      const response = await apiRequest('/api/admin/login', {
-        method: 'POST',
-        body: JSON.stringify({ password }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await apiRequest('POST', '/api/admin/login', { password });
       return response;
     },
     onSuccess: () => {
@@ -41,7 +37,7 @@ export default function AdminPage() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest('/api/admin/logout', { method: 'POST' });
+      await apiRequest('POST', '/api/admin/logout');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
