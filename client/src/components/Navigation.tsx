@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +18,13 @@ import {
 export default function Navigation() {
   const [location] = useLocation();
   
-  const isAdminAuthenticated = sessionStorage.getItem("admin_authenticated") === "true";
+  const { data: sessionData } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ['/api/admin/session'],
+    refetchOnWindowFocus: true,
+    staleTime: 30000,
+  });
+  
+  const isAdminAuthenticated = sessionData?.isAdmin === true;
 
   const navItems = [
     { path: "/home", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },

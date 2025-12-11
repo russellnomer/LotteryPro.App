@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { injectAdSenseId } from "./middleware/adsense";
@@ -15,7 +17,30 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync, isStripeIntegrationAvailable } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 
+declare module 'express-session' {
+  interface SessionData {
+    isAdmin?: boolean;
+  }
+}
+
 const app = express();
+
+const MemoryStoreSession = MemoryStore(session);
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'lotterypro-session-secret-change-in-prod',
+  resave: false,
+  saveUninitialized: false,
+  store: new MemoryStoreSession({
+    checkPeriod: 86400000 
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'lax'
+  }
+}));
 
 async function initStripe() {
   if (!isStripeIntegrationAvailable()) {

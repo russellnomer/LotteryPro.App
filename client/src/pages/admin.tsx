@@ -1,47 +1,72 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import AdminDashboard from "@/components/AdminDashboard";
 import VipCodeRedemption from "@/components/VipCodeRedemption";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Lock, AlertTriangle } from "lucide-react";
-
-const ADMIN_SECRET = "russell2024admin"; 
+import { Shield, Lock, AlertTriangle, Loader2 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [, setLocation] = useLocation();
 
-  useEffect(() => {
-    const adminAuth = sessionStorage.getItem("admin_authenticated");
-    if (adminAuth === "true") {
-      setIsAuthenticated(true);
+  const { data: sessionData, isLoading } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ['/api/admin/session'],
+    refetchOnWindowFocus: true,
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const response = await apiRequest('/api/admin/login', {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
+      setError("");
+    },
+    onError: (error: any) => {
+      setError(error.message || "Invalid password");
+      setPassword("");
     }
-  }, []);
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('/api/admin/logout', { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
+      setLocation("/");
+    }
+  });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_SECRET) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem("admin_authenticated", "true");
-      setError("");
-    } else {
-      setError("Invalid admin password");
-      setPassword("");
-    }
+    loginMutation.mutate(password);
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem("admin_authenticated");
-    setLocation("/");
+    logoutMutation.mutate();
   };
 
-  if (!isAuthenticated) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  if (!sessionData?.isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -70,10 +95,20 @@ export default function AdminPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="text-center"
                   data-testid="input-admin-password"
+                  disabled={loginMutation.isPending}
                 />
               </div>
-              <Button type="submit" className="w-full" data-testid="button-admin-login">
-                <Shield className="w-4 h-4 mr-2" />
+              <Button 
+                type="submit" 
+                className="w-full" 
+                data-testid="button-admin-login"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Shield className="w-4 h-4 mr-2" />
+                )}
                 Access Admin Panel
               </Button>
             </form>
@@ -92,8 +127,13 @@ export default function AdminPage() {
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={handleLogout} data-testid="button-admin-logout">
-          Logout
+        <Button 
+          variant="outline" 
+          onClick={handleLogout} 
+          data-testid="button-admin-logout"
+          disabled={logoutMutation.isPending}
+        >
+          {logoutMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Logout"}
         </Button>
       </div>
       

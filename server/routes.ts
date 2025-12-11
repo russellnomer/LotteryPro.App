@@ -40,6 +40,35 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Admin authentication routes - server-side security
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'default-change-me';
+  
+  app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    
+    if (password === ADMIN_PASSWORD) {
+      req.session.isAdmin = true;
+      res.json({ success: true, message: 'Admin authenticated' });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid password' });
+    }
+  });
+  
+  app.post('/api/admin/logout', (req, res) => {
+    req.session.isAdmin = false;
+    req.session.destroy((err) => {
+      if (err) {
+        res.status(500).json({ success: false, error: 'Logout failed' });
+      } else {
+        res.json({ success: true, message: 'Logged out' });
+      }
+    });
+  });
+  
+  app.get('/api/admin/session', (req, res) => {
+    res.json({ isAdmin: req.session?.isAdmin === true });
+  });
+  
   // Initialize smart caching and progressive loading
   console.log('🎓 Initializing educational lottery analysis system...');
   
