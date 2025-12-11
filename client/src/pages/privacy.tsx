@@ -214,7 +214,7 @@ export default function PrivacyPolicy() {
               <li><strong>Non-Discrimination:</strong> We will not discriminate against you for exercising these rights</li>
             </ul>
             <p>
-              To exercise these rights, contact us at privacy@lotterypro.com or submit a 
+              To exercise these rights, contact us at legal@russellnomer.com or submit a 
               <Link href="/support"><a className="text-primary"> support request</a></Link>.
             </p>
 
@@ -261,7 +261,7 @@ export default function PrivacyPolicy() {
             </h2>
             <p>For privacy-related questions or to exercise your rights, contact us:</p>
             <ul>
-              <li><strong>Email:</strong> privacy@lotterypro.com</li>
+              <li><strong>Email:</strong> legal@russellnomer.com</li>
               <li><strong>Support:</strong> <Link href="/support"><a className="text-primary">Submit a Support Ticket</a></Link></li>
             </ul>
             

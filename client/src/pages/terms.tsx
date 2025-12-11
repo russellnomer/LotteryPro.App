@@ -273,7 +273,7 @@ export default function TermsOfService() {
               For questions about these Terms, please contact us:
             </p>
             <ul>
-              <li>Email: legal@lotterypro.com</li>
+              <li>Email: legal@russellnomer.com</li>
               <li>Support: <Link href="/support"><a className="text-primary">Submit a Support Ticket</a></Link></li>
             </ul>
 
