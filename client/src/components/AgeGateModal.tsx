@@ -6,6 +6,7 @@ import StateCombobox from "./StateCombobox";
 export default function AgeGateModal() {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedState, setSelectedState] = useState("");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -91,9 +92,26 @@ export default function AgeGateModal() {
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
         
+        <div className="flex items-start gap-2 mb-4">
+          <input
+            type="checkbox"
+            id="age-confirm-checkbox"
+            checked={ageConfirmed}
+            onChange={(e) => setAgeConfirmed(e.target.checked)}
+            className="mt-1"
+            aria-describedby="age-confirm-description"
+            data-testid="checkbox-age-confirm"
+          />
+          <label htmlFor="age-confirm-checkbox" className="text-sm text-gray-700 dark:text-gray-300" id="age-confirm-description">
+            I confirm I am <strong>18 years or older</strong> and agree to the{" "}
+            <a href="/terms" className="underline text-blue-600">Terms of Service</a> and{" "}
+            <a href="/privacy" className="underline text-blue-600">Privacy Policy</a>.
+          </label>
+        </div>
+
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
             <p className="text-xs text-amber-800 dark:text-amber-300">
               Gambling Problem? Call <strong>1-800-GAMBLER</strong> or visit{" "}
               <a 
@@ -112,7 +130,8 @@ export default function AgeGateModal() {
           <Button
             onClick={handleVerify}
             className="w-full"
-            disabled={!selectedState}
+            disabled={!selectedState || !ageConfirmed}
+            aria-label="Verify age and continue to site"
             data-testid="button-verify-age"
           >
             I am 18+ and agree to the Terms
