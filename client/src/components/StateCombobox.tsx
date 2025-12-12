@@ -1,20 +1,5 @@
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { ChevronsUpDown } from "lucide-react";
 
 export const US_STATES = [
   { name: "Alabama", abbr: "AL" },
@@ -86,69 +71,54 @@ export default function StateCombobox({
   disabled = false,
   "data-testid": testId,
 }: StateComboboxProps) {
-  const [open, setOpen] = useState(false);
-
   const selectedState = US_STATES.find(
     (state) => state.abbr === value || state.name === value
   );
 
-  const displayValue = selectedState
-    ? `${selectedState.name} (${selectedState.abbr})`
-    : placeholder;
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = e.target.value;
+    if (selectedValue) {
+      const state = US_STATES.find(s => s.abbr === selectedValue);
+      if (state) {
+        const returnValue = returnFormat === "abbr" ? state.abbr : state.name;
+        onChange(returnValue);
+      }
+    }
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          aria-label="Select your state"
-          className="w-full justify-between font-normal"
-          disabled={disabled}
-          data-testid={testId || "state-combobox-trigger"}
-        >
-          <span className={cn(!selectedState && "text-muted-foreground")}>
-            {displayValue}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0" align="start">
-        <Command>
-          <CommandInput 
-            placeholder="Type to search states..." 
-            data-testid="state-combobox-search"
-          />
-          <CommandList>
-            <CommandEmpty>No state found.</CommandEmpty>
-            <CommandGroup>
-              {US_STATES.map((state) => (
-                <CommandItem
-                  key={state.abbr}
-                  value={`${state.name} ${state.abbr}`}
-                  onSelect={() => {
-                    const returnValue = returnFormat === "abbr" ? state.abbr : state.name;
-                    onChange(returnValue);
-                    setOpen(false);
-                  }}
-                  data-testid={`state-option-${state.abbr.toLowerCase()}`}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      (value === state.abbr || value === state.name)
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
-                  />
-                  {state.name} ({state.abbr})
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="relative w-full">
+      <select
+        value={selectedState?.abbr || ""}
+        onChange={handleChange}
+        disabled={disabled}
+        aria-label="Select your state"
+        data-testid={testId || "state-combobox-trigger"}
+        className={cn(
+          "w-full h-10 px-3 pr-10 rounded-md border border-input bg-background text-sm",
+          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "appearance-none cursor-pointer",
+          !selectedState && "text-muted-foreground"
+        )}
+      >
+        <option value="" disabled>
+          {placeholder}
+        </option>
+        {US_STATES.map((state) => (
+          <option 
+            key={state.abbr} 
+            value={state.abbr}
+            data-testid={`state-option-${state.abbr.toLowerCase()}`}
+          >
+            {state.name} ({state.abbr})
+          </option>
+        ))}
+      </select>
+      <ChevronsUpDown 
+        className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" 
+        aria-hidden="true"
+      />
+    </div>
   );
 }
