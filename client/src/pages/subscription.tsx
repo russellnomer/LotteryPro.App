@@ -1,21 +1,183 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, Star, Zap, Users, TrendingUp, CreditCard, AlertTriangle, Info, ExternalLink, Gift } from "lucide-react";
+import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/8x28wO2Xq5gbgGX6Se9IQ00";
+const PAYPAL_CLIENT_ID = "AeNTw1gkaHTlOHooUC_LutCwO5BXmvIClbARB3cFsJVMcXsCPcL7H2lGxnq_8b_J-lIkKsCXs-EylDy7";
 const JACKPOCKET_REFERRAL_LINK = "https://lottery.jackpocket.com/r/lotto/russellnomer/LOTTERY/US-NY";
+
+const PAYPAL_PLAN_IDS = {
+  basic: "P-0CV4171778997622WNE5W4LI",
+  pro: "P-0P768176DP505422PNE5W52I",
+  premium: "P-6Y555870RG342905WNE5W6ZA"
+};
+
+declare global {
+  interface Window {
+    paypal?: any;
+  }
+}
+
+function PayPalButton({ planId, planName, disabled }: { planId: string; planName: string; disabled: boolean }) {
+  const buttonContainerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (disabled || !buttonContainerRef.current) return;
+
+    const renderButton = () => {
+      if (!window.paypal || !buttonContainerRef.current) {
+        setError("PayPal not loaded");
+        setLoading(false);
+        return;
+      }
+
+      buttonContainerRef.current.innerHTML = '';
+
+      try {
+        window.paypal.Buttons({
+          style: {
+            shape: 'pill',
+            color: 'gold',
+            layout: 'vertical',
+            label: 'subscribe'
+          },
+          createSubscription: function(data: any, actions: any) {
+            return actions.subscription.create({
+              plan_id: planId
+            });
+          },
+          onApprove: async function(data: any) {
+            console.log('Subscription approved:', data.subscriptionID);
+            toast({
+              title: "Subscription Activated!",
+              description: `Your ${planName} subscription is now active. Subscription ID: ${data.subscriptionID}`,
+            });
+            
+            try {
+              await fetch('/api/subscriptions/activate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  subscriptionId: data.subscriptionID,
+                  planId: planId,
+                  tier: planName.toLowerCase()
+                })
+              });
+            } catch (err) {
+              console.error('Failed to update subscription status:', err);
+            }
+          },
+          onError: function(err: any) {
+            console.error('PayPal error:', err);
+            toast({
+              title: "Payment Error",
+              description: "There was an issue with PayPal. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }).render(buttonContainerRef.current);
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('PayPal button render error:', err);
+        setError("Failed to load payment button");
+        setLoading(false);
+      }
+    };
+
+    if (window.paypal) {
+      renderButton();
+    } else {
+      const checkPayPal = setInterval(() => {
+        if (window.paypal) {
+          clearInterval(checkPayPal);
+          renderButton();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(checkPayPal);
+        if (!window.paypal) {
+          setError("PayPal failed to load");
+          setLoading(false);
+        }
+      }, 10000);
+
+      return () => clearInterval(checkPayPal);
+    }
+  }, [planId, planName, disabled, toast]);
+
+  if (disabled) {
+    return (
+      <Button 
+        className="w-full bg-gray-400 cursor-not-allowed"
+        disabled
+        data-testid={`button-subscribe-${planName.toLowerCase()}`}
+      >
+        Confirm Above to Subscribe
+      </Button>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-2 text-red-500 text-sm">
+        {error} - <button onClick={() => window.location.reload()} className="underline">Refresh</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      {loading && (
+        <div className="flex items-center justify-center p-4">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          <span className="ml-2 text-sm text-gray-600">Loading PayPal...</span>
+        </div>
+      )}
+      <div 
+        ref={buttonContainerRef} 
+        data-testid={`paypal-button-${planName.toLowerCase()}`}
+        className={loading ? 'hidden' : ''}
+      />
+    </div>
+  );
+}
 
 export default function SubscriptionPage() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [stateConfirmed, setStateConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [paypalLoaded, setPaypalLoaded] = useState(false);
 
   const canPurchase = ageVerified && stateConfirmed && termsAccepted;
+
+  useEffect(() => {
+    if (document.querySelector(`script[src*="paypal.com/sdk/js"]`)) {
+      setPaypalLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription`;
+    script.setAttribute('data-sdk-integration-source', 'button-factory');
+    script.async = true;
+    script.onload = () => setPaypalLoaded(true);
+    script.onerror = () => console.error('Failed to load PayPal SDK');
+    document.body.appendChild(script);
+
+    return () => {
+      // Don't remove script on cleanup as it may be used by other components
+    };
+  }, []);
 
   const plans = [
     {
@@ -35,7 +197,8 @@ export default function SubscriptionPage() {
         "Includes advertising",
         "Daily generation limit",
         "Basic features only"
-      ]
+      ],
+      paypalPlanId: null
     },
     {
       id: "basic",
@@ -50,7 +213,8 @@ export default function SubscriptionPage() {
         "No advertisements",
         "Email support"
       ],
-      badge: null
+      badge: null,
+      paypalPlanId: PAYPAL_PLAN_IDS.basic
     },
     {
       id: "pro",
@@ -66,7 +230,8 @@ export default function SubscriptionPage() {
         "Priority support",
         "Early access to new toys"
       ],
-      badge: "Most Popular"
+      badge: "Most Popular",
+      paypalPlanId: PAYPAL_PLAN_IDS.pro
     },
     {
       id: "premium",
@@ -83,7 +248,8 @@ export default function SubscriptionPage() {
         "Group dream management",
         "100% ad-free experience"
       ],
-      badge: "Best Value"
+      badge: "Best Value",
+      paypalPlanId: PAYPAL_PLAN_IDS.premium
     }
   ];
 
@@ -95,7 +261,7 @@ export default function SubscriptionPage() {
             Choose Your LotteryPro Plan
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure entertainment - no actual magic!)
+            Upgrade your lucky number game with more cosmic conjuring power! (Pure entertainment - no actual magic!)
           </p>
           
           <Alert className="max-w-2xl mx-auto mt-6 bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800">
@@ -181,9 +347,9 @@ Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure enter
                   ))}
                 </ul>
                 
-                {(plan as any).limitations && (
+                {plan.limitations && (
                   <ul className="space-y-2 mb-6 border-t pt-4">
-                    {(plan as any).limitations.map((limitation: string, index: number) => (
+                    {plan.limitations.map((limitation: string, index: number) => (
                       <li key={index} className="flex items-center gap-2">
                         <div className="h-2 w-2 bg-orange-400 rounded-full flex-shrink-0" />
                         <span className="text-sm text-orange-600 dark:text-orange-400">{limitation}</span>
@@ -201,16 +367,17 @@ Upgrade your lucky number game with more cosmic conjuring power! ✨ (Pure enter
                     >
                       Start Free
                     </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => window.open(STRIPE_PAYMENT_LINK, '_blank')}
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  ) : plan.paypalPlanId && paypalLoaded ? (
+                    <PayPalButton 
+                      planId={plan.paypalPlanId} 
+                      planName={plan.name}
                       disabled={!canPurchase}
-                      data-testid={`button-subscribe-${plan.id}`}
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      {canPurchase ? 'Subscribe Now' : 'Confirm Above to Subscribe'}
-                    </Button>
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      <span className="ml-2 text-sm text-gray-600">Loading...</span>
+                    </div>
                   )}
                 </div>
               </CardContent>

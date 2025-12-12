@@ -1744,23 +1744,34 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
     }
   });
 
-  app.post("/api/subscriptions/activate", requireAuth, async (req, res) => {
+  app.post("/api/subscriptions/activate", async (req, res) => {
     try {
-      const { subscriptionId } = req.body;
+      const { subscriptionId, planId, tier } = req.body;
       const userId = req.user?.id;
 
-      if (!userId) {
-        return res.status(401).json({ success: false, message: 'Authentication required' });
+      console.log(`📦 PayPal subscription activated: ${subscriptionId}, plan: ${planId}, tier: ${tier}`);
+
+      // If user is authenticated, update their tier
+      if (userId) {
+        const result = await activatePayPalSubscription(subscriptionId, userId);
+        
+        if (result.success) {
+          return res.json({ success: true, tier: result.tier });
+        } else {
+          return res.status(400).json({ success: false, message: result.error });
+        }
       }
 
-      // Activate subscription and update user tier
-      const result = await activatePayPalSubscription(subscriptionId, userId);
+      // For unauthenticated users, log the subscription for later association
+      // The PayPal webhook will handle tier activation when user registers/logs in
+      console.log(`⏳ Subscription ${subscriptionId} pending user association`);
       
-      if (result.success) {
-        res.json({ success: true, tier: result.tier });
-      } else {
-        res.status(400).json({ success: false, message: result.error });
-      }
+      res.json({ 
+        success: true, 
+        message: 'Subscription recorded. Please log in or register to activate your tier.',
+        subscriptionId,
+        tier
+      });
     } catch (error) {
       console.error('Subscription activation error:', error);
       res.status(500).json({ success: false, message: 'Failed to activate subscription' });

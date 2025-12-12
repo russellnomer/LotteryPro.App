@@ -1,0 +1,120 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Arial",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "pp-open-regular",
+      "role": "body"
+    },
+    {
+      "family": "pp-open-medium",
+      "role": "body"
+    },
+    {
+      "family": "pp-open-bold",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#001435",
+    "accent": "#0070E0",
+    "background": "#FFFFFF",
+    "textPrimary": "#000000",
+    "link": "#0070E0"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Arial",
+      "heading": "pp-open-bold"
+    },
+    "fontStacks": {
+      "heading": [
+        "pp-open-regular",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "body": [
+        "pp-open-regular",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "pp-open-regular",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "24px",
+      "h2": "24px",
+      "body": "16px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "0px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "0px"
+    },
+    "buttonPrimary": {
+      "background": "#0551B5",
+      "textColor": "#FFFFFF",
+      "borderColor": "#0551B5",
+      "borderRadius": "100px",
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "transparent",
+      "textColor": "#000000",
+      "borderColor": "#000000",
+      "borderRadius": "100px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 2px inset"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.png",
+    "favicon": "https://www.paypalobjects.com/en_US/i/icon/pp_favicon_x.ico",
+    "ogImage": "File saved at: attached_assets/ogImage.png"
+  },
+  "__framework_hints": [],
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 1,
+      "text": "Next",
+      "reasoning": "Button #1 has a vibrant blue background (#0551B5) which is the brand color, and the text 'Next' is action-oriented, making it the primary CTA."
+    },
+    "secondary": {
+      "index": 0,
+      "text": "Sign Up",
+      "reasoning": "Button #0 has a transparent background and is labeled 'Sign Up', which is less prominent compared to the primary button. It is from a different color group, making it suitable as the secondary button."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "professional",
+    "energy": "medium",
+    "targetAudience": "developers and businesses"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  }
+}
