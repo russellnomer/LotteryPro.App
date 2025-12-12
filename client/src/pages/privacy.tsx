@@ -7,11 +7,9 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Link href="/">
-          <a className="inline-flex items-center text-primary hover:text-primary/80 mb-8" data-testid="link-back-home">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </a>
+        <Link href="/" className="inline-flex items-center text-primary hover:text-primary/80 mb-8 block" data-testid="link-back-home">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Home
         </Link>
 
         <Card className="shadow-lg">

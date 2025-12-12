@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Shield } from "lucide-react";
-import StateCombobox from "./StateCombobox";
+import { US_STATES } from "./StateCombobox";
 
 // Helper function to check if age_verified cookie exists
 function hasAgeVerifiedCookie(): boolean {
@@ -103,16 +103,23 @@ export default function AgeGateModal() {
         </p>
         
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+          <label htmlFor="state-select" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
             Select Your State
           </label>
-          <StateCombobox
+          <select
+            id="state-select"
             value={selectedState}
-            onChange={setSelectedState}
-            placeholder="Type to search your state..."
-            returnFormat="name"
-            data-testid="age-gate-state-combobox"
-          />
+            onChange={(e) => setSelectedState(e.target.value)}
+            data-testid="age-gate-state-select"
+            className="w-full h-12 px-3 rounded-md border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-base dark:text-white"
+          >
+            <option value="">Select your state...</option>
+            {US_STATES.map((state) => (
+              <option key={state.abbr} value={state.name}>
+                {state.name} ({state.abbr})
+              </option>
+            ))}
+          </select>
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
         
