@@ -45,6 +45,21 @@ export default function AdminPage() {
     }
   });
 
+  const upgradeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('POST', '/api/admin/update-user-tier', { 
+        email: 'russell@russellnomer.com', 
+        tier: 'premium' 
+      });
+    },
+    onSuccess: () => {
+      alert('Your account has been upgraded to Premium with unlimited access!');
+    },
+    onError: (error: any) => {
+      setError(error.message || "Failed to upgrade account");
+    }
+  });
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate(password);
@@ -121,16 +136,27 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout} 
-          data-testid="button-admin-logout"
-          disabled={logoutMutation.isPending}
-        >
-          {logoutMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Logout"}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="default"
+            onClick={() => upgradeMutation.mutate()}
+            data-testid="button-upgrade-account"
+            disabled={upgradeMutation.isPending}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
+            {upgradeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Upgrade My Account"}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout} 
+            data-testid="button-admin-logout"
+            disabled={logoutMutation.isPending}
+          >
+            {logoutMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Logout"}
+          </Button>
+        </div>
       </div>
       
       <AdminDashboard />

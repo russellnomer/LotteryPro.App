@@ -217,19 +217,27 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         console.log('📊 USAGE TRACKING: Guest user detected, using tracking ID:', usageTrackingId);
       }
       
-      // Check usage limits for all users
-      const usageInfo = await storage.checkUserUsageLimit(usageTrackingId);
+      // Admin bypass - admins have unlimited usage
+      const isAdmin = req.session?.isAdmin === true;
+      if (isAdmin) {
+        console.log('👑 ADMIN BYPASS: Admin user has unlimited access');
+      }
       
-      if (!usageInfo.canUse) {
-        console.log('🚫 USAGE LIMIT: User reached daily limit', usageTrackingId, usageInfo);
-        return res.status(429).json({ 
-          success: false,
-          message: "Daily usage limit reached. Please upgrade your subscription for unlimited access.",
-          usageCount: usageInfo.count,
-          usageLimit: usageInfo.limit,
-          upgradeRequired: true,
-          isGuest
-        });
+      // Check usage limits for non-admin users
+      if (!isAdmin) {
+        const usageInfo = await storage.checkUserUsageLimit(usageTrackingId);
+        
+        if (!usageInfo.canUse) {
+          console.log('🚫 USAGE LIMIT: User reached daily limit', usageTrackingId, usageInfo);
+          return res.status(429).json({ 
+            success: false,
+            message: "Daily usage limit reached. Please upgrade your subscription for unlimited access.",
+            usageCount: usageInfo.count,
+            usageLimit: usageInfo.limit,
+            upgradeRequired: true,
+            isGuest
+          });
+        }
       }
       
       // Increment usage count for all users
