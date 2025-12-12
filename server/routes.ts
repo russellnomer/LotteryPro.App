@@ -1753,7 +1753,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
 
       // If user is authenticated, update their tier
       if (userId) {
-        const result = await activatePayPalSubscription(subscriptionId, userId);
+        const result = await activatePayPalSubscription(subscriptionId, userId, planId);
         
         if (result.success) {
           return res.json({ success: true, tier: result.tier });

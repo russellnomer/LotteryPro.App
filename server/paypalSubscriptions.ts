@@ -1,19 +1,16 @@
 import { storage } from "./storage";
 
-// PayPal subscription plan IDs (these need to be created in PayPal dashboard)
+// PayPal subscription plan IDs (created in PayPal dashboard)
 const PAYPAL_PLANS = {
-  basic: process.env.NODE_ENV === 'production' ? 'P-BASIC-PROD-ID' : 'P-BASIC-TEST-ID',
-  pro: process.env.NODE_ENV === 'production' ? 'P-PRO-PROD-ID' : 'P-PRO-TEST-ID', 
-  premium: process.env.NODE_ENV === 'production' ? 'P-PREMIUM-PROD-ID' : 'P-PREMIUM-TEST-ID'
+  basic: 'P-0CV4171778997622WNE5W4LI',
+  pro: 'P-0P768176DP505422PNE5W52I',
+  premium: 'P-6Y555870RG342905WNE5W6ZA'
 };
 
 const PLAN_TIER_MAPPING = {
-  'P-BASIC-TEST-ID': 'basic',
-  'P-PRO-TEST-ID': 'pro',
-  'P-PREMIUM-TEST-ID': 'premium',
-  'P-BASIC-PROD-ID': 'basic',
-  'P-PRO-PROD-ID': 'pro',
-  'P-PREMIUM-PROD-ID': 'premium'
+  'P-0CV4171778997622WNE5W4LI': 'basic',
+  'P-0P768176DP505422PNE5W52I': 'pro',
+  'P-6Y555870RG342905WNE5W6ZA': 'premium'
 };
 
 export async function createPayPalSubscription(planId: string, userId: string) {
@@ -42,19 +39,20 @@ export async function createPayPalSubscription(planId: string, userId: string) {
   }
 }
 
-export async function activatePayPalSubscription(subscriptionId: string, userId: string) {
+export async function activatePayPalSubscription(subscriptionId: string, userId: string, planId?: string) {
   try {
-    // For testing, we'll simulate activation
-    // In production, this would verify the subscription with PayPal API
+    // Determine tier from PayPal plan ID
+    let tier: 'basic' | 'pro' | 'premium' = 'basic';
     
-    // Determine tier from subscription (for now, default to 'pro')
-    const tier = 'pro'; // In production, get this from PayPal API
+    if (planId) {
+      tier = PLAN_TIER_MAPPING[planId as keyof typeof PLAN_TIER_MAPPING] || 'basic';
+    }
     
     // Update user subscription status
     await storage.updateUserSubscriptionStatus(userId, 'active', subscriptionId);
     await storage.updateUserSubscriptionTier(userId, tier);
     
-    console.log('✅ Educational subscription activated for user:', userId, 'Tier:', tier);
+    console.log('✅ PayPal subscription activated for user:', userId, 'Plan:', planId, 'Tier:', tier);
     
     return {
       success: true,
