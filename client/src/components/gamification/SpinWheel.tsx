@@ -33,8 +33,10 @@ export default function SpinWheel() {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
+  const [currentSpinId, setCurrentSpinId] = useState<number | null>(null);
   const [spinCount, setSpinCount] = useState(0);
   const [spinAnnouncement, setSpinAnnouncement] = useState('');
+  const [claiming, setClaiming] = useState(false);
 
   const { data: spinStatus } = useQuery({
     queryKey: ['/api/spin/status'],
@@ -51,6 +53,7 @@ export default function SpinWheel() {
       
       setSpinning(true);
       setRotation(targetRotation);
+      setCurrentSpinId(data.spinId);
       
       setTimeout(() => {
         setSpinning(false);
@@ -74,6 +77,50 @@ export default function SpinWheel() {
       });
     }
   });
+
+  const claimMutation = useMutation({
+    mutationFn: async (spinId: number) => {
+      const response = await apiRequest('POST', `/api/spin/claim/${spinId}`);
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      setWonPrize(null);
+      setCurrentSpinId(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/spin/status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/spin/prizes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
+      
+      toast({
+        title: '🎁 Prize Claimed!',
+        description: data.message || 'Your prize has been added to your account!',
+        duration: 5000,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: '❌ Claim Failed',
+        description: error.message || 'Could not claim prize',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  const handleClaimPrize = () => {
+    if (wonPrize?.type === 'no_prize') {
+      setWonPrize(null);
+      setCurrentSpinId(null);
+      return;
+    }
+    
+    if (currentSpinId) {
+      setClaiming(true);
+      claimMutation.mutate(currentSpinId, {
+        onSettled: () => setClaiming(false)
+      });
+    } else {
+      setWonPrize(null);
+    }
+  };
 
   const handleSpin = () => {
     const status = spinStatus as any;
@@ -212,9 +259,8 @@ export default function SpinWheel() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setWonPrize(null)}
           >
-            <Card className="p-8 max-w-md text-center" onClick={(e) => e.stopPropagation()}>
+            <Card className="p-8 max-w-md text-center">
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ repeat: Infinity, duration: 0.5 }}
@@ -230,14 +276,24 @@ export default function SpinWheel() {
                 {wonPrize.displayName}
               </p>
               
-              {wonPrize.type !== 'no_prize' && (
+              {wonPrize.type !== 'no_prize' && !claimMutation.isError && (
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Your prize has been added to your account!
+                  Click below to claim your prize!
                 </p>
               )}
               
-              <Button onClick={() => setWonPrize(null)} data-testid="button-close-prize">
-                {wonPrize.type === 'no_prize' ? 'Try Again Tomorrow' : 'Claim Prize'}
+              {claimMutation.isError && (
+                <p className="text-sm text-red-500 mb-4">
+                  Failed to claim prize. Please try again.
+                </p>
+              )}
+              
+              <Button 
+                onClick={handleClaimPrize} 
+                disabled={claiming}
+                data-testid="button-close-prize"
+              >
+                {claiming ? 'Claiming...' : (wonPrize.type === 'no_prize' ? 'Try Again Tomorrow' : (claimMutation.isError ? 'Retry Claim' : 'Claim Prize'))}
               </Button>
             </Card>
           </motion.div>
