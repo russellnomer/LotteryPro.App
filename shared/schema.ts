@@ -70,6 +70,9 @@ export const userAccounts = pgTable("user_accounts", {
   mfaBackupCodes: jsonb("mfa_backup_codes"), // Array of backup codes
   dailyUsageCount: integer("daily_usage_count").notNull().default(0),
   lastUsageReset: timestamp("last_usage_reset").default(sql`now()`),
+  bonusGenerations: integer("bonus_generations").notNull().default(0), // Free picks from spin wheel wins
+  premiumTrialExpires: timestamp("premium_trial_expires"), // Premium trial expiration from spin wheel
+  discountCode: text("discount_code"), // Active discount code from spin wheel
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),

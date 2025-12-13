@@ -1203,6 +1203,155 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
     }
   });
 
+  // Claim a spin prize - apply prize to user account
+  app.post("/api/spin/claim/:spinId", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { dailySpins, userAccounts } = await import('@shared/schema');
+      const { eq, and, sql } = await import('drizzle-orm');
+      
+      const spinId = req.params.spinId;
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      // Find the spin
+      const [spin] = await db.select()
+        .from(dailySpins)
+        .where(eq(dailySpins.id, spinId))
+        .limit(1);
+      
+      if (!spin) {
+        return res.status(404).json({ success: false, message: 'Spin not found' });
+      }
+      
+      // Verify ownership
+      if (userId && spin.userId !== userId) {
+        return res.status(403).json({ success: false, message: 'Not your prize to claim' });
+      }
+      if (!userId && spin.sessionId !== sessionId) {
+        return res.status(403).json({ success: false, message: 'Not your prize to claim' });
+      }
+      
+      // Check if already claimed
+      if (spin.claimed === 1) {
+        return res.status(400).json({ success: false, message: 'Prize already claimed' });
+      }
+      
+      // Check if it's a no_prize
+      if (spin.prizeType === 'no_prize') {
+        return res.status(400).json({ success: false, message: 'No prize to claim' });
+      }
+      
+      // Apply the prize based on type
+      let prizeApplied = '';
+      
+      if (spin.prizeType === 'free_generation' && userId) {
+        const bonusAmount = parseInt(spin.prizeValue || '1');
+        await db.update(userAccounts)
+          .set({
+            bonusGenerations: sql`COALESCE(${userAccounts.bonusGenerations}, 0) + ${bonusAmount}`,
+            updatedAt: new Date()
+          })
+          .where(eq(userAccounts.id, userId));
+        prizeApplied = `${bonusAmount} free pick(s) added to your account!`;
+      } else if (spin.prizeType === 'premium_trial' && userId) {
+        const trialDays = parseInt(spin.prizeValue || '7');
+        const trialExpires = new Date();
+        trialExpires.setDate(trialExpires.getDate() + trialDays);
+        await db.update(userAccounts)
+          .set({
+            premiumTrialExpires: trialExpires,
+            updatedAt: new Date()
+          })
+          .where(eq(userAccounts.id, userId));
+        prizeApplied = `${trialDays}-day premium trial activated!`;
+      } else if (spin.prizeType === 'discount_code' && userId) {
+        await db.update(userAccounts)
+          .set({
+            discountCode: spin.prizeValue,
+            updatedAt: new Date()
+          })
+          .where(eq(userAccounts.id, userId));
+        prizeApplied = `Discount code ${spin.prizeValue} saved to your account!`;
+      } else if (!userId) {
+        // Guest users - just mark as claimed but note they need an account
+        prizeApplied = 'Prize claimed! Create an account to use your rewards.';
+      }
+      
+      // Mark as claimed
+      await db.update(dailySpins)
+        .set({
+          claimed: 1,
+          claimedAt: new Date()
+        })
+        .where(eq(dailySpins.id, spinId));
+      
+      res.json({
+        success: true,
+        message: prizeApplied,
+        prizeType: spin.prizeType,
+        prizeValue: spin.prizeValue
+      });
+    } catch (error: any) {
+      console.error('Claim prize error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Get user's prizes (both claimed and unclaimed)
+  app.get("/api/spin/prizes", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { dailySpins, userAccounts } = await import('@shared/schema');
+      const { eq, desc, and, ne } = await import('drizzle-orm');
+      
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      // Get all user's spins (non-no_prize)
+      const prizes = await db.select()
+        .from(dailySpins)
+        .where(
+          and(
+            userId ? eq(dailySpins.userId, userId) : eq(dailySpins.sessionId, sessionId),
+            ne(dailySpins.prizeType, 'no_prize')
+          )
+        )
+        .orderBy(desc(dailySpins.spunAt))
+        .limit(50);
+      
+      // Get user's current bonus generations and premium trial status
+      let userBonuses = { bonusGenerations: 0, premiumTrialExpires: null, discountCode: null };
+      if (userId) {
+        const [user] = await db.select({
+          bonusGenerations: userAccounts.bonusGenerations,
+          premiumTrialExpires: userAccounts.premiumTrialExpires,
+          discountCode: userAccounts.discountCode
+        })
+        .from(userAccounts)
+        .where(eq(userAccounts.id, userId))
+        .limit(1);
+        if (user) {
+          userBonuses = user as any;
+        }
+      }
+      
+      res.json({
+        success: true,
+        prizes,
+        userBonuses: {
+          bonusGenerations: userBonuses.bonusGenerations || 0,
+          premiumTrialActive: userBonuses.premiumTrialExpires && new Date(userBonuses.premiumTrialExpires) > new Date(),
+          premiumTrialExpires: userBonuses.premiumTrialExpires,
+          discountCode: userBonuses.discountCode
+        }
+      });
+    } catch (error: any) {
+      console.error('Get prizes error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // Get analysis data for a game (with real-time data updates)
   app.get("/api/analysis/:game", async (req, res) => {
     try {
