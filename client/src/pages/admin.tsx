@@ -113,9 +113,9 @@ export default function AdminPage() {
                   disabled={loginMutation.isPending}
                 />
               </div>
-              <Button 
+              <button 
                 type="submit" 
-                className="w-full" 
+                className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 data-testid="button-admin-login"
                 disabled={loginMutation.isPending}
               >
@@ -125,7 +125,7 @@ export default function AdminPage() {
                   <Shield className="w-4 h-4 mr-2" />
                 )}
                 Access Admin Panel
-              </Button>
+              </button>
             </form>
             <div className="mt-4 text-center">
               <Button variant="link" onClick={() => setLocation("/")} className="text-gray-500">
