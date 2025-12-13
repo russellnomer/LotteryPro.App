@@ -36,6 +36,7 @@ import customerDataRoutes from "./routes/customerData";
 import profileSetupRoutes from "./routes/profileSetup";
 import fanContestRoutes from "./routes/fanContest";
 import ascapNetworkingRoutes from "./routes/ascapNetworking";
+import { logAudit, logError, getAuditLogs, getErrorLogs, markErrorResolved } from "./logging";
 import { z } from "zod";
 
 import path from "path";
@@ -1624,6 +1625,110 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
     } catch (error) {
       console.error('Error fetching admin logs:', error);
       res.status(500).json({ message: 'Failed to fetch admin logs' });
+    }
+  });
+
+  // Comprehensive Audit Logs endpoint
+  app.get('/api/admin/audit-logs', requireAdmin, async (req, res) => {
+    try {
+      const { eventType, eventCategory, userId, severity, startDate, endDate, limit, offset } = req.query;
+      
+      const filters: any = {};
+      if (eventType) filters.eventType = eventType as string;
+      if (eventCategory) filters.eventCategory = eventCategory as string;
+      if (userId) filters.userId = userId as string;
+      if (severity) filters.severity = severity as string;
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      if (limit) filters.limit = parseInt(limit as string, 10);
+      if (offset) filters.offset = parseInt(offset as string, 10);
+      
+      const logs = await getAuditLogs(filters);
+      
+      logAudit('admin_access', 'admin', req, { action: 'view_audit_logs', filters });
+      
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      res.status(500).json({ message: 'Failed to fetch audit logs' });
+    }
+  });
+
+  // Error Logs endpoint
+  app.get('/api/admin/error-logs', requireAdmin, async (req, res) => {
+    try {
+      const { errorType, resolved, userId, startDate, endDate, limit, offset } = req.query;
+      
+      const filters: any = {};
+      if (errorType) filters.errorType = errorType as string;
+      if (resolved !== undefined) filters.resolved = resolved === 'true';
+      if (userId) filters.userId = userId as string;
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      if (limit) filters.limit = parseInt(limit as string, 10);
+      if (offset) filters.offset = parseInt(offset as string, 10);
+      
+      const logs = await getErrorLogs(filters);
+      
+      logAudit('admin_access', 'admin', req, { action: 'view_error_logs', filters });
+      
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching error logs:', error);
+      res.status(500).json({ message: 'Failed to fetch error logs' });
+    }
+  });
+
+  // Mark error as resolved endpoint
+  app.patch('/api/admin/error-logs/:id/resolve', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const resolvedBy = req.body.resolvedBy || 'admin';
+      
+      const success = await markErrorResolved(id, resolvedBy);
+      
+      if (success) {
+        logAudit('admin_access', 'admin', req, { action: 'resolve_error', errorId: id, resolvedBy });
+        res.json({ success: true, message: 'Error marked as resolved' });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to mark error as resolved' });
+      }
+    } catch (error) {
+      console.error('Error resolving error log:', error);
+      res.status(500).json({ message: 'Failed to resolve error' });
+    }
+  });
+
+  // Frontend error reporting endpoint (public - no auth required)
+  app.post('/api/errors/frontend', async (req, res) => {
+    try {
+      const { errorMessage, stackTrace, componentStack, url, userAgent, timestamp } = req.body;
+      
+      if (!errorMessage) {
+        return res.status(400).json({ success: false, message: 'Error message is required' });
+      }
+      
+      const errorId = await logError(
+        'frontend_error',
+        new Error(errorMessage),
+        req,
+        {
+          stackTrace,
+          componentStack,
+          url,
+          frontendUserAgent: userAgent,
+          frontendTimestamp: timestamp,
+        }
+      );
+      
+      res.json({ 
+        success: true, 
+        message: 'Error reported successfully',
+        errorId 
+      });
+    } catch (error) {
+      console.error('Error logging frontend error:', error);
+      res.status(500).json({ success: false, message: 'Failed to report error' });
     }
   });
 

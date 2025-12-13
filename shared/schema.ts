@@ -114,6 +114,43 @@ export const adminLogs = pgTable("admin_logs", {
   timestamp: timestamp("timestamp").default(sql`now()`),
 });
 
+// Comprehensive Audit Logs for business continuity
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventType: text("event_type").notNull(), // 'login', 'logout', 'spin', 'claim_prize', 'payment', 'tier_change', 'admin_access', 'security_alert'
+  eventCategory: text("event_category").notNull(), // 'auth', 'transaction', 'admin', 'security', 'user_action'
+  userId: varchar("user_id").references(() => userAccounts.id),
+  sessionId: text("session_id"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  requestPath: text("request_path"),
+  requestMethod: text("request_method"),
+  statusCode: integer("status_code"),
+  details: jsonb("details"), // Additional context as JSON
+  severity: text("severity").notNull().default("info"), // 'info', 'warning', 'error', 'critical'
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// Error Logs for debugging and investigation
+export const errorLogs = pgTable("error_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  errorType: text("error_type").notNull(), // 'unhandled_exception', 'api_error', 'validation_error', 'database_error', 'frontend_error'
+  errorMessage: text("error_message").notNull(),
+  stackTrace: text("stack_trace"),
+  userId: varchar("user_id").references(() => userAccounts.id),
+  sessionId: text("session_id"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  requestPath: text("request_path"),
+  requestMethod: text("request_method"),
+  requestBody: jsonb("request_body"),
+  context: jsonb("context"), // Additional debugging context
+  resolved: integer("resolved").notNull().default(0), // 0 = unresolved, 1 = resolved
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: varchar("resolved_by"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 // Music content integration for Russell Nomer Music branding
 export const musicContent = pgTable("music_content", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -286,6 +323,18 @@ export const insertAdminLogSchema = createInsertSchema(adminLogs).omit({
   timestamp: true,
 });
 
+// Audit and Error Log Schemas
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertErrorLogSchema = createInsertSchema(errorLogs).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+
 // Revenue Generation Schemas
 export const insertAffiliateTrackingSchema = createInsertSchema(affiliateTracking).omit({
   id: true,
@@ -322,6 +371,10 @@ export type InsertVipCode = z.infer<typeof insertVipCodeSchema>;
 export type VipCode = typeof vipCodes.$inferSelect;
 export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
 export type AdminLog = typeof adminLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertErrorLog = z.infer<typeof insertErrorLogSchema>;
+export type ErrorLog = typeof errorLogs.$inferSelect;
 export type InsertMusicContent = z.infer<typeof insertMusicContentSchema>;
 export type MusicContent = typeof musicContent.$inferSelect;
 export type InsertBookRecommendation = z.infer<typeof insertBookRecommendationSchema>;
