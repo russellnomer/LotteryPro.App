@@ -113,7 +113,13 @@ export default function AdminPage() {
                 type="submit" 
                 className="w-full" 
                 data-testid="button-admin-login"
-                disabled={loginMutation.isPending}
+                disabled={loginMutation.isPending || !password}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (password && !loginMutation.isPending) {
+                    loginMutation.mutate(password);
+                  }
+                }}
               >
                 {loginMutation.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
