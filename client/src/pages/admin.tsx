@@ -62,6 +62,10 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!password.trim()) {
+      setError("Please enter the admin password");
+      return;
+    }
     loginMutation.mutate(password);
   };
 
@@ -113,13 +117,7 @@ export default function AdminPage() {
                 type="submit" 
                 className="w-full" 
                 data-testid="button-admin-login"
-                disabled={loginMutation.isPending || !password}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (password && !loginMutation.isPending) {
-                    loginMutation.mutate(password);
-                  }
-                }}
+                disabled={loginMutation.isPending}
               >
                 {loginMutation.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
