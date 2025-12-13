@@ -114,10 +114,23 @@ export default function AdminPage() {
                 />
               </div>
               <button 
-                type="submit" 
+                type="button"
                 className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 data-testid="button-admin-login"
                 disabled={loginMutation.isPending}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (password.trim() && !loginMutation.isPending) {
+                    loginMutation.mutate(password);
+                  }
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (password.trim() && !loginMutation.isPending) {
+                    loginMutation.mutate(password);
+                  }
+                }}
               >
                 {loginMutation.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
