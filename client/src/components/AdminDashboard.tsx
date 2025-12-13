@@ -413,7 +413,7 @@ export default function AdminDashboard() {
                 <div>
                   <Label>Email Address</Label>
                   <Input
-                    type="email"
+                    type="text"
                     placeholder="user@example.com"
                     value={autoUpgradeEmail}
                     onChange={(e) => setAutoUpgradeEmail(e.target.value)}
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
                       <Label htmlFor="createEmail">Email Address</Label>
                       <Input
                         id="createEmail"
-                        type="email"
+                        type="text"
                         value={createUserForm.email}
                         onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
                         placeholder="user@example.com"
@@ -634,7 +634,7 @@ export default function AdminDashboard() {
                     <Label htmlFor="targetEmail">Target User Email</Label>
                     <Input
                       id="targetEmail"
-                      type="email"
+                      type="text"
                       value={vipForm.targetEmail}
                       onChange={(e) => setVipForm({ ...vipForm, targetEmail: e.target.value })}
                       placeholder="user@example.com"
