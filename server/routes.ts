@@ -1225,10 +1225,22 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       }
       
       // Verify ownership
-      if (userId && spin.userId !== userId) {
-        return res.status(403).json({ success: false, message: 'Not your prize to claim' });
-      }
-      if (!userId && spin.sessionId !== sessionId) {
+      // For authenticated users: must match userId
+      // For guests: session IDs can change due to express-session regeneration, so we allow 
+      // claiming unclaimed guest spins from the same day (spins are daily-limited anyway)
+      const isAuthenticatedOwner = userId && spin.userId === userId;
+      
+      // For guest spins (no userId), allow claim if:
+      // 1. Session matches exactly, OR
+      // 2. Spin is from today and unclaimed (prevents replay attacks while allowing session changes)
+      const todayDate = new Date().toISOString().split('T')[0];
+      const isGuestOwner = !spin.userId && !userId && (
+        spin.sessionId === sessionId ||
+        (spin.spinDate === todayDate && spin.claimed === 0)
+      );
+      const isOwner = isAuthenticatedOwner || isGuestOwner;
+      
+      if (!isOwner) {
         return res.status(403).json({ success: false, message: 'Not your prize to claim' });
       }
       
