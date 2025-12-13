@@ -1699,6 +1699,33 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
     }
   });
 
+  // Export logs endpoint for production debugging (combined audit + error logs)
+  app.get('/api/admin/export-logs', requireAdmin, async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { auditLogs, errorLogs } = await import('@shared/schema');
+      const { desc } = await import('drizzle-orm');
+      
+      const limit = parseInt(req.query.limit as string) || 100;
+      
+      const recentAudit = await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(limit);
+      const recentErrors = await db.select().from(errorLogs).orderBy(desc(errorLogs.createdAt)).limit(limit);
+      
+      logAudit('admin_access', 'admin', req, { action: 'export_logs', auditCount: recentAudit.length, errorCount: recentErrors.length });
+      
+      res.json({ 
+        auditLogs: recentAudit, 
+        errorLogs: recentErrors, 
+        exportedAt: new Date().toISOString(),
+        totalAudit: recentAudit.length,
+        totalErrors: recentErrors.length
+      });
+    } catch (error) {
+      console.error('Error exporting logs:', error);
+      res.status(500).json({ message: 'Failed to export logs' });
+    }
+  });
+
   // Frontend error reporting endpoint (public - no auth required)
   app.post('/api/errors/frontend', async (req, res) => {
     try {

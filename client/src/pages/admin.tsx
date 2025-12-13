@@ -60,13 +60,36 @@ export default function AdminPage() {
     }
   });
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('[Admin] handleLogin called, password length:', password.length);
+    
     if (!password.trim()) {
       setError("Please enter the admin password");
       return;
     }
-    loginMutation.mutate(password);
+    
+    if (loginMutation.isPending) {
+      console.log('[Admin] Login already pending, skipping');
+      return;
+    }
+    
+    try {
+      console.log('[Admin] Calling loginMutation.mutate');
+      setError("");
+      loginMutation.mutate(password);
+    } catch (err) {
+      console.error('[Admin] Error calling mutation:', err);
+      setError("Failed to submit login request");
+    }
+  };
+  
+  const handleDirectLogin = () => {
+    console.log('[Admin] Direct button click handler');
+    handleLogin();
   };
 
   const handleLogout = () => {
@@ -113,22 +136,22 @@ export default function AdminPage() {
                   disabled={loginMutation.isPending}
                 />
               </div>
-              <button 
-                type="button"
-                className="w-full inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              <Button 
+                type="submit"
+                className="w-full"
                 data-testid="button-admin-login"
                 disabled={loginMutation.isPending}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={(e) => {
+                  console.log('[Admin] Button onClick fired');
                   if (password.trim() && !loginMutation.isPending) {
-                    loginMutation.mutate(password);
+                    handleDirectLogin();
                   }
                 }}
-                onClick={(e) => {
-                  e.preventDefault();
+                onTouchEnd={(e) => {
+                  console.log('[Admin] Button onTouchEnd fired (iOS)');
                   if (password.trim() && !loginMutation.isPending) {
-                    loginMutation.mutate(password);
+                    e.preventDefault();
+                    handleDirectLogin();
                   }
                 }}
               >
@@ -138,7 +161,7 @@ export default function AdminPage() {
                   <Shield className="w-4 h-4 mr-2" />
                 )}
                 Access Admin Panel
-              </button>
+              </Button>
             </form>
             <div className="mt-4 text-center">
               <Button variant="link" onClick={() => setLocation("/")} className="text-gray-500">
