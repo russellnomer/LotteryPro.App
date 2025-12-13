@@ -1,8 +1,17 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Home, 
   Music, 
@@ -12,11 +21,19 @@ import {
   Shield, 
   Users, 
   Share2,
-  Settings
+  Settings,
+  Lock,
+  Loader2
 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Navigation() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const { toast } = useToast();
   
   const { data: sessionData } = useQuery<{ isAdmin: boolean }>({
     queryKey: ['/api/admin/session'],
@@ -25,6 +42,42 @@ export default function Navigation() {
   });
   
   const isAdminAuthenticated = sessionData?.isAdmin === true;
+
+  const loginMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const response = await apiRequest('POST', '/api/admin/login', { password });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/session'] });
+      setAdminDialogOpen(false);
+      setAdminPassword("");
+      setLoginError("");
+      toast({
+        title: "Admin Access Granted",
+        description: "Welcome to the admin dashboard!",
+      });
+      setLocation("/admin");
+    },
+    onError: (error: any) => {
+      setLoginError(error.message || "Invalid password");
+      setAdminPassword("");
+    }
+  });
+
+  const handleAdminLogin = () => {
+    if (!adminPassword.trim()) {
+      setLoginError("Please enter the admin password");
+      return;
+    }
+    loginMutation.mutate(adminPassword);
+  };
+
+  const openAdminDialog = () => {
+    setLoginError("");
+    setAdminPassword("");
+    setAdminDialogOpen(true);
+  };
 
   const navItems = [
     { path: "/home", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },
@@ -82,48 +135,72 @@ export default function Navigation() {
               );
             })}
 
-            {/* Admin Section - Only show when authenticated */}
-            {isAdminAuthenticated && (
-              <>
-                <Separator orientation="vertical" className="h-8 bg-white/20" />
-                {adminItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location === item.path;
-                  
-                  return (
-                    <Link href={item.path} key={item.path}>
-                      <Button
-                        variant={isActive ? "destructive" : "ghost"}
-                        size="sm"
-                        className={`flex items-center space-x-2 ${
-                          isActive 
-                            ? "bg-red-600 text-white" 
-                            : "text-red-200 hover:text-white hover:bg-red-600/20 border border-red-400/30"
-                        }`}
-                      >
-                        <Icon size={16} />
-                        <span className="hidden lg:inline">🔑 Admin</span>
-                        <Badge variant="outline" className="ml-1 text-xs border-red-300 text-red-200">
-                          Russell
-                        </Badge>
-                      </Button>
-                    </Link>
-                  );
-                })}
-              </>
+            {/* Admin Section - Always visible */}
+            <Separator orientation="vertical" className="h-8 bg-white/20" />
+            {isAdminAuthenticated ? (
+              <Link href="/admin">
+                <Button
+                  variant={location === "/admin" ? "destructive" : "ghost"}
+                  size="sm"
+                  className={`flex items-center space-x-2 ${
+                    location === "/admin" 
+                      ? "bg-red-600 text-white" 
+                      : "text-red-200 hover:text-white hover:bg-red-600/20 border border-red-400/30"
+                  }`}
+                  data-testid="nav-admin-link"
+                >
+                  <Settings size={16} />
+                  <span className="hidden lg:inline">🔑 Admin</span>
+                  <Badge variant="outline" className="ml-1 text-xs border-red-300 text-red-200">
+                    Russell
+                  </Badge>
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2 text-amber-200 hover:text-white hover:bg-amber-600/20 border border-amber-400/30"
+                data-testid="nav-admin-login-button"
+                onClick={openAdminDialog}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openAdminDialog();
+                }}
+              >
+                <Lock size={16} />
+                <span className="hidden lg:inline">Admin</span>
+              </Button>
             )}
           </div>
 
-          {/* Mobile Menu Button - Only show admin when authenticated */}
-          {isAdminAuthenticated && (
-            <div className="md:hidden">
+          {/* Mobile Admin Button - Always visible */}
+          <div className="md:hidden">
+            {isAdminAuthenticated ? (
               <Link href="/admin">
-                <Button variant="outline" size="sm" className="border-red-400 text-red-200 hover:bg-red-600">
+                <Button variant="outline" size="sm" className="border-red-400 text-red-200 hover:bg-red-600" data-testid="mobile-admin-link">
                   🔑 Admin
                 </Button>
               </Link>
-            </div>
-          )}
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-amber-400 text-amber-200 hover:bg-amber-600"
+                data-testid="mobile-admin-login-button"
+                onClick={openAdminDialog}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openAdminDialog();
+                }}
+              >
+                <Lock size={14} className="mr-1" />
+                Admin
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -153,6 +230,67 @@ export default function Navigation() {
           </div>
         </div>
       </div>
+
+      {/* Admin Login Dialog */}
+      <Dialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-amber-600" />
+              Admin Access
+            </DialogTitle>
+            <DialogDescription>
+              Enter the admin password to access the control panel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {loginError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {loginError}
+              </div>
+            )}
+            <Input
+              type="password"
+              placeholder="Enter admin password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAdminLogin();
+                }
+              }}
+              className="text-center text-lg"
+              data-testid="input-admin-dialog-password"
+              disabled={loginMutation.isPending}
+              autoFocus
+            />
+            <button
+              type="button"
+              className="w-full inline-flex items-center justify-center rounded-md bg-amber-600 px-4 py-3 text-sm font-medium text-white shadow hover:bg-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:pointer-events-none disabled:opacity-50"
+              data-testid="button-admin-dialog-submit"
+              disabled={loginMutation.isPending}
+              onClick={handleAdminLogin}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAdminLogin();
+              }}
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  <Shield className="w-4 h-4 mr-2" />
+                  Access Admin Panel
+                </>
+              )}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }
