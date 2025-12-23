@@ -18,7 +18,8 @@ const PROHIBITED_STATES = [
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [authStep, setAuthStep] = useState<'login' | 'register' | 'mfa-setup' | 'mfa-verify'>('login');
+  const [authStep, setAuthStep] = useState<'login' | 'register' | 'mfa-setup' | 'mfa-verify' | 'forgot-password' | 'reset-password'>('login');
+  const [resetToken, setResetToken] = useState('');
   const [ageVerified, setAgeVerified] = useState(false);
   const [stateConfirmed, setStateConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -47,6 +48,10 @@ export default function AuthPage() {
         await handleMfaSetup();
       } else if (authStep === 'mfa-verify') {
         await handleMfaVerify();
+      } else if (authStep === 'forgot-password') {
+        await handleForgotPassword();
+      } else if (authStep === 'reset-password') {
+        await handleResetPassword();
       }
     } catch (error: any) {
       setErrors([error.message || 'An error occurred']);
@@ -147,6 +152,51 @@ export default function AuthPage() {
       }
       window.location.href = '/';
     }
+  };
+
+  const handleForgotPassword = async () => {
+    const response = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: formData.email })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+
+    toast({
+      title: "Check Your Email",
+      description: "If an account exists with this email, you'll receive password reset instructions."
+    });
+    
+    // For development: if token is returned, show reset form immediately
+    if (data.resetToken) {
+      setResetToken(data.resetToken);
+      setAuthStep('reset-password');
+    } else {
+      setAuthStep('login');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        token: resetToken,
+        newPassword: formData.password 
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+
+    toast({
+      title: "Password Reset Successful",
+      description: "You can now sign in with your new password."
+    });
+    setAuthStep('login');
+    setFormData(prev => ({ ...prev, password: '' }));
   };
 
   const renderMFAEducation = () => (
@@ -309,6 +359,101 @@ export default function AuthPage() {
           <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
+
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setAuthStep('forgot-password')}
+              className="text-sm text-blue-600 hover:underline"
+              data-testid="link-forgot-password"
+            >
+              Forgot your password?
+            </button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+
+  const renderForgotPasswordForm = () => (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Reset Password</CardTitle>
+        <CardDescription>
+          Enter your email to receive a password reset link
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="resetEmail">Email</Label>
+            <Input
+              id="resetEmail"
+              type="email"
+              required
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              data-testid="input-reset-email"
+            />
+          </div>
+
+          <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-send-reset">
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
+          </Button>
+
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setAuthStep('login')}
+              className="text-sm text-gray-600 hover:underline"
+            >
+              Back to Sign In
+            </button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+
+  const renderResetPasswordForm = () => (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Set New Password</CardTitle>
+        <CardDescription>
+          Enter your new password below
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">New Password</Label>
+            <div className="relative">
+              <Input
+                id="newPassword"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={8}
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                data-testid="input-new-password"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500">Password must be at least 8 characters</p>
+          </div>
+
+          <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-reset-password">
+            {isLoading ? 'Resetting...' : 'Reset Password'}
+          </Button>
         </form>
       </CardContent>
     </Card>
@@ -453,6 +598,10 @@ export default function AuthPage() {
 
         {authStep === 'mfa-setup' ? (
           renderMFASetup()
+        ) : authStep === 'forgot-password' ? (
+          renderForgotPasswordForm()
+        ) : authStep === 'reset-password' ? (
+          renderResetPasswordForm()
         ) : (
           <Tabs value={authStep === 'mfa-verify' ? 'login' : authStep} onValueChange={(value) => {
             if (value !== 'mfa-verify') {

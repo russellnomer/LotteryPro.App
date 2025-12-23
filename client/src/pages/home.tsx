@@ -25,6 +25,7 @@ const RussellBiography = lazy(() => import("@/components/RussellBiography"));
 const RussellMusicPlayer = lazy(() => import("@/components/RussellMusicPlayer"));
 const ProfileSetup = lazy(() => import("@/components/ProfileSetup"));
 const SpinWheel = lazy(() => import("@/components/gamification/SpinWheel"));
+const PostGenerationModal = lazy(() => import("@/components/PostGenerationModal"));
 import SystemStatusIndicator from "@/components/SystemStatusIndicator";
 import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign } from "lucide-react";
 
@@ -40,6 +41,8 @@ export default function Home() {
   const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
   const [userEmail, setUserEmail] = useState<string>(""); // Empty by default - user must authenticate
   const [showFloatingJackpocket, setShowFloatingJackpocket] = useState(false);
+  const [showPostGenModal, setShowPostGenModal] = useState(false);
+  const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
 
   // Show floating Jackpocket banner after 10 seconds
   useEffect(() => {
@@ -100,6 +103,12 @@ export default function Home() {
         title: "Numbers Generated!",
         description: `Generated ${GAME_CONFIG[selectedGame].name} numbers using ${ANALYSIS_METHODS[selectedMethod as keyof typeof ANALYSIS_METHODS].name} method.`
       });
+      // Show engagement modal after first generation for non-authenticated users
+      if (!hasGeneratedOnce && !userEmail) {
+        setHasGeneratedOnce(true);
+        // Delay modal slightly so user can see their numbers first
+        setTimeout(() => setShowPostGenModal(true), 2000);
+      }
     },
     onError: (error: any) => {
       toast({
@@ -171,57 +180,13 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Russell Nomer Branding Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold mb-2">✨ Russell Nomer's Numerology & Runes Randomizer</h2>
-            <p className="text-purple-100 text-lg">
-              Sprinkle some mathematical fairy dust on your lottery dreams (just for fun!)
-            </p>
-            <div className="mt-4 flex justify-center gap-4">
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                <Target className="h-4 w-4 mr-2" />
-                Number Magic
-              </Badge>
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Crystal Ball Data
-              </Badge>
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                <Star className="h-4 w-4 mr-2" />
-                Fortune Cookie Stats
-              </Badge>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <Card className="bg-white/10 border-white/20 text-white">
-                <CardHeader>
-                  <CardTitle className="text-white">Quick Access</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    className="w-full bg-white text-purple-600 hover:bg-gray-100"
-                    onClick={() => window.location.href = '/music'}
-                  >
-                    <Music className="h-4 w-4 mr-2" />
-                    Russell's Music
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="lg:col-span-1">
-              <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>}>
-                <BookRecommendations compact={true} />
-              </Suspense>
-            </div>
-            <div className="lg:col-span-1">
-              <Suspense fallback={<div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>}>
-                <VipCodeManager userEmail={userEmail} />
-              </Suspense>
-            </div>
-          </div>
+      {/* Hero Section - Clean and Focused */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">🎱 Get Your Lucky Numbers Now!</h2>
+          <p className="text-purple-100">
+            Choose your game, pick a method, and generate your numbers in seconds
+          </p>
         </div>
       </div>
 
@@ -962,6 +927,17 @@ export default function Home() {
       {showFloatingJackpocket && (
         <JackpocketBanner variant="floating" onDismiss={dismissFloatingBanner} />
       )}
+
+      {/* Post-Generation Engagement Modal */}
+      <Suspense fallback={null}>
+        <PostGenerationModal
+          open={showPostGenModal}
+          onOpenChange={setShowPostGenModal}
+          generatedNumbers={generatedNumbers?.mainNumbers}
+          bonusNumber={generatedNumbers?.bonusNumber}
+          gameName={SHARED_GAME_CONFIG[selectedGame]?.name}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -88,6 +88,7 @@ export interface IStorage {
   updateUserMFASecret(userId: string, secret: string): Promise<void>;
   enableUserMFA(userId: string, backupCodes: string[]): Promise<void>;
   updateUserLastLogin(userId: string): Promise<void>;
+  updateUserPassword(userId: string, passwordHash: string): Promise<void>;
   
   // Session management  
   createUserSession(session: InsertUserSession): Promise<UserSession>;
@@ -318,6 +319,10 @@ export class MemStorage implements IStorage {
   }
 
   async updateUserLastLogin(userId: string): Promise<void> {
+    // No-op for memory storage
+  }
+
+  async updateUserPassword(userId: string, passwordHash: string): Promise<void> {
     // No-op for memory storage
   }
 
@@ -752,6 +757,12 @@ export class DatabaseStorage implements IStorage {
   async updateUserLastLogin(userId: string): Promise<void> {
     await db.update(userAccounts)
       .set({ lastLogin: new Date() })
+      .where(eq(userAccounts.id, userId));
+  }
+
+  async updateUserPassword(userId: string, passwordHash: string): Promise<void> {
+    await db.update(userAccounts)
+      .set({ passwordHash, updatedAt: new Date() })
       .where(eq(userAccounts.id, userId));
   }
 

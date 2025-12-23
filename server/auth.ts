@@ -1,4 +1,8 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
+
+// In-memory password reset tokens (for development - in production, use database)
+const passwordResetTokens = new Map<string, { email: string; expiresAt: Date }>();
 
 // Extend Express Request interface
 declare global {
@@ -365,6 +369,107 @@ export function requireTier(minTier: 'basic' | 'pro' | 'premium') {
 export const requireBasic = requireTier('basic');
 export const requirePro = requireTier('pro');
 export const requirePremium = requireTier('premium');
+
+// Password Reset Functions
+export async function forgotPassword(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if user exists (but don't reveal this to the user for security)
+    const user = await storage.getUserByEmail(email);
+    
+    // Generate a secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    
+    if (user) {
+      // Store the token
+      passwordResetTokens.set(resetToken, { email, expiresAt });
+      
+      // Clean up expired tokens
+      Array.from(passwordResetTokens.entries()).forEach(([token, data]) => {
+        if (data.expiresAt < new Date()) {
+          passwordResetTokens.delete(token);
+        }
+      });
+      
+      // In production, send email with reset link
+      // For development, return the token directly so you can reset immediately
+      console.log(`Password reset requested for ${email}. Token: ${resetToken}`);
+      
+      return res.json({ 
+        success: true, 
+        message: 'If an account exists with this email, you will receive reset instructions.',
+        // Development only - remove in production
+        resetToken: resetToken
+      });
+    }
+    
+    // Always return success for security (don't reveal if email exists)
+    res.json({ 
+      success: true, 
+      message: 'If an account exists with this email, you will receive reset instructions.'
+    });
+  } catch (error: any) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Look up the token
+    const tokenData = passwordResetTokens.get(token);
+    
+    if (!tokenData) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    if (tokenData.expiresAt < new Date()) {
+      passwordResetTokens.delete(token);
+      return res.status(400).json({ error: 'Reset token has expired' });
+    }
+
+    // Get the user
+    const user = await storage.getUserByEmail(tokenData.email);
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+
+    // Hash the new password
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    
+    // Update the password
+    await storage.updateUserPassword(user.id, passwordHash);
+    
+    // Delete the used token
+    passwordResetTokens.delete(token);
+
+    console.log(`Password reset successful for ${tokenData.email}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Password has been reset successfully' 
+    });
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+}
 
 // Admin middleware - uses simple session-based authentication
 export async function requireAdmin(req: Request, res: Response, next: any) {

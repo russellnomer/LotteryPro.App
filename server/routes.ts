@@ -7,7 +7,7 @@ import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/sch
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
-import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, requireAdmin, requireBasic, requirePro, requirePremium } from "./auth";
+import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword } from "./auth";
 import { 
   createPayPalSubscription, 
   activatePayPalSubscription,
@@ -2281,6 +2281,8 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   app.post("/api/auth/logout", logout);
   app.post("/api/auth/mfa/setup", authRateLimit, setupMFA);
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
+  app.post("/api/auth/forgot-password", authRateLimit, forgotPassword);
+  app.post("/api/auth/reset-password", authRateLimit, resetPassword);
 
   // VIP Code Management Routes moved to admin endpoints above
 
