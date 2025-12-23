@@ -5,7 +5,6 @@ declare global {
   namespace Express {
     interface Request {
       user?: any;
-      session?: any;
     }
   }
 }
@@ -367,38 +366,28 @@ export const requireBasic = requireTier('basic');
 export const requirePro = requireTier('pro');
 export const requirePremium = requireTier('premium');
 
-// Admin middleware - requires admin role
+// Admin middleware - uses simple session-based authentication
 export async function requireAdmin(req: Request, res: Response, next: any) {
   try {
+    // Check session-based admin login (from /api/admin/login)
+    if (req.session?.isAdmin) {
+      return next();
+    }
+
+    // Fallback: Check Bearer token for API access
     const sessionToken = req.headers.authorization?.replace('Bearer ', '');
-    if (!sessionToken) {
-      return res.status(401).json({ error: 'Authentication required' });
+    if (sessionToken) {
+      const session = await storage.getUserSession(sessionToken);
+      if (session && session.expiresAt >= new Date()) {
+        const user = await storage.getUserById(session.userId);
+        if (user && (user.subscriptionTier === 'admin' || user.email === 'russell@russellnomer.com')) {
+          req.user = user;
+          return next();
+        }
+      }
     }
 
-    const session = await storage.getUserSession(sessionToken);
-    if (!session || session.expiresAt < new Date()) {
-      return res.status(401).json({ error: 'Session expired' });
-    }
-
-    const user = await storage.getUserById(session.userId);
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    if (!session.mfaVerified) {
-      return res.status(401).json({ error: 'MFA verification required' });
-    }
-
-    // Check for admin role (stored in subscriptionTier as 'admin' or a specific admin flag)
-    const isAdmin = user.subscriptionTier === 'admin' || user.email === 'admin@lotterypro.com';
-    
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    req.user = user;
-    req.session = session;
-    next();
+    return res.status(401).json({ error: 'Admin authentication required' });
   } catch (error) {
     res.status(500).json({ error: 'Authorization error' });
   }
