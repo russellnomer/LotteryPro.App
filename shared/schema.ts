@@ -62,7 +62,7 @@ export const userAccounts = pgTable("user_accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  subscriptionTier: text("subscription_tier").notNull().default("free"), // 'free', 'basic', 'pro', 'premium', 'unlimited'
+  subscriptionTier: text("subscription_tier").notNull().default("free"), // 'free', 'basic', 'pro', 'premium', 'founder', 'lifetime', 'unlimited'
   subscriptionStatus: text("subscription_status").notNull().default("active"), // 'active', 'cancelled', 'expired'
   paypalSubscriptionId: text("paypal_subscription_id"),
   mfaSecret: text("mfa_secret"), // Base32 encoded secret for TOTP

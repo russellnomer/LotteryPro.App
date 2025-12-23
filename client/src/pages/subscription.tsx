@@ -4,9 +4,54 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2 } from "lucide-react";
+import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2, Crown, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+
+const VIP_TIERS = ['premium', 'founder', 'lifetime'] as const;
+type VipTier = typeof VIP_TIERS[number];
+
+function isVipTier(tier: string | undefined | null): tier is VipTier {
+  return VIP_TIERS.includes(tier as VipTier);
+}
+
+function getTierDisplayName(tier: string): string {
+  const names: Record<string, string> = {
+    premium: 'Premium',
+    founder: 'Founder',
+    lifetime: 'Lifetime'
+  };
+  return names[tier] || tier;
+}
+
+function getTierBenefits(tier: string): string[] {
+  const baseBenefits = [
+    "Unlimited number generation",
+    "100% ad-free experience",
+    "Priority support",
+    "All premium features unlocked"
+  ];
+  
+  if (tier === 'founder') {
+    return [
+      ...baseBenefits,
+      "Exclusive founder recognition",
+      "Early access to all new features",
+      "Direct feedback channel with developers"
+    ];
+  }
+  
+  if (tier === 'lifetime') {
+    return [
+      ...baseBenefits,
+      "Lifetime access - never pay again",
+      "All future features included"
+    ];
+  }
+  
+  return baseBenefits;
+}
 
 const PAYPAL_CLIENT_ID = "AeNTw1gkaHTlOHooUC_LutCwO5BXmvIClbARB3cFsJVMcXsCPcL7H2lGxnq_8b_J-lIkKsCXs-EylDy7";
 const JACKPOCKET_REFERRAL_LINK = "https://lottery.jackpocket.com/r/lotto/russellnomer/LOTTERY/US-NY";
@@ -157,6 +202,10 @@ export default function SubscriptionPage() {
   const [stateConfirmed, setStateConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [paypalLoaded, setPaypalLoaded] = useState(false);
+  
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const userTier = (user as any)?.subscriptionTier;
+  const isVipUser = isAuthenticated && isVipTier(userTier);
 
   const canPurchase = ageVerified && stateConfirmed && termsAccepted;
 
@@ -252,6 +301,80 @@ export default function SubscriptionPage() {
       paypalPlanId: PAYPAL_PLAN_IDS.premium
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (isVipUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-purple-900 p-4">
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-2 border-purple-500 shadow-xl" data-testid="card-vip-status">
+            <CardHeader className="text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Crown className="h-10 w-10 text-yellow-300" />
+                <Sparkles className="h-6 w-6 text-yellow-200" />
+              </div>
+              <CardTitle className="text-3xl font-bold" data-testid="text-vip-title">
+                You're Already a VIP Member!
+              </CardTitle>
+              <CardDescription className="text-purple-100 text-lg">
+                Thank you for being part of our exclusive {getTierDisplayName(userTier)} tier
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
+                <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-lg px-6 py-2" data-testid="badge-tier">
+                  {getTierDisplayName(userTier)} Member
+                </Badge>
+              </div>
+              
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4 text-center text-gray-900 dark:text-white">
+                  Your VIP Benefits
+                </h3>
+                <ul className="space-y-3 max-w-md mx-auto">
+                  {getTierBenefits(userTier).map((benefit, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <CheckCircle className="h-6 w-6 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="text-center space-y-4">
+                <p className="text-gray-600 dark:text-gray-400">
+                  Enjoy your exclusive access to all LotteryPro features!
+                </p>
+                <Button 
+                  onClick={() => window.location.href = "/"}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  data-testid="button-go-generate"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Start Generating Numbers
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Alert className="max-w-2xl mx-auto mt-8 bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm">
+              <strong>Educational Entertainment Only:</strong> LotteryPro is for educational and entertainment purposes only. We make no claims about improving your odds of winning. Past number patterns do not predict future results. Play responsibly.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
