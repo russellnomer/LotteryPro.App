@@ -345,6 +345,23 @@ export default function SpinWheel() {
                 >
                   {claiming ? 'Claiming...' : (wonPrize.type === 'no_prize' ? 'Try Again Tomorrow' : (claimMutation.isError ? 'Retry Claim' : 'Claim Prize'))}
                 </Button>
+                
+                {/* Upsell to Premium Subscription */}
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    {wonPrize.type === 'no_prize' 
+                      ? "Want more chances? Premium members get 5 daily spins!" 
+                      : "Love winning? Premium members get unlimited picks!"}
+                  </p>
+                  <a 
+                    href="/pricing" 
+                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
+                    data-testid="link-upsell-premium"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Premium
+                  </a>
+                </div>
               </Card>
             </motion.div>
           )}
