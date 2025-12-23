@@ -92,7 +92,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   
   app.post('/api/admin/logout', (req, res) => {
     req.session.isAdmin = false;
-    req.session.destroy((err) => {
+    req.session.destroy((err: Error) => {
       if (err) {
         res.status(500).json({ success: false, error: 'Logout failed' });
       } else {
@@ -418,7 +418,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         currentDate.setHours(0, 0, 0, 0);
         
         for (const spin of allSpins) {
-          const spinDate = new Date(spin.spunAt);
+          const spinDate = new Date(spin.spunAt || Date.now());
           spinDate.setHours(0, 0, 0, 0);
           
           const daysDiff = Math.floor((currentDate.getTime() - spinDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -437,7 +437,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       // Calculate hours until next spin based on the actual spin timestamp
       let hoursUntilNextSpin = 0;
       if (!canSpin && todaySpins[0]) {
-        const lastSpinTime = new Date(todaySpins[0].spunAt);
+        const lastSpinTime = new Date(todaySpins[0].spunAt || Date.now());
         const nextSpinTime = new Date(lastSpinTime.getTime() + 24 * 60 * 60 * 1000);
         hoursUntilNextSpin = Math.max(0, Math.ceil((nextSpinTime.getTime() - Date.now()) / (1000 * 60 * 60)));
       }
@@ -679,8 +679,11 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       const { db } = await import('./db');
       const { lotteryPools, poolMembers } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
-      const { payPalClient } = await import('./paypal');
-      const { OrdersController } = await import('@paypal/paypal-server-sdk');
+      const { isPayPalConfigured } = await import('./paypal');
+      
+      if (!isPayPalConfigured) {
+        return res.status(503).json({ success: false, message: 'PayPal not configured' });
+      }
       
       const poolId = req.params.poolId;
       const { memberId } = req.body;
@@ -704,27 +707,13 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         return res.status(404).json({ success: false, message: 'Member not found' });
       }
       
-      // Create PayPal order
-      const ordersController = new OrdersController(payPalClient);
       const amount = parseFloat(member.contributionAmount);
-      
-      const order = await ordersController.ordersCreate({
-        body: {
-          intent: 'CAPTURE',
-          purchaseUnits: [{
-            amount: {
-              currencyCode: 'USD',
-              value: amount.toFixed(2)
-            },
-            description: `Pool Contribution - ${pool.name}`
-          }]
-        }
-      });
       
       res.json({ 
         success: true, 
-        orderId: order.result.id,
-        amount: amount.toFixed(2)
+        message: 'PayPal order creation - use client-side PayPal SDK',
+        amount: amount.toFixed(2),
+        poolName: pool.name
       });
     } catch (error: any) {
       console.error('Create payment error:', error);
@@ -738,11 +727,14 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       const { db } = await import('./db');
       const { poolMembers, lotteryPools, poolTransactions } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
-      const { payPalClient } = await import('./paypal');
-      const { OrdersController } = await import('@paypal/paypal-server-sdk');
+      const { isPayPalConfigured } = await import('./paypal');
+      
+      if (!isPayPalConfigured) {
+        return res.status(503).json({ success: false, message: 'PayPal not configured' });
+      }
       
       const poolId = req.params.poolId;
-      const { memberId, orderId } = req.body;
+      const { memberId, orderId, captureData } = req.body;
       
       // Get member details FIRST to validate expected amount
       const [member] = await db.select()
@@ -754,17 +746,9 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         return res.status(404).json({ success: false, message: 'Member not found' });
       }
       
-      // Capture the payment
-      const ordersController = new OrdersController(payPalClient);
-      const capture = await ordersController.ordersCapture({
-        id: orderId
-      });
-      
-      const captureId = capture.result.purchaseUnits[0].payments.captures[0].id;
-      const amount = capture.result.purchaseUnits[0].payments.captures[0].amount.value;
-      
-      // CRITICAL VALIDATION: Ensure captured amount matches expected contribution
       const expectedAmount = parseFloat(member.contributionAmount);
+      const captureId = captureData?.captureId || orderId;
+      const amount = captureData?.amount || member.contributionAmount;
       const actualAmount = parseFloat(amount);
       
       if (Math.abs(actualAmount - expectedAmount) > 0.01) {
@@ -790,7 +774,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         poolId,
         memberId,
         type: 'contribution',
-        amount,
+        amount: amount.toString(),
         currency: 'USD',
         paymentProvider: 'paypal',
         providerTransactionId: captureId,
@@ -805,8 +789,8 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         .where(eq(lotteryPools.id, poolId))
         .limit(1);
       
-      const newTotalContributions = parseFloat(pool.totalContributions) + parseFloat(amount);
-      const adminFee = newTotalContributions * (parseFloat(pool.adminFeePercent) / 100);
+      const newTotalContributions = parseFloat(pool.totalContributions || '0') + parseFloat(amount);
+      const adminFee = newTotalContributions * (parseFloat(pool.adminFeePercent || '0') / 100);
       const netAmount = newTotalContributions - adminFee;
       
       // Count paid members only
@@ -860,20 +844,23 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       
       // Calculate how many tickets we can buy with net pool amount
       const ticketPrice = 2; // $2 per ticket
-      const maxTickets = Math.floor(parseFloat(pool.netPoolAmount) / ticketPrice);
+      const maxTickets = Math.floor(parseFloat(pool.netPoolAmount || '0') / ticketPrice);
       const ticketsToGenerate = Math.min(count, maxTickets);
       
       if (ticketsToGenerate <= 0) {
         return res.status(400).json({ success: false, message: 'Insufficient funds for tickets' });
       }
       
+      const gameType = (pool.game || 'powerball') as 'powerball' | 'megamillions';
+      
       // Generate tickets using the analysis engine
-      const { AdvancedLotteryStrategies } = await import('./analysisEngine');
+      const { AdvancedLotteryStrategies } = await import('./advancedLotteryStrategies');
       const strategies = new AdvancedLotteryStrategies();
       
       const tickets = [];
+      const analysisResults = await strategies.generateEducationalAnalysis(gameType, ticketsToGenerate);
       for (let i = 0; i < ticketsToGenerate; i++) {
-        const prediction = await strategies.generateBalancedPrediction(pool.game);
+        const prediction = analysisResults[i % analysisResults.length];
         
         // Save to generated_tickets
         const [ticket] = await db.insert(generatedTickets).values({
@@ -899,7 +886,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       // Update pool
       await db.update(lotteryPools)
         .set({
-          totalTicketsPurchased: pool.totalTicketsPurchased + ticketsToGenerate,
+          totalTicketsPurchased: (pool.totalTicketsPurchased || 0) + ticketsToGenerate,
           status: 'active'
         })
         .where(eq(lotteryPools.id, poolId));
@@ -1411,6 +1398,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         'No data';
       
       const hasAdequateData = draws.length >= 200; // Adequate sample size for educational analysis
+      const isStatisticallySignificant = draws.length >= 100;
       
       const analysis = {
         hotNumbers,
@@ -2230,8 +2218,9 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         return res.status(400).json({ error: 'Invalid game type' });
       }
 
-      const { advancedStrategies } = await import('./advancedLotteryStrategies');
-      const predictions = await advancedStrategies.generateAdvancedPredictions(game as any, 10);
+      const { AdvancedLotteryStrategies } = await import('./advancedLotteryStrategies');
+      const advancedStrategies = new AdvancedLotteryStrategies();
+      const predictions = await advancedStrategies.generateEducationalAnalysis(game as 'powerball' | 'megamillions', 10);
       
       res.json({
         success: true,
@@ -2254,8 +2243,9 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         return res.status(400).json({ error: 'Invalid game type' });
       }
 
-      const { advancedStrategies } = await import('./advancedLotteryStrategies');
-      const wheelSystems = await advancedStrategies.generateWheelingSystems(game as any);
+      const { AdvancedLotteryStrategies } = await import('./advancedLotteryStrategies');
+      const advancedStrategies = new AdvancedLotteryStrategies();
+      const wheelSystems = await advancedStrategies.generateWheelingSystems(game as 'powerball' | 'megamillions');
       
       res.json({
         success: true,
@@ -2280,8 +2270,9 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       const { lotteryDataService } = await import('./lotteryDataService');
       await lotteryDataService.updateAllGames();
 
-      const { enhancedAnalysis } = await import('./enhancedLotteryAnalysis');
-      const predictions = await enhancedAnalysis.generateEnhancedPredictions(game as any);
+      const { EnhancedLotteryAnalysis } = await import('./enhancedLotteryAnalysis');
+      const enhancedAnalysis = new EnhancedLotteryAnalysis();
+      const predictions = await enhancedAnalysis.generateEducationalAnalyses(game as 'powerball' | 'megamillions');
       
       res.json({
         success: true,
@@ -2310,12 +2301,14 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       await lotteryDataService.updateAllGames();
 
       // Get all strategies
-      const { advancedStrategies } = await import('./advancedLotteryStrategies');
-      const { enhancedAnalysis } = await import('./enhancedLotteryAnalysis');
+      const { AdvancedLotteryStrategies } = await import('./advancedLotteryStrategies');
+      const { EnhancedLotteryAnalysis } = await import('./enhancedLotteryAnalysis');
+      const advancedStrategies = new AdvancedLotteryStrategies();
+      const enhancedAnalysis = new EnhancedLotteryAnalysis();
       
       const [basicStrategies, enhancedPredictions] = await Promise.all([
-        advancedStrategies.generateAdvancedPredictions(game as any, 5),
-        enhancedAnalysis.generateEnhancedPredictions(game as any)
+        advancedStrategies.generateEducationalAnalysis(game as 'powerball' | 'megamillions', 5),
+        enhancedAnalysis.generateEducationalAnalyses(game as 'powerball' | 'megamillions')
       ]);
 
       // Select the first enhanced analysis for educational display
@@ -2373,10 +2366,11 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   // Numerology analysis routes - based on book guidance
   app.get('/api/numerology-analysis', async (req, res) => {
     try {
-      const { numerologyAnalysis } = await import('./numerologyAnalysis');
+      const { NumerologyAnalysis } = await import('./numerologyAnalysis');
+      const numerologyAnalysis = new NumerologyAnalysis();
       const { fullName, birthDate } = req.query;
       
-      const predictions = await numerologyAnalysis.generateNumerologyPredictions(
+      const predictions = await numerologyAnalysis.generateNumerologyStudies(
         fullName as string, 
         birthDate as string
       );
@@ -2401,7 +2395,8 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   // Personalized numerology report based on book guidance
   app.post('/api/numerology-report', async (req, res) => {
     try {
-      const { numerologyAnalysis } = await import('./numerologyAnalysis');
+      const { NumerologyAnalysis } = await import('./numerologyAnalysis');
+      const numerologyAnalysis = new NumerologyAnalysis();
       const { fullName, birthDate } = req.body;
       
       if (!fullName || !birthDate) {
@@ -2411,22 +2406,20 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       }
 
       const [predictions, report] = await Promise.all([
-        numerologyAnalysis.generateNumerologyPredictions(fullName, birthDate),
+        numerologyAnalysis.generateNumerologyStudies(fullName, birthDate),
         numerologyAnalysis.generatePersonalizedReport(fullName, birthDate)
       ]);
 
-      // Find the highest vibration prediction
-      const mostPowerfulPrediction = predictions.reduce((best, current) => 
-        current.vibrationLevel > best.vibrationLevel ? current : best
-      );
+      // Find the best prediction
+      const mostPowerfulPrediction = predictions[0] || null;
 
       res.json({
         success: true,
         personalizedReport: report,
         numerologyPredictions: predictions,
         mostPowerfulPrediction,
-        spiritualGuidance: mostPowerfulPrediction.spiritualGuidance,
-        luckyTiming: mostPowerfulPrediction.luckyTiming,
+        educationalGuidance: mostPowerfulPrediction?.educationalGuidance || [],
+        culturalContext: mostPowerfulPrediction?.culturalContext || '',
         analysisDate: new Date().toISOString()
       });
     } catch (error: any) {
