@@ -1,0 +1,129 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Arial",
+      "count": 16
+    },
+    {
+      "family": "sans-serif",
+      "count": 16
+    },
+    {
+      "family": "sohne-var",
+      "count": 13
+    },
+    {
+      "family": "sohne-woff",
+      "count": 13
+    },
+    {
+      "family": "Helvetica Neue",
+      "count": 13
+    },
+    {
+      "family": "-apple-system",
+      "count": 3
+    },
+    {
+      "family": "BlinkMacSystemFont",
+      "count": 3
+    },
+    {
+      "family": "Segoe UI",
+      "count": 3
+    },
+    {
+      "family": "Roboto",
+      "count": 3
+    },
+    {
+      "family": "Helvetica",
+      "count": 3
+    }
+  ],
+  "colors": {
+    "primary": "#3C4257",
+    "accent": "#635BFF",
+    "background": "#FFFFFF",
+    "textPrimary": "#635BFF",
+    "link": "#635BFF"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "sohne-var",
+      "heading": "sohne-var"
+    },
+    "fontStacks": {
+      "body": [
+        "sohne-var",
+        "sohne-woff",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "heading": [
+        "sohne-var",
+        "sohne-woff",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "sohne-var",
+        "sohne-woff",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "14px",
+      "h2": "14px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "4px"
+  },
+  "components": {
+    "input": {
+      "background": "transparent",
+      "textColor": "#3C4257",
+      "borderColor": null,
+      "borderRadius": "4px",
+      "borderRadiusCorners": {
+        "topLeft": "4px",
+        "topRight": "4px",
+        "bottomRight": "4px",
+        "bottomLeft": "4px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": null,
+    "favicon": "https://dashboard.stripe.com/favicon.ico",
+    "ogImage": null
+  },
+  "__framework_hints": [],
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": -1,
+      "text": "N/A",
+      "reasoning": "LLM failed"
+    },
+    "secondary": {
+      "index": -1,
+      "text": "N/A",
+      "reasoning": "LLM failed"
+    },
+    "confidence": 0
+  },
+  "confidence": {
+    "buttons": 0,
+    "colors": 0,
+    "overall": 0
+  }
+}
