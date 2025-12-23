@@ -126,27 +126,12 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Check if MFA is enabled
-    if (user.mfaEnabled) {
-      if (!mfaCode) {
-        return res.status(200).json({ 
-          requiresMFA: true,
-          message: 'Please enter your 6-digit authentication code from Google Authenticator'
-        });
-      }
-
-      // Verify MFA code
-      const validMFA = MFAService.verifyToken(user.mfaSecret!, mfaCode);
+    // MFA is optional - skip if not enabled or no code provided
+    if (user.mfaEnabled && user.mfaSecret && mfaCode) {
+      const validMFA = MFAService.verifyToken(user.mfaSecret, mfaCode);
       if (!validMFA) {
         return res.status(401).json({ error: 'Invalid authentication code' });
       }
-    } else {
-      // Force MFA setup for all subscribers
-      return res.status(200).json({
-        requiresMFASetup: true,
-        userId: user.id,
-        message: 'Multi-factor authentication is required for all subscribers. Please set up Google Authenticator.'
-      });
     }
 
     // Create session
@@ -249,7 +234,7 @@ export async function verifyMFASetup(req: Request, res: Response) {
 }
 
 function generateSessionToken(): string {
-  return require('crypto').randomBytes(32).toString('hex');
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Logout - invalidate session
