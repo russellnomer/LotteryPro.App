@@ -91,8 +91,6 @@ export default function AdminDashboard() {
   });
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [showCode, setShowCode] = useState(false);
-  const [totpToken, setTotpToken] = useState<string>("");
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [createUserForm, setCreateUserForm] = useState<CreateUserForm>({
     email: "",
     firstName: "",
@@ -106,12 +104,6 @@ export default function AdminDashboard() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Fetch current TOTP info
-  const { data: totpInfo } = useQuery({
-    queryKey: ['/api/admin/totp-info'],
-    refetchInterval: 5000, // Update every 5 seconds
-  });
 
   // Fetch user accounts
   const { data: users, isLoading: usersLoading } = useQuery<UserAccount[]>({
@@ -199,7 +191,7 @@ export default function AdminDashboard() {
   // Generate VIP code mutation
   const generateCodeMutation = useMutation({
     mutationFn: async (data: VipCodeGeneration) => {
-      const response = await apiRequest('POST', '/api/admin/generate-vip-code', data);
+      const response = await apiRequest('POST', '/api/admin/generate-vip', data);
       return response.json();
     },
     onSuccess: (data) => {
@@ -243,14 +235,6 @@ export default function AdminDashboard() {
       });
     },
   });
-
-  // Update TOTP info
-  useEffect(() => {
-    if (totpInfo && typeof totpInfo === 'object') {
-      setTotpToken((totpInfo as any).token || "");
-      setTimeRemaining((totpInfo as any).timeRemaining || 0);
-    }
-  }, [totpInfo]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -324,7 +308,7 @@ export default function AdminDashboard() {
                 <Shield className="h-8 w-8 mr-3 inline text-red-600" />
                 Russell's Admin Dashboard
               </h1>
-              <p className="text-gray-600">Secure VIP code management with Nomerati + Google Authenticator</p>
+              <p className="text-gray-600">VIP code management and user administration</p>
             </div>
             <div className="text-right">
               <Badge variant="outline" className="mb-2">
@@ -336,39 +320,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* TOTP Status */}
-        <Card className="mb-6 border-2 border-blue-300 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="flex items-center text-blue-800">
-              <Lock className="h-5 w-5 mr-2" />
-              Google Authenticator Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <Label className="text-sm text-blue-700">Current TOTP Token</Label>
-                <div className="text-2xl font-mono font-bold text-blue-900 mt-1">
-                  {totpToken || "------"}
-                </div>
-              </div>
-              <div className="text-center">
-                <Label className="text-sm text-blue-700">Time Remaining</Label>
-                <div className="text-xl font-bold text-blue-900 mt-1">
-                  <Clock className="h-4 w-4 inline mr-1" />
-                  {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
-                </div>
-              </div>
-              <div className="text-center">
-                <Label className="text-sm text-blue-700">Security Level</Label>
-                <Badge className="bg-green-600 text-white mt-1">
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Maximum Security
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Navigation Tabs */}
         <div className="mb-6">
@@ -699,16 +650,15 @@ export default function AdminDashboard() {
                 </div>
                 
                 <div className="space-y-4">
-                  <Alert className="border-yellow-200 bg-yellow-50">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <AlertDescription className="text-yellow-800">
-                      <strong>Security Features:</strong>
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      <strong>How it works:</strong>
                       <ul className="mt-2 space-y-1 text-sm">
-                        <li>• Uses "Nomerati" prefix for brand security</li>
-                        <li>• Google Authenticator TOTP integration</li>
-                        <li>• Account-specific email hash binding</li>
-                        <li>• 5-minute expiration window</li>
-                        <li>• Cannot be hacked or reused</li>
+                        <li>• Code format: VIP-XXXX-XXXX</li>
+                        <li>• Valid for 30 minutes</li>
+                        <li>• Single use per user</li>
+                        <li>• Sent via email automatically</li>
                       </ul>
                     </AlertDescription>
                   </Alert>

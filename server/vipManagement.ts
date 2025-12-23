@@ -24,8 +24,8 @@ export interface VipCodeRedemption {
 }
 
 /**
- * Generate secure VIP code using Nomerati + Google Authenticator TOTP + target email
- * Format: Nomerati + TOTP(6-digit) + SHA256(email)
+ * Generate simple VIP code - random alphanumeric format
+ * Format: VIP-XXXX-XXXX (easy to read and share)
  */
 export async function generateSecureVipCode(
   generation: VipCodeGeneration, 
@@ -34,22 +34,11 @@ export async function generateSecureVipCode(
   userAgent?: string
 ): Promise<{ vipCode: string; expiresAt: Date; codeId: string }> {
   
-  // Generate current TOTP token
-  const totpToken = speakeasy.totp({
-    secret: ADMIN_TOTP_SECRET,
-    encoding: 'base32',
-    time: Date.now(),
-    step: 300, // 5 minutes
-  });
-
-  // Create email hash for account-specific binding
-  const emailHash = crypto.createHash('sha256')
-    .update(generation.targetEmail.toLowerCase())
-    .digest('hex')
-    .substring(0, 8); // First 8 characters
-
-  // Construct the VIP code: Nomerati + TOTP + EmailHash
-  const vipCode = `Nomerati${totpToken}${emailHash}`;
+  // Generate simple random code
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing characters (0/O, 1/I/L)
+  const part1 = Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part2 = Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const vipCode = `VIP-${part1}-${part2}`;
   
   // Create secure hash for database storage
   const codeHash = crypto.createHash('sha256')
