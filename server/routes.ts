@@ -439,8 +439,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
             eq(dailySpins.spinDate, todayDate)
           )
         )
-        .orderBy(desc(dailySpins.spunAt))
-        .limit(1);
+        .orderBy(desc(dailySpins.spunAt));
       
       // Calculate consecutive day streak
       const allSpins = await db.select()
@@ -468,11 +467,13 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         }
       }
       
-      // Check if user has premium tier - unlimited spins
+      // Check if user has premium tier - 3 spins per day
       const userTier = req.user?.subscriptionTier || 'free';
-      const hasPremiumSpins = ['premium', 'pro', 'unlimited'].includes(userTier);
+      const isPremium = ['premium', 'pro', 'unlimited'].includes(userTier);
+      const maxSpinsPerDay = isPremium ? 3 : 1;
       
-      const canSpin = hasPremiumSpins || todaySpins.length === 0;
+      const canSpin = todaySpins.length < maxSpinsPerDay;
+      const spinsRemaining = Math.max(0, maxSpinsPerDay - todaySpins.length);
       
       // Calculate hours until next spin based on the actual spin timestamp
       let hoursUntilNextSpin = 0;
@@ -487,7 +488,9 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         hoursUntilNextSpin,
         spinStreak,
         lastSpin: todaySpins[0] || null,
-        unlimitedSpins: hasPremiumSpins,
+        spinsRemaining,
+        maxSpinsPerDay,
+        isPremium,
         userTier
       });
     } catch (error: any) {
@@ -1248,7 +1251,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
     try {
       const { db } = await import('./db');
       const { dailySpins, userAccounts } = await import('@shared/schema');
-      const { eq, and, sql } = await import('drizzle-orm');
+      const { eq, and, sql, count } = await import('drizzle-orm');
       
       const userId = req.user?.id || null;
       const sessionId = req.sessionID || `guest_${req.ip}`;
@@ -1256,15 +1259,48 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       // Get today's date in YYYY-MM-DD format
       const todayDate = new Date().toISOString().split('T')[0];
       
-      // Weighted prize distribution
-      const prizePool = [
-        { type: 'free_generation', value: '3', weight: 5 },      // 5% - 3 free picks
-        { type: 'no_prize', value: 'better_luck', weight: 30 },  // 30% - no prize
-        { type: 'free_generation', value: '1', weight: 25 },     // 25% - 1 free pick
-        { type: 'discount_code', value: 'LUCKY10', weight: 15 }, // 15% - 10% discount
-        { type: 'free_generation', value: '2', weight: 15 },     // 15% - 2 free picks
-        { type: 'premium_trial', value: '7', weight: 8 },        // 8% - 7-day trial
-        { type: 'free_generation', value: '1', weight: 2 },      // 2% - 1 free pick (duplicate position)
+      // Check premium status - premium users get 3 spins per day
+      const userTier = req.user?.subscriptionTier || 'free';
+      const isPremium = ['premium', 'pro', 'unlimited'].includes(userTier);
+      const maxSpinsPerDay = isPremium ? 3 : 1;
+      
+      // Check how many spins this user/session has today
+      const [spinCount] = await db.select({ count: count() })
+        .from(dailySpins)
+        .where(
+          and(
+            userId ? eq(dailySpins.userId, userId) : eq(dailySpins.sessionId, sessionId),
+            eq(dailySpins.spinDate, todayDate)
+          )
+        );
+      
+      if (spinCount.count >= maxSpinsPerDay) {
+        return res.status(429).json({ 
+          success: false, 
+          message: isPremium 
+            ? `You've used all ${maxSpinsPerDay} spins for today. Come back tomorrow!`
+            : 'You have already spun today. Come back tomorrow!' 
+        });
+      }
+      
+      // Weighted prize distribution - better prizes for premium members
+      const prizePool = isPremium ? [
+        { type: 'signed_song', value: 'russell_nomer', weight: 5 },  // 5% - Signed Russell Nomer song
+        { type: 'free_generation', value: '5', weight: 10 },         // 10% - 5 free picks
+        { type: 'free_generation', value: '3', weight: 15 },         // 15% - 3 free picks
+        { type: 'free_generation', value: '2', weight: 20 },         // 20% - 2 free picks
+        { type: 'hot_alerts', value: '7', weight: 10 },              // 10% - 7 days hot alerts
+        { type: 'vip_points', value: '50', weight: 15 },             // 15% - 50 VIP points
+        { type: 'streak_bonus', value: '2x', weight: 10 },           // 10% - 2x streak bonus
+        { type: 'free_generation', value: '1', weight: 15 },         // 15% - 1 free pick
+      ] : [
+        { type: 'free_generation', value: '3', weight: 5 },          // 5% - 3 free picks
+        { type: 'no_prize', value: 'better_luck', weight: 30 },      // 30% - no prize
+        { type: 'free_generation', value: '1', weight: 25 },         // 25% - 1 free pick
+        { type: 'discount_code', value: 'LUCKY10', weight: 15 },     // 15% - 10% discount
+        { type: 'free_generation', value: '2', weight: 15 },         // 15% - 2 free picks
+        { type: 'premium_trial', value: '7', weight: 8 },            // 8% - 7-day trial
+        { type: 'free_generation', value: '1', weight: 2 },          // 2% - 1 free pick
       ];
       
       const totalWeight = prizePool.reduce((sum, p) => sum + p.weight, 0);
@@ -1281,8 +1317,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         }
       }
       
-      // Record the spin - DB will enforce uniqueness via constraint
-      // This prevents race conditions from multiple parallel requests
+      // Record the spin
       let spin;
       try {
         [spin] = await db.insert(dailySpins).values({
@@ -1294,14 +1329,14 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
           claimed: 0
         }).returning();
       } catch (error: any) {
-        // Unique constraint violation means already spun today
-        if (error.code === '23505') { // PostgreSQL unique violation code
+        // Unique constraint violation - handle gracefully for non-premium
+        if (error.code === '23505') {
           return res.status(429).json({ 
             success: false, 
             message: 'You have already spun today. Come back tomorrow!' 
           });
         }
-        throw error; // Re-throw other errors
+        throw error;
       }
       
       // Award VIP points for each spin (authenticated users only)

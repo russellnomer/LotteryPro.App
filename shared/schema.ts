@@ -208,11 +208,8 @@ export const dailySpins = pgTable("daily_spins", {
   spunAt: timestamp("spun_at").default(sql`now()`),
   claimed: integer("claimed").notNull().default(0), // 0 = unclaimed, 1 = claimed
   claimedAt: timestamp("claimed_at"),
-}, (table) => ({
-  // Unique constraint to prevent multiple spins per day - race condition protection
-  uniqueUserSpin: unique("unique_user_daily_spin").on(table.userId, table.spinDate),
-  uniqueSessionSpin: unique("unique_session_daily_spin").on(table.sessionId, table.spinDate),
-}));
+});
+// Note: Unique constraints removed to allow premium members multiple daily spins
 
 // Revenue Generation: Referral Program
 export const referralCodes = pgTable("referral_codes", {
