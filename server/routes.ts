@@ -7,7 +7,7 @@ import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/sch
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
-import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword } from "./auth";
+import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, optionalAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword } from "./auth";
 import { 
   createPayPalSubscription, 
   activatePayPalSubscription,
@@ -390,7 +390,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   });
 
   // Daily Spin-to-Win: Check spin status
-  app.get("/api/spin/status", async (req, res) => {
+  app.get("/api/spin/status", optionalAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { dailySpins, emailPreferences } = await import('@shared/schema');
@@ -1244,7 +1244,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   });
 
   // Daily Spin-to-Win: Execute spin
-  app.post("/api/spin/daily", async (req, res) => {
+  app.post("/api/spin/daily", optionalAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { dailySpins } = await import('@shared/schema');
@@ -1304,11 +1304,33 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         throw error; // Re-throw other errors
       }
       
+      // Award VIP points for each spin (authenticated users only)
+      let pointsAwarded = 10; // Base points per spin
+      if (userId) {
+        const { userAccounts } = await import('@shared/schema');
+        
+        // Bonus points based on prize
+        if (wonPrize.type === 'free_generation') {
+          pointsAwarded += parseInt(wonPrize.value) * 5;
+        } else if (wonPrize.type === 'premium_trial') {
+          pointsAwarded += 25;
+        }
+        
+        // Update user's VIP points
+        await db.update(userAccounts)
+          .set({ 
+            vipPoints: sql`COALESCE(${userAccounts.vipPoints}, 0) + ${pointsAwarded}`,
+            lastSpinDate: todayDate
+          })
+          .where(eq(userAccounts.id, userId));
+      }
+      
       res.json({
         success: true,
         spinId: spin.id,
         prizeType: wonPrize.type,
-        prizeValue: wonPrize.value
+        prizeValue: wonPrize.value,
+        pointsAwarded: userId ? pointsAwarded : 0
       });
     } catch (error: any) {
       console.error('Daily spin error:', error);
@@ -1317,7 +1339,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   });
 
   // Claim a spin prize - apply prize to user account
-  app.post("/api/spin/claim/:spinId", async (req, res) => {
+  app.post("/api/spin/claim/:spinId", optionalAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { dailySpins, userAccounts } = await import('@shared/schema');

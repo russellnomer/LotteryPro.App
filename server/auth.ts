@@ -287,6 +287,30 @@ export async function requireAuth(req: Request, res: Response, next: any) {
   }
 }
 
+// Optional auth middleware - populates req.user if authenticated, but doesn't block guests
+export async function optionalAuth(req: Request, res: Response, next: any) {
+  try {
+    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    if (!sessionToken) {
+      return next(); // Not authenticated, continue as guest
+    }
+
+    const session = await storage.getUserSession(sessionToken);
+    if (!session || session.expiresAt < new Date()) {
+      return next(); // Invalid session, continue as guest
+    }
+
+    const user = await storage.getUserById(session.userId);
+    if (user) {
+      req.user = user;
+    }
+    next();
+  } catch (error) {
+    // On error, continue as guest
+    next();
+  }
+}
+
 // Subscription tier hierarchy: premium > pro > basic > free
 const tierHierarchy: Record<string, number> = {
   'free': 0,

@@ -73,6 +73,9 @@ export const userAccounts = pgTable("user_accounts", {
   bonusGenerations: integer("bonus_generations").notNull().default(0), // Free picks from spin wheel wins
   premiumTrialExpires: timestamp("premium_trial_expires"), // Premium trial expiration from spin wheel
   discountCode: text("discount_code"), // Active discount code from spin wheel
+  vipPoints: integer("vip_points").notNull().default(0), // Accumulated VIP points from spins
+  spinStreak: integer("spin_streak").notNull().default(0), // Consecutive daily spins
+  lastSpinDate: date("last_spin_date"), // Last spin date for streak tracking
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
@@ -240,6 +243,42 @@ export const emailPreferences = pgTable("email_preferences", {
 }, (table) => ({
   uniqueEmailUser: unique("unique_email_user").on(table.email),
 }));
+
+// Password Reset Tokens - Production-ready password reset system
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(), // SHA-256 hash of the reset token
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"), // Set when token is used
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// VIP Rewards - Redeemable prizes with VIP points
+export const vipRewards = pgTable("vip_rewards", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  pointsCost: integer("points_cost").notNull(),
+  rewardType: text("reward_type").notNull(), // 'signed_song', 'free_picks', 'premium_days', 'merchandise', 'exclusive_content'
+  rewardValue: text("reward_value").notNull(), // The actual value (number of picks, days, song title, etc.)
+  isActive: integer("is_active").notNull().default(1),
+  limitedQuantity: integer("limited_quantity"), // Null = unlimited
+  claimedCount: integer("claimed_count").notNull().default(0),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// VIP Redemptions - Track when users redeem rewards
+export const vipRedemptions = pgTable("vip_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => userAccounts.id),
+  rewardId: varchar("reward_id").notNull().references(() => vipRewards.id),
+  pointsSpent: integer("points_spent").notNull(),
+  status: text("status").notNull().default('pending'), // 'pending', 'fulfilled', 'cancelled'
+  fulfilledAt: timestamp("fulfilled_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
 
 // Email Send Log - Track all emails sent
 export const emailSendLog = pgTable("email_send_log", {
