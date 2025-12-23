@@ -1262,32 +1262,37 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       // Get today's date in YYYY-MM-DD format
       const todayDate = new Date().toISOString().split('T')[0];
       
-      // Check premium status - premium users get 3 spins per day
+      // Check premium status - Founders have UNLIMITED spins, premium gets 3 per day
       const userTier = req.user?.subscriptionTier || 'free';
-      const isPremium = ['premium', 'pro', 'unlimited'].includes(userTier);
-      const maxSpinsPerDay = isPremium ? 3 : 1;
+      const isFounder = userTier === 'founder';
+      const isPremium = ['premium', 'pro', 'unlimited', 'lifetime', 'founder'].includes(userTier);
+      const maxSpinsPerDay = isFounder ? Infinity : (isPremium ? 3 : 1);
       
-      // Check how many spins this user/session has today
-      const [spinCount] = await db.select({ count: count() })
-        .from(dailySpins)
-        .where(
-          and(
-            userId ? eq(dailySpins.userId, userId) : eq(dailySpins.sessionId, sessionId),
-            eq(dailySpins.spinDate, todayDate)
-          )
-        );
-      
-      if (spinCount.count >= maxSpinsPerDay) {
-        return res.status(429).json({ 
-          success: false, 
-          message: isPremium 
-            ? `You've used all ${maxSpinsPerDay} spins for today. Come back tomorrow!`
-            : 'You have already spun today. Come back tomorrow!' 
-        });
+      // Founders bypass ALL spin limits - no checking needed
+      if (!isFounder) {
+        // Check how many spins this user/session has today
+        const [spinCount] = await db.select({ count: count() })
+          .from(dailySpins)
+          .where(
+            and(
+              userId ? eq(dailySpins.userId, userId) : eq(dailySpins.sessionId, sessionId),
+              eq(dailySpins.spinDate, todayDate)
+            )
+          );
+        
+        if (spinCount.count >= maxSpinsPerDay) {
+          return res.status(429).json({ 
+            success: false, 
+            message: isPremium 
+              ? `You've used all ${maxSpinsPerDay} spins for today. Come back tomorrow!`
+              : 'You have already spun today. Come back tomorrow!' 
+          });
+        }
       }
       
-      // Weighted prize distribution - better prizes for premium members
-      const prizePool = isPremium ? [
+      // Weighted prize distribution - better prizes for premium/founder members
+      // Founders get the BEST prize pool with even better odds
+      const prizePool = (isPremium || isFounder) ? [
         { type: 'signed_song', value: 'russell_nomer', weight: 5 },  // 5% - Signed Russell Nomer song
         { type: 'free_generation', value: '5', weight: 10 },         // 10% - 5 free picks
         { type: 'free_generation', value: '3', weight: 15 },         // 15% - 3 free picks
