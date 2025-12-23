@@ -1,8 +1,25 @@
 import Stripe from 'stripe';
 
 let connectionSettings: any;
+let cachedCredentials: { publishableKey: string; secretKey: string } | null = null;
 
 async function getCredentials() {
+  // Return cached credentials if available
+  if (cachedCredentials) {
+    return cachedCredentials;
+  }
+
+  // First, check for environment variables (user-provided API keys)
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY) {
+    console.log('✅ Using Stripe API keys from environment variables');
+    cachedCredentials = {
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      secretKey: process.env.STRIPE_SECRET_KEY,
+    };
+    return cachedCredentials;
+  }
+
+  // Fall back to Replit connector if available
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -10,8 +27,8 @@ async function getCredentials() {
       ? 'depl ' + process.env.WEB_REPL_RENEWAL
       : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (!xReplitToken || !hostname) {
+    throw new Error('Stripe API keys not found. Please set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables.');
   }
 
   const connectorName = 'stripe';
@@ -35,13 +52,14 @@ async function getCredentials() {
   connectionSettings = data.items?.[0];
 
   if (!connectionSettings || (!connectionSettings.settings.publishable || !connectionSettings.settings.secret)) {
-    throw new Error(`Stripe ${targetEnvironment} connection not found`);
+    throw new Error(`Stripe ${targetEnvironment} connection not found. Please set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY.`);
   }
 
-  return {
+  cachedCredentials = {
     publishableKey: connectionSettings.settings.publishable,
     secretKey: connectionSettings.settings.secret,
   };
+  return cachedCredentials;
 }
 
 export async function getUncachableStripeClient() {
@@ -81,5 +99,5 @@ export async function getStripeSync() {
 }
 
 export function isStripeIntegrationAvailable(): boolean {
-  return !!process.env.REPLIT_CONNECTORS_HOSTNAME;
+  return !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY) || !!process.env.REPLIT_CONNECTORS_HOSTNAME;
 }
