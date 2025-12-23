@@ -145,6 +145,16 @@ export async function login(req: Request, res: Response) {
     // Update last login
     await storage.updateUserLastLogin(user.id);
 
+    // Set HttpOnly cookie for mobile compatibility (30 days)
+    const cookieMaxAge = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    res.cookie('lp_session', session.sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: cookieMaxAge,
+      path: '/'
+    });
+
     res.json({
       success: true,
       sessionToken: session.sessionToken,
@@ -237,15 +247,36 @@ function generateSessionToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
+// Helper function to extract session token from request (header or cookie)
+function getSessionToken(req: Request): string | undefined {
+  // First check Authorization header (bearer token)
+  const headerToken = req.headers.authorization?.replace('Bearer ', '');
+  if (headerToken) {
+    return headerToken;
+  }
+  
+  // Fallback to HttpOnly cookie (for mobile/WebView)
+  const cookieToken = req.cookies?.lp_session;
+  return cookieToken;
+}
+
 // Logout - invalidate session
 export async function logout(req: Request, res: Response) {
   try {
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    const sessionToken = getSessionToken(req);
     if (!sessionToken) {
       return res.status(400).json({ error: 'No session to invalidate' });
     }
 
     await storage.deleteUserSession(sessionToken);
+    
+    // Clear the HttpOnly session cookie
+    res.clearCookie('lp_session', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
     
     res.json({ 
       success: true, 
@@ -259,7 +290,8 @@ export async function logout(req: Request, res: Response) {
 // Middleware to check authentication and MFA
 export async function requireAuth(req: Request, res: Response, next: any) {
   try {
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    // Check both header and cookie for session token (mobile/desktop unified auth)
+    const sessionToken = getSessionToken(req);
     if (!sessionToken) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -290,7 +322,8 @@ export async function requireAuth(req: Request, res: Response, next: any) {
 // Optional auth middleware - populates req.user if authenticated, but doesn't block guests
 export async function optionalAuth(req: Request, res: Response, next: any) {
   try {
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    // Check both header and cookie for session token (mobile/desktop unified auth)
+    const sessionToken = getSessionToken(req);
     if (!sessionToken) {
       return next(); // Not authenticated, continue as guest
     }
@@ -324,8 +357,8 @@ const tierHierarchy: Record<string, number> = {
 export function requireTier(minTier: 'basic' | 'pro' | 'premium') {
   return async (req: Request, res: Response, next: any) => {
     try {
-      // First check authentication
-      const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+      // Check both header and cookie for session token (mobile/desktop unified auth)
+      const sessionToken = getSessionToken(req);
       if (!sessionToken) {
         return res.status(401).json({ error: 'Authentication required' });
       }
@@ -488,8 +521,8 @@ export async function requireAdmin(req: Request, res: Response, next: any) {
       return next();
     }
 
-    // Fallback: Check Bearer token for API access
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+    // Fallback: Check both header and cookie for session token (mobile/desktop unified auth)
+    const sessionToken = getSessionToken(req);
     if (sessionToken) {
       const session = await storage.getUserSession(sessionToken);
       if (session && session.expiresAt >= new Date()) {

@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { injectAdSenseId } from "./middleware/adsense";
@@ -159,6 +160,7 @@ app.post(
 
 app.use(express.json({ limit: '10mb' })); // DoS protection
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(cookieParser());
 app.use(injectAdSenseId);
 
 app.use((req, res, next) => {
