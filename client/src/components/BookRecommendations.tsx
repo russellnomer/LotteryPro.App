@@ -79,7 +79,7 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
                     </h4>
                     {isTheGrove && (
                       <Badge className="bg-green-600 text-white text-[10px] px-1.5 py-0">
-                        🌟 NEW PREORDER
+                        🌟 NEW RELEASE
                       </Badge>
                     )}
                   </div>
@@ -105,7 +105,7 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
                       onClick={() => window.open(book.amazonUrl, '_blank')}
                     >
                       <ShoppingCartIcon className="h-3 w-3 mr-1" />
-                      {isTheGrove ? '🌟 Preorder Now!' : '🛒 Buy & Support Russell!'}
+                      {isTheGrove ? '🌟 Order Now!' : '🛒 Buy & Support Russell!'}
                     </Button>
                   </div>
                 </div>

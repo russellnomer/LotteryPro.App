@@ -1,0 +1,88 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Graphik",
+      "count": 97
+    }
+  ],
+  "colors": {
+    "primary": "#0060A7",
+    "accent": "#021534",
+    "background": "#F8F8F8",
+    "textPrimary": "#021534",
+    "link": "#021534"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Graphik",
+      "heading": "Graphik"
+    },
+    "fontStacks": {
+      "body": [
+        "Graphik"
+      ],
+      "heading": [
+        "Graphik"
+      ],
+      "paragraph": [
+        "Graphik"
+      ]
+    },
+    "fontSizes": {
+      "h1": "32px",
+      "h2": "32px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "5px"
+  },
+  "components": {
+    "input": {
+      "background": "#FFFFFF",
+      "textColor": "#000000",
+      "borderColor": null,
+      "borderRadius": "5px",
+      "borderRadiusCorners": {
+        "topLeft": "5px",
+        "topRight": "5px",
+        "bottomRight": "5px",
+        "bottomLeft": "5px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "https://edit.nylottery.ny.gov/sites/default/files/logo-2179655b4229a219a9305b3f0e734bd0.png",
+    "favicon": "https://nylottery.ny.gov/icons/icon-48x48.png?v=2bd30796a4cdf436baf7fe3ab424946a",
+    "ogImage": null
+  },
+  "__framework_hints": [
+    "Gatsby 5.14.0"
+  ],
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Strong indicators: header logo linking to homepage, header location, visible, top-left position, alt matches logo/brand, src contains logo, class contains logo, reasonable size. Score: 118 (clear winner by 85 points)",
+    "confidence": 0.9
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": -1,
+      "text": "N/A",
+      "reasoning": "LLM failed"
+    },
+    "secondary": {
+      "index": -1,
+      "text": "N/A",
+      "reasoning": "LLM failed"
+    },
+    "confidence": 0
+  },
+  "confidence": {
+    "buttons": 0,
+    "colors": 0,
+    "overall": 0
+  }
+}

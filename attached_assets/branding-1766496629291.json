@@ -1,0 +1,91 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "sans-serif",
+      "count": 63
+    },
+    {
+      "family": "proxima-nova",
+      "count": 50
+    },
+    {
+      "family": "Roboto",
+      "count": 13
+    },
+    {
+      "family": "Helvetica",
+      "count": 12
+    },
+    {
+      "family": "Arial",
+      "count": 12
+    },
+    {
+      "family": "Open Sans",
+      "count": 3
+    }
+  ],
+  "colors": {
+    "primary": "#1C6387",
+    "accent": "#1B2A5E",
+    "background": "#FFFFFF",
+    "textPrimary": "#1B2A5E",
+    "link": "#1B2A5E"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Roboto",
+      "heading": "proxima-nova"
+    },
+    "fontStacks": {
+      "body": [
+        "Roboto",
+        "sans-serif"
+      ],
+      "heading": [
+        "proxima-nova",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "proxima-nova",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "28px",
+      "h2": "20px",
+      "body": "13px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "4px"
+  },
+  "components": {
+    "input": {
+      "background": "#C8C8C8",
+      "textColor": "#222222",
+      "borderColor": "#F4F4F4",
+      "borderRadius": "3px",
+      "borderRadiusCorners": {
+        "topLeft": "3px",
+        "topRight": "3px",
+        "bottomRight": "3px",
+        "bottomLeft": "3px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": null,
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "File saved at: attached_assets/ogImage.bin"
+  },
+  "__framework_hints": [],
+  "confidence": {
+    "buttons": 0,
+    "colors": 0,
+    "overall": 0
+  }
+}

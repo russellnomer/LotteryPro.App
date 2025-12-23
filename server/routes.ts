@@ -333,10 +333,15 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         return res.status(500).json({ message: "Failed to generate exactly 5 main numbers" });
       }
 
-      const gameConfig = {
-        powerball: { maxMain: 69, maxBonus: 26 },
-        megamillions: { maxMain: 70, maxBonus: 24 }
-      }[game];
+      const gameConfigs: Record<string, { maxMain: number; maxBonus: number; mainCount: number }> = {
+        powerball: { maxMain: 69, maxBonus: 26, mainCount: 5 },
+        megamillions: { maxMain: 70, maxBonus: 25, mainCount: 5 },
+        nylotto: { maxMain: 59, maxBonus: 59, mainCount: 6 },
+        cash4life: { maxMain: 60, maxBonus: 4, mainCount: 5 },
+        take5: { maxMain: 39, maxBonus: 0, mainCount: 5 },
+        pick10: { maxMain: 80, maxBonus: 0, mainCount: 10 }
+      };
+      const gameConf = gameConfigs[game] || gameConfigs.powerball;
 
       res.json({
         mainNumbers,
@@ -344,10 +349,12 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         method,
         educationalNote: `Educational ${method} number methodology for study purposes`,
         ticketId: ticket.id,
-        totalNumbers: 6, // Explicitly show this is 6 numbers total
+        totalNumbers: mainNumbers.length + (bonusNumber ? 1 : 0),
         gameInfo: {
           name: game,
-          format: `5 from 1-${gameConfig.maxMain} + 1 from 1-${gameConfig.maxBonus}`
+          format: gameConf.maxBonus > 0 
+            ? `${gameConf.mainCount} from 1-${gameConf.maxMain} + 1 from 1-${gameConf.maxBonus}`
+            : `${gameConf.mainCount} from 1-${gameConf.maxMain}`
         }
       });
       

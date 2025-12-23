@@ -395,8 +395,11 @@ export type EmailSendLog = typeof emailSendLog.$inferSelect;
 // Export advertisement schemas
 export * from "./adSchema";
 
-// Analysis types
-export type GameType = 'powerball' | 'megamillions';
+// Analysis types - Import from gameConfig for centralized configuration
+import { GameType as GameTypeImport, MethodologyType as MethodologyTypeImport, GAME_CONFIG, ALL_GAME_TYPES, ALL_METHODOLOGIES } from './gameConfig';
+export type GameType = GameTypeImport;
+export type MethodologyType = MethodologyTypeImport;
+export { GAME_CONFIG, ALL_GAME_TYPES, ALL_METHODOLOGIES };
 
 export type NumberFrequency = {
   number: number;
