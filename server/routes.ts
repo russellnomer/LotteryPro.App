@@ -1247,8 +1247,8 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   app.post("/api/spin/daily", optionalAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
-      const { dailySpins } = await import('@shared/schema');
-      const { eq, and } = await import('drizzle-orm');
+      const { dailySpins, userAccounts } = await import('@shared/schema');
+      const { eq, and, sql } = await import('drizzle-orm');
       
       const userId = req.user?.id || null;
       const sessionId = req.sessionID || `guest_${req.ip}`;
@@ -1307,8 +1307,6 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       // Award VIP points for each spin (authenticated users only)
       let pointsAwarded = 10; // Base points per spin
       if (userId) {
-        const { userAccounts } = await import('@shared/schema');
-        
         // Bonus points based on prize
         if (wonPrize.type === 'free_generation') {
           pointsAwarded += parseInt(wonPrize.value) * 5;
