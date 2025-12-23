@@ -8,6 +8,7 @@ import { Chart } from "@/components/ui/chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { GAME_CONFIG, ANALYSIS_METHODS, WHEEL_SYSTEMS, MethodologyType } from "@/lib/lottery-data";
 import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analysis";
 import { apiRequest } from "@/lib/queryClient";
@@ -15,6 +16,10 @@ import { TicketGeneration } from "@shared/schema";
 import { GAME_CONFIG as SHARED_GAME_CONFIG, GameType, ALL_GAME_TYPES, ALL_METHODOLOGIES } from "@shared/gameConfig";
 import AdSpace from "@/components/AdSpace";
 import JackpocketBanner from "@/components/JackpocketBanner";
+
+// VIP tier detection - these tiers bypass all limits
+const VIP_TIERS = ['premium', 'founder', 'lifetime', 'unlimited', 'pro'];
+const isVipTier = (tier: string) => VIP_TIERS.includes(tier?.toLowerCase() || '');
 // import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer"; // Replaced with RussellMusicPlayer
 // Lazy load non-critical components for better initial performance
 const BookRecommendations = lazy(() => import("@/components/BookRecommendations"));
@@ -36,13 +41,19 @@ export default function Home() {
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
   const [selectedWheelType, setSelectedWheelType] = useState<string>('single');
-  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium' | 'unlimited'>('free'); // Default to free tier for all users
   const [dailyGenerationsUsed, setDailyGenerationsUsed] = useState<number>(0);
-  const [maxDailyGenerations, setMaxDailyGenerations] = useState<number>(1); // Free tier limit
-  const [userEmail, setUserEmail] = useState<string>(""); // Empty by default - user must authenticate
   const [showFloatingJackpocket, setShowFloatingJackpocket] = useState(false);
   const [showPostGenModal, setShowPostGenModal] = useState(false);
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
+  
+  // Get authenticated user info
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  // Derive tier from authenticated user - VIP tiers bypass all limits
+  const userTier = (user as any)?.subscriptionTier || 'free';
+  const userEmail = (user as any)?.email || '';
+  const isVip = isVipTier(userTier);
+  const maxDailyGenerations = isVip ? Infinity : 1;
 
   // Show floating Jackpocket banner after 10 seconds
   useEffect(() => {
@@ -73,8 +84,8 @@ export default function Home() {
   }, []);
 
   const updateDailyUsage = () => {
-    // Don't track usage for unlimited users or Russell
-    if (userTier === 'unlimited' || userEmail === 'russell@russellnomer.com') {
+    // Don't track usage for VIP users - they have unlimited access
+    if (isVip) {
       return;
     }
     
@@ -120,14 +131,14 @@ export default function Home() {
   });
 
   const handleGenerateNumbers = () => {
-    // Unlimited users and Russell bypass all limits
-    if (userTier === 'unlimited' || userEmail === 'russell@russellnomer.com') {
+    // VIP users bypass all limits
+    if (isVip) {
       generateMutation.mutate({ game: selectedGame, method: selectedMethod });
       return;
     }
     
-    // Check daily limits for other users
-    if (userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations) {
+    // Check daily limits for free users only
+    if (dailyGenerationsUsed >= maxDailyGenerations) {
       toast({
         title: "Daily Limit Reached",
         description: "Free users can generate 1 set of numbers per day. Upgrade to remove limits!",
@@ -191,15 +202,33 @@ export default function Home() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Free Tier Banner Advertisement */}
-        {userTier === 'free' && (
+        {/* Free Tier Banner Advertisement - Only for non-VIP users */}
+        {!isVip && userTier === 'free' && (
           <div className="mb-6 flex justify-center">
             <AdSpace size="leaderboard" position="Header" className="max-w-full" />
           </div>
         )}
 
-        {/* Usage Limit Alert for Free Users */}
-        {userTier === 'free' && (
+        {/* VIP Member Welcome Banner */}
+        {isVip && (
+          <Alert className="mb-6 border-purple-200 bg-purple-50 dark:bg-purple-950">
+            <Crown className="h-4 w-4 text-purple-600" />
+            <AlertDescription>
+              <div className="flex justify-between items-center">
+                <span className="text-purple-700 dark:text-purple-300">
+                  <strong>VIP {userTier.charAt(0).toUpperCase() + userTier.slice(1)} Member</strong> - Unlimited generations, no ads, priority access
+                </span>
+                <Badge className="bg-purple-600 text-white">
+                  <Star className="h-3 w-3 mr-1" />
+                  VIP
+                </Badge>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Usage Limit Alert for Free Users Only - Never shown to VIP */}
+        {!isVip && userTier === 'free' && (
           <Alert className="mb-6 border-orange-200 bg-orange-50 dark:bg-orange-950">
             <Crown className="h-4 w-4" />
             <AlertDescription>
