@@ -148,7 +148,7 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
             <Input
               id="vip-code"
               type="text"
-              placeholder="Nomerati123456abc12345"
+              placeholder="VIP-XXXX-XXXX"
               value={vipCode}
               onChange={(e) => handleVipCodeChange(e.target.value)}
               className={`font-mono text-sm ${errors.vipCode ? 'border-red-500' : ''}`}
@@ -172,22 +172,9 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
             <p id="vip-code-error" className="text-xs text-red-500 font-medium" data-testid="error-vip-code" role="alert">{errors.vipCode}</p>
           )}
           <p id="vip-code-hint" className="text-xs text-gray-500">
-            VIP codes start with "Nomerati" and are account-specific
+            VIP codes are in format VIP-XXXX-XXXX
           </p>
         </div>
-
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-xs">
-            <strong>Security Features:</strong>
-            <ul className="mt-1 space-y-1">
-              <li>• Account-specific email binding</li>
-              <li>• 5-minute expiration window</li>
-              <li>• Google Authenticator TOTP verification</li>
-              <li>• Cannot be hacked or reused</li>
-            </ul>
-          </AlertDescription>
-        </Alert>
 
         <Button
           onClick={handleRedeem}

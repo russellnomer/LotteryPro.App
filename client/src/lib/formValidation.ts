@@ -63,8 +63,10 @@ export function validateVipCode(code: string): { valid: boolean; error: string }
   if (!code || !code.trim()) {
     return { valid: false, error: "VIP code is required" };
   }
-  if (code.trim().length < 10) {
-    return { valid: false, error: "VIP code must be at least 10 characters" };
+  // VIP-XXXX-XXXX format (12 characters total)
+  const vipPattern = /^VIP-[A-Z0-9]{4}-[A-Z0-9]{4}$/i;
+  if (!vipPattern.test(code.trim())) {
+    return { valid: false, error: "Invalid format. Expected: VIP-XXXX-XXXX" };
   }
   return { valid: true, error: "" };
 }

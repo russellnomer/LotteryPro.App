@@ -109,7 +109,7 @@ export async function generateSecureVipCode(
 }
 
 /**
- * Redeem VIP code with comprehensive security validation
+ * Redeem VIP code - simple validation
  */
 export async function redeemVipCode(
   redemption: VipCodeRedemption,
@@ -118,59 +118,10 @@ export async function redeemVipCode(
 ): Promise<{ success: boolean; newTier?: string; message: string }> {
   
   try {
-    // Extract components from VIP code
-    if (!redemption.code.startsWith('Nomerati') || redemption.code.length !== 22) {
-      return { success: false, message: 'Invalid VIP code format' };
-    }
-
-    const totpPart = redemption.code.substring(8, 14); // 6 digits after "Nomerati"
-    const emailHashPart = redemption.code.substring(14); // 8 characters
-
-    // Verify email hash matches
-    const expectedEmailHash = crypto.createHash('sha256')
-      .update(redemption.userEmail.toLowerCase())
-      .digest('hex')
-      .substring(0, 8);
-
-    if (emailHashPart !== expectedEmailHash) {
-      await logAdminAction({
-        adminEmail: 'system',
-        action: 'vip_code_failed_redemption',
-        targetEmail: redemption.userEmail,
-        details: {
-          reason: 'email_hash_mismatch',
-          providedCode: redemption.code.substring(0, 10) + '***',
-        },
-        ipAddress,
-        userAgent,
-      });
-      return { success: false, message: 'This VIP code is not valid for your account' };
-    }
-
-    // Verify TOTP is within valid window (current or previous 5-minute window, plus 30 minute grace period)
-    const currentTime = Date.now();
-    const isValidTotp = speakeasy.totp.verify({
-      secret: ADMIN_TOTP_SECRET,
-      encoding: 'base32',
-      token: totpPart,
-      time: currentTime,
-      step: 300,
-      window: 6, // Allow 6 windows (30 minutes) for extended validity
-    });
-
-    if (!isValidTotp) {
-      await logAdminAction({
-        adminEmail: 'system',
-        action: 'vip_code_failed_redemption',
-        targetEmail: redemption.userEmail,
-        details: {
-          reason: 'invalid_totp',
-          providedCode: redemption.code.substring(0, 10) + '***',
-        },
-        ipAddress,
-        userAgent,
-      });
-      return { success: false, message: 'VIP code has expired or is invalid' };
+    // Validate VIP code format: VIP-XXXX-XXXX
+    const vipCodePattern = /^VIP-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    if (!vipCodePattern.test(redemption.code.toUpperCase())) {
+      return { success: false, message: 'Invalid VIP code format. Expected: VIP-XXXX-XXXX' };
     }
 
     // Create hash for database lookup
