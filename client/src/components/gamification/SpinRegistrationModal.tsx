@@ -238,6 +238,13 @@ export default function SpinRegistrationModal({
                 </>
               )}
             </Button>
+
+            <div className="text-center pt-2">
+              <span className="text-sm text-gray-600">Already have an account? </span>
+              <Link href="/auth" className="text-sm text-purple-600 hover:underline font-medium">
+                Login here
+              </Link>
+            </div>
           </form>
         </Form>
       </DialogContent>

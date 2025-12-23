@@ -468,7 +468,11 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         }
       }
       
-      const canSpin = todaySpins.length === 0;
+      // Check if user has premium tier - unlimited spins
+      const userTier = req.user?.subscriptionTier || 'free';
+      const hasPremiumSpins = ['premium', 'pro', 'unlimited'].includes(userTier);
+      
+      const canSpin = hasPremiumSpins || todaySpins.length === 0;
       
       // Calculate hours until next spin based on the actual spin timestamp
       let hoursUntilNextSpin = 0;
@@ -482,7 +486,9 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         canSpin,
         hoursUntilNextSpin,
         spinStreak,
-        lastSpin: todaySpins[0] || null
+        lastSpin: todaySpins[0] || null,
+        unlimitedSpins: hasPremiumSpins,
+        userTier
       });
     } catch (error: any) {
       console.error('Spin status error:', error);
