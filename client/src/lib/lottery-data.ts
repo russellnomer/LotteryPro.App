@@ -7,35 +7,99 @@ export const GAME_CONFIG = {
     bonusNumber: { min: 1, max: 26, name: 'Powerball' },
     color: 'red',
     odds: '1 in 292,201,338',
-    icon: 'fas fa-bolt'
+    icon: 'fas fa-bolt',
+    drawDays: ['Mon', 'Wed', 'Sat'],
+    price: 2
   },
   megamillions: {
-    name: 'MegaMillions',
+    name: 'Mega Millions',
     mainNumbers: { min: 1, max: 70, count: 5 },
-    bonusNumber: { min: 1, max: 24, name: 'Mega Ball' },
+    bonusNumber: { min: 1, max: 25, name: 'Mega Ball' },
     color: 'blue',
     odds: '1 in 302,575,350',
-    icon: 'fas fa-gem'
+    icon: 'fas fa-gem',
+    drawDays: ['Tue', 'Fri'],
+    price: 2
+  },
+  nylotto: {
+    name: 'NY Lotto',
+    mainNumbers: { min: 1, max: 59, count: 6 },
+    bonusNumber: { min: 1, max: 59, name: 'Bonus', playerPicks: false },
+    color: 'purple',
+    odds: '1 in 45,057,474',
+    icon: 'fas fa-ticket-alt',
+    drawDays: ['Wed', 'Sat'],
+    price: 1
+  },
+  cash4life: {
+    name: 'Cash4Life',
+    mainNumbers: { min: 1, max: 60, count: 5 },
+    bonusNumber: { min: 1, max: 4, name: 'Cash Ball' },
+    color: 'green',
+    odds: '1 in 21,846,048',
+    icon: 'fas fa-money-bill-wave',
+    drawDays: ['Daily'],
+    price: 2
+  },
+  take5: {
+    name: 'Take 5',
+    mainNumbers: { min: 1, max: 39, count: 5 },
+    bonusNumber: null,
+    color: 'yellow',
+    odds: '1 in 575,757',
+    icon: 'fas fa-hand-paper',
+    drawDays: ['Twice Daily'],
+    price: 1
+  },
+  pick10: {
+    name: 'Pick 10',
+    mainNumbers: { min: 1, max: 80, count: 10 },
+    bonusNumber: null,
+    color: 'indigo',
+    odds: '1 in 8,911,711',
+    icon: 'fas fa-dice-d20',
+    drawDays: ['Daily'],
+    price: 1
   }
 } as const;
 
+export type MethodologyType = 'frequency' | 'pattern' | 'numerology' | 'astrology' | 'random' | 'mixed';
+
 export const ANALYSIS_METHODS = {
-  hot: {
-    name: 'Hot Numbers',
-    description: 'Based on frequency',
+  frequency: {
+    name: 'Frequency',
+    description: 'Hot/cold number analysis',
     icon: 'fas fa-fire',
     color: 'orange'
   },
-  balanced: {
-    name: 'Balanced',
-    description: 'Even distribution',
-    icon: 'fas fa-balance-scale',
+  pattern: {
+    name: 'Pattern',
+    description: 'Pattern recognition',
+    icon: 'fas fa-project-diagram',
     color: 'blue'
   },
-  wheel: {
-    name: 'Wheel System',
-    description: 'Multiple combinations',
-    icon: 'fas fa-cogs',
+  numerology: {
+    name: 'Numerology',
+    description: 'Numerology-based',
+    icon: 'fas fa-star-of-david',
+    color: 'purple'
+  },
+  astrology: {
+    name: 'Astrology',
+    description: 'Zodiac-based',
+    icon: 'fas fa-moon',
+    color: 'indigo'
+  },
+  random: {
+    name: 'Random',
+    description: 'Pure random',
+    icon: 'fas fa-dice',
+    color: 'gray'
+  },
+  mixed: {
+    name: 'Mixed',
+    description: 'Combine methods',
+    icon: 'fas fa-blender',
     color: 'green'
   }
 } as const;

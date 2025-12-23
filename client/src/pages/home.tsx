@@ -2,16 +2,17 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Chart } from "@/components/ui/chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { GAME_CONFIG, ANALYSIS_METHODS, WHEEL_SYSTEMS } from "@/lib/lottery-data";
+import { GAME_CONFIG, ANALYSIS_METHODS, WHEEL_SYSTEMS, MethodologyType } from "@/lib/lottery-data";
 import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analysis";
 import { apiRequest } from "@/lib/queryClient";
-import { GameType, TicketGeneration } from "@shared/schema";
+import { TicketGeneration } from "@shared/schema";
+import { GAME_CONFIG as SHARED_GAME_CONFIG, GameType, ALL_GAME_TYPES, ALL_METHODOLOGIES } from "@shared/gameConfig";
 import AdSpace from "@/components/AdSpace";
 import JackpocketBanner from "@/components/JackpocketBanner";
 // import EnhancedMusicPlayer from "@/components/EnhancedMusicPlayer"; // Replaced with RussellMusicPlayer
@@ -29,7 +30,7 @@ import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, Dolla
 
 export default function Home() {
   const [selectedGame, setSelectedGame] = useState<GameType>('powerball');
-  const [selectedMethod, setSelectedMethod] = useState<string>('hot');
+  const [selectedMethod, setSelectedMethod] = useState<MethodologyType>('frequency');
   const [generatedNumbers, setGeneratedNumbers] = useState<TicketGeneration | null>(null);
   const [showWheel, setShowWheel] = useState(false);
   const [wheelCombinations, setWheelCombinations] = useState<number[][]>([]);
@@ -267,27 +268,80 @@ export default function Home() {
           </Suspense>
         </div>
 
-        {/* Game Selector */}
-        <div className="mb-8">
-          <Tabs value={selectedGame} onValueChange={(value) => setSelectedGame(value as GameType)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="powerball" className="bg-red-600 text-white hover:bg-red-700 data-[state=active]:bg-red-600" aria-label="Select Powerball lottery game">
-                <div className="text-center">
-                  <i className="fas fa-bolt text-2xl mb-2 block" aria-hidden="true"></i>
-                  <div className="text-lg font-semibold">Powerball</div>
-                  <div className="text-sm opacity-90">5 from 1-69 + 1 from 1-26</div>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger value="megamillions" className="bg-blue-600 text-white hover:bg-blue-700 data-[state=active]:bg-blue-600" aria-label="Select MegaMillions lottery game">
-                <div className="text-center">
-                  <i className="fas fa-gem text-2xl mb-2 block" aria-hidden="true"></i>
-                  <div className="text-lg font-semibold">MegaMillions</div>
-                  <div className="text-sm opacity-90">5 from 1-70 + 1 from 1-24</div>
-                </div>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        {/* Game & Methodology Selectors */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Game Selector */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Select Lottery Game</label>
+            <Select value={selectedGame} onValueChange={(value) => setSelectedGame(value as GameType)}>
+              <SelectTrigger className="w-full" data-testid="select-game">
+                <SelectValue placeholder="Select a game" />
+              </SelectTrigger>
+              <SelectContent>
+                {ALL_GAME_TYPES.map((game) => {
+                  const config = SHARED_GAME_CONFIG[game];
+                  const bonusText = config.bonusNumber 
+                    ? ` + 1 ${config.bonusNumber.name} from 1-${config.bonusNumber.max}`
+                    : '';
+                  return (
+                    <SelectItem key={game} value={game} data-testid={`game-option-${game}`}>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{config.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {config.mainNumbers.count} from 1-{config.mainNumbers.max}{bonusText}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Methodology Selector */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Analysis Method</label>
+            <Select value={selectedMethod} onValueChange={(value) => setSelectedMethod(value as MethodologyType)}>
+              <SelectTrigger className="w-full" data-testid="select-methodology">
+                <SelectValue placeholder="Select methodology" />
+              </SelectTrigger>
+              <SelectContent>
+                {ALL_METHODOLOGIES.map((method) => (
+                  <SelectItem key={method} value={method} data-testid={`method-option-${method}`}>
+                    <span className="capitalize">{method}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        {/* Selected Game Info */}
+        <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h3 className="font-bold text-lg">{SHARED_GAME_CONFIG[selectedGame].name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Pick {SHARED_GAME_CONFIG[selectedGame].mainNumbers.count} numbers from 1-{SHARED_GAME_CONFIG[selectedGame].mainNumbers.max}
+                  {SHARED_GAME_CONFIG[selectedGame].bonusNumber && (
+                    <> + 1 {SHARED_GAME_CONFIG[selectedGame].bonusNumber.name} from 1-{SHARED_GAME_CONFIG[selectedGame].bonusNumber.max}</>
+                  )}
+                </p>
+              </div>
+              <div className="flex gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{SHARED_GAME_CONFIG[selectedGame].drawDays.join(', ')}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span>${SHARED_GAME_CONFIG[selectedGame].price}/play</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -431,7 +485,7 @@ export default function Home() {
                         className={`bg-gray-50 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
                           selectedMethod === key ? 'border-primary' : 'border-gray-200 hover:border-primary'
                         }`}
-                        onClick={() => setSelectedMethod(key)}
+                        onClick={() => setSelectedMethod(key as MethodologyType)}
                       >
                         <div className="text-center">
                           <i className={`${method.icon} text-${method.color}-500 text-2xl mb-2`}></i>
