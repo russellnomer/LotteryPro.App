@@ -467,13 +467,15 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         }
       }
       
-      // Check if user has premium tier - 3 spins per day
+      // Check tier for spin limits - Founders have UNLIMITED access
       const userTier = req.user?.subscriptionTier || 'free';
-      const isPremium = ['premium', 'pro', 'unlimited'].includes(userTier);
-      const maxSpinsPerDay = isPremium ? 3 : 1;
+      const isFounder = userTier === 'founder';
+      const isPremium = ['premium', 'pro', 'unlimited', 'lifetime', 'founder'].includes(userTier);
       
-      const canSpin = todaySpins.length < maxSpinsPerDay;
-      const spinsRemaining = Math.max(0, maxSpinsPerDay - todaySpins.length);
+      // Founders have ZERO limits - infinite spins, no restrictions
+      const maxSpinsPerDay = isFounder ? Infinity : (isPremium ? 3 : 1);
+      const canSpin = isFounder ? true : todaySpins.length < maxSpinsPerDay;
+      const spinsRemaining = isFounder ? Infinity : Math.max(0, maxSpinsPerDay - todaySpins.length);
       
       // Calculate hours until next spin based on the actual spin timestamp
       let hoursUntilNextSpin = 0;
@@ -491,6 +493,7 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
         spinsRemaining,
         maxSpinsPerDay,
         isPremium,
+        isFounder,
         userTier
       });
     } catch (error: any) {

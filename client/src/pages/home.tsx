@@ -209,18 +209,42 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIP Member Welcome Banner */}
-        {isVip && (
-          <Alert className="mb-6 border-purple-200 bg-purple-50 dark:bg-purple-950">
-            <Crown className="h-4 w-4 text-purple-600" />
+        {/* Login Prompt for Non-Authenticated Users */}
+        {!isAuthenticated && !authLoading && (
+          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950">
+            <UserPlus className="h-4 w-4 text-blue-600" />
             <AlertDescription>
-              <div className="flex justify-between items-center">
-                <span className="text-purple-700 dark:text-purple-300">
-                  <strong>VIP {userTier.charAt(0).toUpperCase() + userTier.slice(1)} Member</strong> - Unlimited generations, no ads, priority access
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <span className="text-blue-700 dark:text-blue-300">
+                  <strong>Welcome!</strong> Login to access your benefits and track your generations
                 </span>
-                <Badge className="bg-purple-600 text-white">
+                <a href="/auth" className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                  <Lock className="h-3 w-3 mr-1" />
+                  Login / Register
+                </a>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* VIP Member Welcome Banner with Tiered Gratitude */}
+        {isVip && (
+          <Alert className={`mb-6 ${userTier === 'founder' ? 'border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950' : 'border-purple-200 bg-purple-50 dark:bg-purple-950'}`}>
+            <Crown className={`h-4 w-4 ${userTier === 'founder' ? 'text-amber-600' : 'text-purple-600'}`} />
+            <AlertDescription>
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <span className={userTier === 'founder' ? 'text-amber-800 dark:text-amber-200' : 'text-purple-700 dark:text-purple-300'}>
+                  {userTier === 'founder' ? (
+                    <><strong>🙏 Welcome, Founder!</strong> Thank you for creating LotteryPro. Unlimited access, always.</>
+                  ) : ['premium', 'pro', 'lifetime', 'unlimited'].includes(userTier) ? (
+                    <><strong>🌟 Thank you for being a valued subscriber!</strong> Unlimited generations, no ads, priority access</>
+                  ) : (
+                    <><strong>VIP {userTier.charAt(0).toUpperCase() + userTier.slice(1)} Member</strong> - Unlimited generations, no ads, priority access</>
+                  )}
+                </span>
+                <Badge className={userTier === 'founder' ? 'bg-amber-600 text-white' : 'bg-purple-600 text-white'}>
                   <Star className="h-3 w-3 mr-1" />
-                  VIP
+                  {userTier === 'founder' ? 'FOUNDER' : 'VIP'}
                 </Badge>
               </div>
             </AlertDescription>

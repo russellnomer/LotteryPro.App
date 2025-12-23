@@ -50,6 +50,9 @@ interface SpinStatus {
   lastSpin: any;
   requiresRegistration?: boolean;
   message?: string;
+  isFounder?: boolean;
+  userTier?: string;
+  spinsRemaining?: number;
 }
 
 export default function SpinWheel() {
@@ -69,6 +72,9 @@ export default function SpinWheel() {
     queryKey: ['/api/spin/status'],
   });
 
+  // Founder detection - founders have ZERO limits
+  const isFounder = spinStatus?.isFounder || spinStatus?.userTier === 'founder';
+  
   // Use better prizes for logged-in users
   const PRIZES = isAuthenticated ? MEMBER_PRIZES : GUEST_PRIZES;
   
@@ -196,11 +202,13 @@ export default function SpinWheel() {
             Daily Lucky Spin
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            {requiresRegistration 
-              ? 'Register to unlock your daily spin and win prizes!' 
-              : isAuthenticated 
-                ? 'Members get exclusive prizes including signed Russell Nomer songs!' 
-                : 'Spin once per day to win prizes!'}
+            {isFounder 
+              ? '🙏 Thank you for creating LotteryPro! Unlimited spins, always.' 
+              : requiresRegistration 
+                ? 'Register to unlock your daily spin and win prizes!' 
+                : isAuthenticated 
+                  ? 'Members get exclusive prizes including signed Russell Nomer songs!' 
+                  : 'Spin once per day to win prizes!'}
           </p>
         </div>
 
@@ -264,12 +272,12 @@ export default function SpinWheel() {
               <UserPlus className="mr-2 w-6 h-6" />
               Register to Spin!
             </Button>
-          ) : spinStatus?.canSpin ? (
+          ) : (isFounder || spinStatus?.canSpin) ? (
             <Button
               size="lg"
               onClick={handleSpin}
               disabled={spinning}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xl px-12 py-6 shadow-lg hover:shadow-xl transition-all"
+              className={`${isFounder ? 'bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700' : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'} text-white font-bold text-xl px-12 py-6 shadow-lg hover:shadow-xl transition-all`}
               data-testid="button-spin-wheel"
               aria-label={spinning ? "Wheel is spinning, please wait" : "Spin to generate numbers"}
             >
@@ -287,7 +295,7 @@ export default function SpinWheel() {
               ) : (
                 <>
                   <Sparkles className="mr-2" />
-                  SPIN NOW!
+                  {isFounder ? '✨ FOUNDER SPIN!' : 'SPIN NOW!'}
                 </>
               )}
             </Button>
@@ -364,22 +372,37 @@ export default function SpinWheel() {
                   {claiming ? 'Claiming...' : (wonPrize.type === 'no_prize' ? 'Try Again Tomorrow' : (claimMutation.isError ? 'Retry Claim' : 'Claim Prize'))}
                 </Button>
                 
-                {/* Upsell to Premium Subscription */}
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    {wonPrize.type === 'no_prize' 
-                      ? "Want more chances? Premium members get 5 daily spins!" 
-                      : "Love winning? Premium members get unlimited picks!"}
-                  </p>
-                  <a 
-                    href="/pricing" 
-                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
-                    data-testid="link-upsell-premium"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Premium
-                  </a>
-                </div>
+                {/* Upsell to Premium Subscription - Hidden for VIP/Founder users */}
+                {!isFounder && !isAuthenticated && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      {wonPrize.type === 'no_prize' 
+                        ? "Want more chances? Premium members get 5 daily spins!" 
+                        : "Love winning? Premium members get unlimited picks!"}
+                    </p>
+                    <a 
+                      href="/pricing" 
+                      className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 rounded-lg shadow-md hover:shadow-lg transition-all"
+                      data-testid="link-upsell-premium"
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Premium
+                    </a>
+                  </div>
+                )}
+                
+                {/* Thank you message for Founders */}
+                {isFounder && (
+                  <div className="mt-6 pt-6 border-t border-amber-200 dark:border-amber-700">
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
+                      🙏 Thank you for creating LotteryPro, Founder!
+                    </p>
+                    <Badge className="bg-amber-600 text-white">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Unlimited Spins Forever
+                    </Badge>
+                  </div>
+                )}
               </Card>
             </motion.div>
           )}
