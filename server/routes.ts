@@ -386,11 +386,40 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   app.get("/api/spin/status", async (req, res) => {
     try {
       const { db } = await import('./db');
-      const { dailySpins } = await import('@shared/schema');
-      const { desc, eq, and, sql } = await import('drizzle-orm');
+      const { dailySpins, emailPreferences } = await import('@shared/schema');
+      const { desc, eq, and, sql, or } = await import('drizzle-orm');
       
       const userId = req.user?.id || null;
       const sessionId = req.sessionID || `guest_${req.ip}`;
+      
+      const isAuthenticated = !!req.user;
+      const hasRegisteredEmail = !!req.session?.spinRegisteredEmail;
+      const isRegistered = isAuthenticated || hasRegisteredEmail;
+      
+      if (!isRegistered) {
+        const existingRegistration = await db.select()
+          .from(emailPreferences)
+          .where(
+            or(
+              userId ? eq(emailPreferences.userId, userId) : sql`false`,
+              eq(emailPreferences.sessionId, sessionId)
+            )
+          )
+          .limit(1);
+        
+        if (existingRegistration.length > 0) {
+          req.session.spinRegisteredEmail = existingRegistration[0].email;
+        } else {
+          return res.json({
+            canSpin: false,
+            hoursUntilNextSpin: 0,
+            spinStreak: 0,
+            lastSpin: null,
+            requiresRegistration: true,
+            message: 'Please register to spin the wheel'
+          });
+        }
+      }
       
       // Get today's date in YYYY-MM-DD format
       const todayDate = new Date().toISOString().split('T')[0];
@@ -1114,6 +1143,89 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
       
     } catch (error: any) {
       console.error('Unsubscribe error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Spin Registration: Register email to unlock spin wheel
+  app.post("/api/spin/register", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { emailPreferences } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const { name, email, marketingConsent } = req.body;
+      
+      if (!name || !email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Name and email are required' 
+        });
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Please enter a valid email address' 
+        });
+      }
+      
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+      const userId = req.user?.id || null;
+      
+      const existing = await db.select()
+        .from(emailPreferences)
+        .where(eq(emailPreferences.email, email.toLowerCase()))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        req.session.spinRegisteredEmail = email.toLowerCase();
+        req.session.spinRegisteredName = name;
+        
+        return res.json({ 
+          success: true, 
+          message: 'Welcome back! You can now spin the wheel.',
+          email: email.toLowerCase(),
+          name,
+          alreadyRegistered: true
+        });
+      }
+      
+      await db.insert(emailPreferences).values({
+        userId,
+        sessionId,
+        email: email.toLowerCase(),
+        powerballReminders: marketingConsent ? 1 : 0,
+        megamillionsReminders: marketingConsent ? 1 : 0,
+        weeklyDigest: marketingConsent ? 1 : 0,
+        promotionalEmails: marketingConsent ? 1 : 0,
+      });
+      
+      req.session.spinRegisteredEmail = email.toLowerCase();
+      req.session.spinRegisteredName = name;
+      
+      console.log(`📧 New spin registration: ${email} (marketing: ${marketingConsent})`);
+      
+      res.json({ 
+        success: true, 
+        message: 'Registration complete! You can now spin the wheel.',
+        email: email.toLowerCase(),
+        name
+      });
+      
+    } catch (error: any) {
+      console.error('Spin registration error:', error);
+      if (error.code === '23505') {
+        req.session.spinRegisteredEmail = req.body.email?.toLowerCase();
+        req.session.spinRegisteredName = req.body.name;
+        return res.json({ 
+          success: true, 
+          message: 'Welcome back! You can now spin the wheel.',
+          email: req.body.email?.toLowerCase(),
+          alreadyRegistered: true
+        });
+      }
       res.status(500).json({ success: false, message: error.message });
     }
   });
