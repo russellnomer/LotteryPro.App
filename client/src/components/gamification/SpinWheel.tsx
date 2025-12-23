@@ -12,22 +12,35 @@ import SessionTimeReminder from '@/components/SessionTimeReminder';
 import SpinRegistrationModal from './SpinRegistrationModal';
 
 interface Prize {
-  type: 'free_generation' | 'discount_code' | 'premium_trial' | 'no_prize';
+  type: 'free_generation' | 'discount_code' | 'premium_trial' | 'no_prize' | 'loyalty_points' | 'hot_alerts' | 'streak_bonus' | 'autographed_song';
   value: string;
   displayName: string;
   color: string;
   icon: any;
 }
 
-const PRIZES: Prize[] = [
-  { type: 'free_generation', value: '3', displayName: '3 Free Picks!', color: '#10b981', icon: Ticket },
-  { type: 'no_prize', value: 'better_luck', displayName: 'Try Again Tomorrow', color: '#6b7280', icon: X },
-  { type: 'free_generation', value: '1', displayName: '1 Free Pick', color: '#3b82f6', icon: Gift },
-  { type: 'discount_code', value: 'LUCKY10', displayName: '10% Off Premium', color: '#f59e0b', icon: Sparkles },
+// Prizes for logged-in users - more valuable, no "try again"
+const MEMBER_PRIZES: Prize[] = [
+  { type: 'free_generation', value: '5', displayName: '5 Free Picks!', color: '#10b981', icon: Ticket },
+  { type: 'autographed_song', value: '1', displayName: 'Signed Song!', color: '#fbbf24', icon: Crown },
+  { type: 'free_generation', value: '3', displayName: '3 Free Picks', color: '#3b82f6', icon: Gift },
+  { type: 'hot_alerts', value: '7', displayName: 'Hot Alerts', color: '#f59e0b', icon: Sparkles },
   { type: 'free_generation', value: '2', displayName: '2 Free Picks', color: '#8b5cf6', icon: Ticket },
-  { type: 'premium_trial', value: '7', displayName: '7-Day Premium Trial', color: '#ec4899', icon: Crown },
+  { type: 'streak_bonus', value: '2x', displayName: '2x Bonus', color: '#ec4899', icon: Crown },
+  { type: 'loyalty_points', value: '50', displayName: '50 VIP Points', color: '#fbbf24', icon: Gift },
+  { type: 'free_generation', value: '1', displayName: '1 Free Pick', color: '#3b82f6', icon: Ticket },
+];
+
+// Prizes for guests - includes try again options
+const GUEST_PRIZES: Prize[] = [
+  { type: 'free_generation', value: '3', displayName: '3 Free Picks!', color: '#10b981', icon: Ticket },
+  { type: 'no_prize', value: 'better_luck', displayName: 'Try Again', color: '#6b7280', icon: X },
   { type: 'free_generation', value: '1', displayName: '1 Free Pick', color: '#3b82f6', icon: Gift },
-  { type: 'no_prize', value: 'better_luck', displayName: 'Try Again Tomorrow', color: '#6b7280', icon: X },
+  { type: 'discount_code', value: 'LUCKY10', displayName: '10% Off', color: '#f59e0b', icon: Sparkles },
+  { type: 'free_generation', value: '2', displayName: '2 Free Picks', color: '#8b5cf6', icon: Ticket },
+  { type: 'premium_trial', value: '7', displayName: '7-Day Trial', color: '#ec4899', icon: Crown },
+  { type: 'free_generation', value: '1', displayName: '1 Free Pick', color: '#3b82f6', icon: Gift },
+  { type: 'no_prize', value: 'better_luck', displayName: 'Try Again', color: '#6b7280', icon: X },
 ];
 
 interface SpinStatus {
@@ -56,6 +69,9 @@ export default function SpinWheel() {
     queryKey: ['/api/spin/status'],
   });
 
+  // Use better prizes for logged-in users
+  const PRIZES = isAuthenticated ? MEMBER_PRIZES : GUEST_PRIZES;
+  
   const requiresRegistration = spinStatus?.requiresRegistration && !isAuthenticated && !registeredEmail;
 
   const spinMutation = useMutation({
@@ -182,7 +198,9 @@ export default function SpinWheel() {
           <p className="text-gray-600 dark:text-gray-300">
             {requiresRegistration 
               ? 'Register to unlock your daily spin and win prizes!' 
-              : 'Spin once per day to win prizes!'}
+              : isAuthenticated 
+                ? 'Members get exclusive prizes including signed Russell Nomer songs!' 
+                : 'Spin once per day to win prizes!'}
           </p>
         </div>
 

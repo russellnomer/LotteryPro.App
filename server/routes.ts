@@ -2283,6 +2283,43 @@ Canonical: https://lotterypro.replit.app/.well-known/security.txt
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
   app.post("/api/auth/forgot-password", authRateLimit, forgotPassword);
   app.post("/api/auth/reset-password", authRateLimit, resetPassword);
+  
+  // Get current user endpoint
+  app.get("/api/auth/user", async (req, res) => {
+    try {
+      // Check session token from Authorization header
+      const sessionToken = req.headers.authorization?.replace('Bearer ', '');
+      
+      // Also check localStorage token from body or stored session
+      const storedToken = sessionToken || req.session?.sessionToken;
+      
+      if (!storedToken) {
+        return res.json(null);
+      }
+      
+      const session = await storage.getUserSession(storedToken);
+      if (!session || session.expiresAt < new Date()) {
+        return res.json(null);
+      }
+      
+      const user = await storage.getUserById(session.userId);
+      if (!user) {
+        return res.json(null);
+      }
+      
+      // Return user info (without sensitive data)
+      res.json({
+        id: user.id,
+        email: user.email,
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        mfaEnabled: user.mfaEnabled
+      });
+    } catch (error) {
+      console.error('Get user error:', error);
+      res.json(null);
+    }
+  });
 
   // VIP Code Management Routes moved to admin endpoints above
 
