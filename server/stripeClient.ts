@@ -10,11 +10,15 @@ async function getCredentials() {
   }
 
   // First, check for environment variables (user-provided API keys)
-  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY) {
+  // Support multiple naming conventions for flexibility
+  const secretKey = process.env.STRIPE_SECRET_KEY || process.env.LOTTERYPro_STRIPE_Secret_Key;
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_Publishable_Key;
+  
+  if (secretKey && publishableKey) {
     console.log('✅ Using Stripe API keys from environment variables');
     cachedCredentials = {
-      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-      secretKey: process.env.STRIPE_SECRET_KEY,
+      publishableKey: publishableKey,
+      secretKey: secretKey,
     };
     return cachedCredentials;
   }
@@ -99,5 +103,7 @@ export async function getStripeSync() {
 }
 
 export function isStripeIntegrationAvailable(): boolean {
-  return !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY) || !!process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const hasSecretKey = !!(process.env.STRIPE_SECRET_KEY || process.env.LOTTERYPro_STRIPE_Secret_Key);
+  const hasPublishableKey = !!(process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_Publishable_Key);
+  return (hasSecretKey && hasPublishableKey) || !!process.env.REPLIT_CONNECTORS_HOSTNAME;
 }
