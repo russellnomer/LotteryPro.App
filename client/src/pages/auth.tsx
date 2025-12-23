@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,16 @@ export default function AuthPage() {
   const [mfaData, setMfaData] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Handle URL query parameters for auth flow
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('register') === 'true') {
+      setAuthStep('register');
+    } else if (params.get('forgot') === 'true') {
+      setAuthStep('forgot-password');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
