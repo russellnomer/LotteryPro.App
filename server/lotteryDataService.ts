@@ -14,8 +14,8 @@ interface LotteryApiResponse {
  */
 export class LotteryDataService {
   private readonly API_ENDPOINTS = {
-    powerball: 'https://api.powerball.com/v2/recent-draws',
-    megamillions: 'https://api.megamillions.com/v2/recent-draws'
+    powerball: 'https://data.ny.gov/resource/d6yy-54nr.json',
+    megamillions: 'https://data.ny.gov/resource/5xaw-6ayf.json'
   };
 
   private readonly MINIMUM_SAMPLE_SIZE = 200; // Ultra-maximum statistical significance
@@ -98,12 +98,69 @@ export class LotteryDataService {
   }
 
   /**
-   * Fetch latest results from lottery APIs
+   * Fetch latest results from NY State Open Data API (data.ny.gov)
    */
   private async fetchLatestResults(game: 'powerball' | 'megamillions'): Promise<LotteryApiResponse[]> {
-    // Since we don't have real API access, generate realistic current data
-    // In production, this would make actual API calls
-    return this.generateRealisticCurrentResults(game);
+    const url = `${this.API_ENDPOINTS[game]}?$order=draw_date%20DESC&$limit=500`;
+    console.log(`🌐 Fetching real ${game} data from data.ny.gov...`);
+
+    try {
+      const response = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+      }
+
+      const rawData: any[] = await response.json();
+
+      if (!Array.isArray(rawData) || rawData.length === 0) {
+        throw new Error('API returned empty or invalid data');
+      }
+
+      const results: LotteryApiResponse[] = [];
+
+      for (const record of rawData) {
+        try {
+          if (!record.draw_date || !record.winning_numbers) continue;
+
+          const drawDate = record.draw_date.split('T')[0];
+          const numbers = record.winning_numbers.trim().split(/\s+/).map(Number);
+          let mainNumbers: number[];
+          let bonusNumber: number;
+
+          if (game === 'megamillions') {
+            if (numbers.length < 5 || !record.mega_ball) continue;
+            mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
+            bonusNumber = parseInt(record.mega_ball);
+          } else {
+            if (numbers.length < 6) continue;
+            mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
+            bonusNumber = numbers[5];
+          }
+
+          if (mainNumbers.some(isNaN) || isNaN(bonusNumber)) continue;
+
+          results.push({
+            game,
+            drawDate,
+            mainNumbers,
+            bonusNumber,
+            jackpot: record.multiplier ? `${record.multiplier}x Multiplier` : undefined
+          });
+        } catch (parseError) {
+          // Skip malformed records
+        }
+      }
+
+      console.log(`✅ Fetched ${results.length} real ${game} draws from data.ny.gov`);
+      return results;
+    } catch (error: any) {
+      console.error(`⚠️ Failed to fetch real ${game} data: ${error.message}`);
+      console.log(`🔄 Falling back to generated ${game} data`);
+      return this.generateRealisticCurrentResults(game);
+    }
   }
 
   /**
@@ -203,7 +260,7 @@ export class LotteryDataService {
           bonusNumber: result.bonusNumber,
           jackpot: result.jackpot || null
         });
-      } catch (error) {
+      } catch (error: any) {
         // Skip if already exists
         if (!error.message?.includes('duplicate') && !error.message?.includes('UNIQUE')) {
           console.error(`Error storing draw for ${game}:`, error);

@@ -1,15 +1,18 @@
 import { storage } from "./storage";
 
+const REAL_API_ENDPOINTS = {
+  powerball: 'https://data.ny.gov/resource/d6yy-54nr.json',
+  megamillions: 'https://data.ny.gov/resource/5xaw-6ayf.json'
+};
+
 export async function seedHistoricalData() {
   try {
     console.log('🚀 LAZY LOADING: Starting with essential data for instant startup...');
     
-    // First, seed minimal essential data for instant startup
     await seedEssentialData();
     
     console.log('✅ Essential data loaded - app ready for instant use!');
     
-    // Then load full dataset in background
     console.log('📊 Background loading: Building educational dataset for academic analysis...');
     setImmediate(async () => {
       try {
@@ -28,61 +31,50 @@ export async function seedHistoricalData() {
 }
 
 async function seedEssentialData() {
-  // Essential Powerball data (last 10 draws for instant analysis)
-  const essentialPowerball = [
-    { date: "2025-09-26", numbers: [7, 13, 21, 38, 56], powerball: 11 },
-    { date: "2025-09-23", numbers: [5, 17, 29, 45, 63], powerball: 8 },
-    { date: "2025-09-20", numbers: [2, 19, 33, 41, 67], powerball: 22 },
-    { date: "2025-09-17", numbers: [12, 28, 39, 47, 61], powerball: 15 },
-    { date: "2025-09-14", numbers: [1, 24, 35, 52, 68], powerball: 3 },
-    { date: "2025-09-11", numbers: [8, 16, 31, 44, 59], powerball: 19 },
-    { date: "2025-09-08", numbers: [3, 22, 37, 49, 65], powerball: 7 },
-    { date: "2025-09-05", numbers: [14, 27, 40, 53, 66], powerball: 12 },
-    { date: "2025-09-02", numbers: [6, 18, 32, 46, 62], powerball: 25 },
-    { date: "2025-08-30", numbers: [11, 23, 36, 48, 64], powerball: 9 }
-  ];
-
-  // Essential MegaMillions data (last 10 draws for instant analysis)
-  const essentialMegaMillions = [
-    { date: "2025-09-25", numbers: [11, 23, 35, 49, 62], megaBall: 17 },
-    { date: "2025-09-22", numbers: [6, 18, 31, 44, 58], megaBall: 13 },
-    { date: "2025-09-19", numbers: [9, 25, 37, 51, 69], megaBall: 7 },
-    { date: "2025-09-16", numbers: [4, 16, 29, 42, 65], megaBall: 21 },
-    { date: "2025-09-13", numbers: [13, 27, 38, 54, 67], megaBall: 4 },
-    { date: "2025-09-10", numbers: [2, 19, 33, 47, 61], megaBall: 18 },
-    { date: "2025-09-07", numbers: [8, 21, 36, 50, 63], megaBall: 11 },
-    { date: "2025-09-04", numbers: [15, 26, 39, 45, 68], megaBall: 24 },
-    { date: "2025-09-01", numbers: [7, 20, 34, 48, 66], megaBall: 6 },
-    { date: "2025-08-29", numbers: [12, 24, 41, 53, 70], megaBall: 14 }
-  ];
-
-  // Seed essential Powerball data
-  for (const draw of essentialPowerball) {
+  for (const game of ['powerball', 'megamillions'] as const) {
     try {
-      await storage.createDraw({
-        game: 'powerball',
-        drawDate: new Date(draw.date),
-        mainNumbers: draw.numbers,
-        bonusNumber: draw.powerball,
-        jackpot: '$50M'
-      });
-    } catch (e) {
-      // Skip duplicates
-    }
-  }
+      const url = `${REAL_API_ENDPOINTS[game]}?$order=draw_date%20DESC&$limit=10`;
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      
+      if (!response.ok) throw new Error(`API ${response.status}`);
+      
+      const rawData: any[] = await response.json();
+      let count = 0;
+      
+      for (const record of rawData) {
+        if (!record.draw_date || !record.winning_numbers) continue;
+        const drawDate = record.draw_date.split('T')[0];
+        const numbers = record.winning_numbers.trim().split(/\s+/).map(Number);
+        let mainNumbers: number[];
+        let bonusNumber: number;
 
-  // Seed essential MegaMillions data
-  for (const draw of essentialMegaMillions) {
-    try {
-      await storage.createDraw({
-        game: 'megamillions',
-        drawDate: new Date(draw.date),
-        mainNumbers: draw.numbers,
-        bonusNumber: draw.megaBall,
-        jackpot: '$35M'
-      });
-    } catch (e) {
-      // Skip duplicates
+        if (game === 'megamillions') {
+          if (numbers.length < 5 || !record.mega_ball) continue;
+          mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
+          bonusNumber = parseInt(record.mega_ball);
+        } else {
+          if (numbers.length < 6) continue;
+          mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
+          bonusNumber = numbers[5];
+        }
+
+        if (mainNumbers.some(isNaN) || isNaN(bonusNumber)) continue;
+
+        try {
+          await storage.createDraw({
+            game,
+            drawDate: new Date(drawDate),
+            mainNumbers,
+            bonusNumber,
+            jackpot: record.multiplier ? `${record.multiplier}x Multiplier` : null
+          });
+          count++;
+        } catch {
+        }
+      }
+      console.log(`✅ Essential ${game}: ${count} real recent draws loaded`);
+    } catch (error: any) {
+      console.log(`⚠️ Could not fetch essential ${game} data: ${error.message}`);
     }
   }
 }
@@ -90,45 +82,43 @@ async function seedEssentialData() {
 async function fallbackBasicData() {
   console.log('🔄 Falling back to basic lottery data...');
   
-  // Minimal fallback data
-  const basicPowerball = [
-    { date: "2025-09-01", numbers: [7, 13, 21, 38, 56], powerball: 11 },
-    { date: "2025-08-28", numbers: [5, 17, 29, 45, 63], powerball: 8 },
-    { date: "2025-08-25", numbers: [2, 19, 33, 41, 67], powerball: 22 }
-  ];
-
-  const basicMegaMillions = [
-    { date: "2025-09-01", numbers: [11, 23, 35, 49, 62], megaBall: 17 },
-    { date: "2025-08-27", numbers: [6, 18, 31, 44, 58], megaBall: 13 },
-    { date: "2025-08-23", numbers: [9, 25, 37, 51, 69], megaBall: 7 }
-  ];
-
-  // Seed basic data
-  for (const draw of basicPowerball) {
+  for (const game of ['powerball', 'megamillions'] as const) {
     try {
-      await storage.createDraw({
-        game: 'powerball',
-        drawDate: new Date(draw.date),
-        mainNumbers: draw.numbers,
-        bonusNumber: draw.powerball,
-        jackpot: '$50M'
-      });
-    } catch (e) {
-      // Skip duplicates
-    }
-  }
+      const url = `${REAL_API_ENDPOINTS[game]}?$order=draw_date%20DESC&$limit=3`;
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) continue;
+      const rawData: any[] = await response.json();
+      
+      for (const record of rawData) {
+        if (!record.draw_date || !record.winning_numbers) continue;
+        const numbers = record.winning_numbers.trim().split(/\s+/).map(Number);
+        let mainNumbers: number[];
+        let bonusNumber: number;
 
-  for (const draw of basicMegaMillions) {
-    try {
-      await storage.createDraw({
-        game: 'megamillions',
-        drawDate: new Date(draw.date),
-        mainNumbers: draw.numbers,
-        bonusNumber: draw.megaBall,
-        jackpot: '$35M'
-      });
-    } catch (e) {
-      // Skip duplicates
+        if (game === 'megamillions') {
+          if (numbers.length < 5 || !record.mega_ball) continue;
+          mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
+          bonusNumber = parseInt(record.mega_ball);
+        } else {
+          if (numbers.length < 6) continue;
+          mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
+          bonusNumber = numbers[5];
+        }
+
+        if (mainNumbers.some(isNaN) || isNaN(bonusNumber)) continue;
+
+        try {
+          await storage.createDraw({
+            game,
+            drawDate: new Date(record.draw_date.split('T')[0]),
+            mainNumbers,
+            bonusNumber,
+            jackpot: null
+          });
+        } catch {
+        }
+      }
+    } catch {
     }
   }
 
