@@ -62,6 +62,10 @@ const PAYPAL_PLAN_IDS = {
   premium: "P-6Y555870RG342905WNE5W6ZA"
 };
 
+const STRIPE_PAYMENT_LINKS: Record<string, string> = {
+  premium: "https://buy.stripe.com/4gM5kC71e3vP2UO2Kj5EY00"
+};
+
 declare global {
   interface Window {
     paypal?: any;
@@ -490,17 +494,32 @@ export default function SubscriptionPage() {
                     >
                       Start Free
                     </Button>
-                  ) : plan.paypalPlanId && paypalLoaded ? (
-                    <PayPalButton 
-                      planId={plan.paypalPlanId} 
-                      planName={plan.name}
-                      disabled={!canPurchase}
-                    />
                   ) : (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                      <span className="ml-2 text-sm text-gray-600">Loading...</span>
-                    </div>
+                    <>
+                      {STRIPE_PAYMENT_LINKS[plan.id] && (
+                        <Button
+                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold"
+                          disabled={!canPurchase}
+                          onClick={() => window.open(STRIPE_PAYMENT_LINKS[plan.id], '_blank')}
+                          data-testid={`button-stripe-${plan.id}`}
+                        >
+                          <Zap className="w-4 h-4 mr-2" />
+                          Pay with Card (Stripe)
+                        </Button>
+                      )}
+                      {plan.paypalPlanId && paypalLoaded ? (
+                        <PayPalButton 
+                          planId={plan.paypalPlanId} 
+                          planName={plan.name}
+                          disabled={!canPurchase}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center p-4">
+                          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                          <span className="ml-2 text-sm text-gray-600">Loading...</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </CardContent>
