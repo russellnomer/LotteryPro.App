@@ -8,6 +8,7 @@ import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink,
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import SEOHead from "@/components/SEOHead";
 
 const VIP_TIERS = ['premium', 'founder', 'lifetime'] as const;
 type VipTier = typeof VIP_TIERS[number];
@@ -382,6 +383,7 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <SEOHead title="Subscription Plans - Free, Basic, Pro & Premium" description="Choose your LotteryPro plan. Free basic access, or upgrade for unlimited generations, AI picks, community pools, and ad-free experience." path="/subscription" />
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">

@@ -12,6 +12,7 @@ import FanLoyaltyContest from "@/components/FanLoyaltyContest";
 import VipCodeManager from "@/components/VipCodeManager";
 import AstrologicalFeatures from "@/components/AstrologicalFeatures";
 import AdSpace from "@/components/AdSpace";
+import SEOHead from "@/components/SEOHead";
 import { Music, Heart, Star, Crown, DollarSign, Youtube, ExternalLink } from "lucide-react";
 
 export default function MusicHome() {
@@ -20,6 +21,7 @@ export default function MusicHome() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <SEOHead title="Russell Nomer Music - 532 Song ASCAP Catalog" description="Discover Russell Nomer's 532-song ASCAP music catalog. Stream on Apple Music, Spotify, and YouTube." path="/music" />
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

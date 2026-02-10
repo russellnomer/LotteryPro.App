@@ -57,7 +57,7 @@ interface SpinStatus {
 
 export default function SpinWheel() {
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [wonPrize, setWonPrize] = useState<Prize | null>(null);
@@ -78,7 +78,7 @@ export default function SpinWheel() {
   // Use better prizes for logged-in users
   const PRIZES = isAuthenticated ? MEMBER_PRIZES : GUEST_PRIZES;
   
-  const requiresRegistration = spinStatus?.requiresRegistration && !isAuthenticated && !registeredEmail;
+  const requiresRegistration = spinStatus?.requiresRegistration && !isAuthenticated && !isLoading && !registeredEmail;
 
   const spinMutation = useMutation({
     mutationFn: async () => {
@@ -261,7 +261,23 @@ export default function SpinWheel() {
           </div>
 
           {/* Action Button */}
-          {requiresRegistration ? (
+          {isLoading ? (
+            <Button
+              size="lg"
+              disabled
+              className="bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold text-xl px-12 py-6 shadow-lg"
+              aria-label="Loading authentication status"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                className="mr-2"
+              >
+                <Sparkles />
+              </motion.div>
+              Loading...
+            </Button>
+          ) : requiresRegistration ? (
             <Button
               size="lg"
               onClick={() => setRegistrationModalOpen(true)}

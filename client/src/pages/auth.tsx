@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import SEOHead from "@/components/SEOHead";
 
 const PROHIBITED_STATES = [
   'AL', 'AK', 'HI', 'MS', 'NV', 'UT'
@@ -594,6 +595,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
+      <SEOHead title="Login or Register" description="Create your free LotteryPro account to access lottery analysis tools, save picks, and join community pools." path="/auth" />
       <div className="max-w-4xl mx-auto">
         {errors.length > 0 && (
           <Alert className="mb-6 border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">

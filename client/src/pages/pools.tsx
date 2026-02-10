@@ -13,6 +13,7 @@ import { Users, DollarSign, Calendar, Trophy, Plus, TrendingUp } from "lucide-re
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import SEOHead from "@/components/SEOHead";
 
 interface Pool {
   id: string;
@@ -175,6 +176,7 @@ export default function PoolsPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
+      <SEOHead title="Community Lottery Pools" description="Join lottery pools with fellow players. Pool contributions, share tickets, and dream together." path="/pools" />
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold mb-2">Community Lottery Pools</h1>

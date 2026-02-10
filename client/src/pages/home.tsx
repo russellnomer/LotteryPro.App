@@ -32,6 +32,7 @@ const ProfileSetup = lazy(() => import("@/components/ProfileSetup"));
 const SpinWheel = lazy(() => import("@/components/gamification/SpinWheel"));
 const PostGenerationModal = lazy(() => import("@/components/PostGenerationModal"));
 import SystemStatusIndicator from "@/components/SystemStatusIndicator";
+import SEOHead from "@/components/SEOHead";
 import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign } from "lucide-react";
 
 export default function Home() {
@@ -168,6 +169,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead title="AI-Powered Lottery Analysis & Smart Picks" description="Analyze Powerball & Mega Millions with 2,020+ real winning numbers. Generate smart picks with statistical algorithms. Free tier available." path="/" />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

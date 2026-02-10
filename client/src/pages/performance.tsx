@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, TrendingUp, TrendingDown, DollarSign, Target, Trophy, BarChart3, AlertTriangle } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 interface WinLossStatement {
   spendingLevel: number;
@@ -108,6 +109,7 @@ export default function Performance() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <SEOHead title="Performance Analytics & Historical Tracking" description="Track lottery number generation performance with real draw results. Comprehensive win/loss analysis across multiple spending levels." path="/performance" />
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
