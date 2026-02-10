@@ -93,6 +93,16 @@ export default function Footer() {
             <h4 className="font-semibold text-white mb-3">Support & Contact</h4>
             <ul className="space-y-2 text-sm">
               <li>
+                <a 
+                  href="https://russellnomermusic.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" /> RussellNomerMusic.com
+                </a>
+              </li>
+              <li>
                 <Link href="/support" className="hover:text-white" data-testid="link-footer-support">
                   Contact Support
                 </Link>

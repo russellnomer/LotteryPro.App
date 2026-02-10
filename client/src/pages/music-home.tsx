@@ -38,6 +38,9 @@ export default function MusicHome() {
               <a href="/books" className="text-gray-600 hover:text-primary transition-colors">Books</a>
               <a href="/fan-contest" className="text-gray-600 hover:text-primary transition-colors">Fan Contest</a>
               <a href="/support" className="text-gray-600 hover:text-primary transition-colors">Support Russell</a>
+              <a href="https://russellnomermusic.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 font-semibold transition-colors flex items-center gap-1">
+                <ExternalLink className="h-3 w-3" /> Official Site
+              </a>
               
               {/* Demo User Tier Switcher */}
               <select 
@@ -65,7 +68,7 @@ export default function MusicHome() {
             <p className="text-xl md:text-2xl text-purple-100 mb-6">
               Authentic ASCAP Member Music Catalog • Books • Fan Community
             </p>
-            <div className="flex justify-center gap-4 mb-6">
+            <div className="flex flex-wrap justify-center gap-4 mb-6">
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 <Youtube className="h-4 w-4 mr-2" />
                 438 Songs Available
@@ -79,6 +82,16 @@ export default function MusicHome() {
                 Authentic Catalog
               </Badge>
             </div>
+            
+            <a
+              href="https://russellnomermusic.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-purple-700 font-bold px-6 py-3 rounded-lg hover:bg-purple-100 transition-colors text-lg shadow-lg"
+            >
+              <ExternalLink className="h-5 w-5" />
+              Visit RussellNomerMusic.com
+            </a>
             
             {/* Streaming Support Education */}
             <Alert className="bg-yellow-500/20 border-yellow-400/30 text-yellow-100 max-w-4xl mx-auto">
