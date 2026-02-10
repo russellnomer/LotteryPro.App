@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
               <Shield className="w-8 h-8 text-primary" />
               <div>
                 <CardTitle className="text-3xl" data-testid="text-page-title">Privacy Policy</CardTitle>
-                <p className="text-gray-600 dark:text-gray-400">Effective Date: January 2025 | Version 1.0</p>
+                <p className="text-gray-600 dark:text-gray-400">Effective Date: February 2026 | Version 1.1</p>
               </div>
             </div>
           </CardHeader>
@@ -260,6 +260,7 @@ export default function PrivacyPolicy() {
             <p>For privacy-related questions or to exercise your rights, contact us:</p>
             <ul>
               <li><strong>Email:</strong> legal@russellnomer.com</li>
+              <li><strong>Website:</strong> <a href="https://lotterypro.app" className="text-primary">https://lotterypro.app</a></li>
               <li><strong>Support:</strong> <Link href="/support"><a className="text-primary">Submit a Support Ticket</a></Link></li>
             </ul>
             

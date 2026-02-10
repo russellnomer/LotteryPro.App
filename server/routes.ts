@@ -59,7 +59,7 @@ Disallow: /api/
 Disallow: /admin/
 Disallow: /god-mode
 
-Sitemap: https://lotterypro.replit.app/sitemap.xml
+Sitemap: https://lotterypro.app/sitemap.xml
 `);
   });
   
@@ -72,7 +72,7 @@ Sitemap: https://lotterypro.replit.app/sitemap.xml
 Contact: mailto:security@lotterypro.com
 Expires: 2026-12-31T23:59:59.000Z
 Preferred-Languages: en
-Canonical: https://lotterypro.replit.app/.well-known/security.txt
+Canonical: https://lotterypro.app/.well-known/security.txt
 `);
   });
   

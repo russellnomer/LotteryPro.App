@@ -17,7 +17,7 @@ export default function TermsOfService() {
               <Scale className="w-8 h-8 text-primary" />
               <div>
                 <CardTitle className="text-3xl" data-testid="text-page-title">Terms of Service</CardTitle>
-                <p className="text-gray-600 dark:text-gray-400">Effective Date: January 2025 | Version 1.0</p>
+                <p className="text-gray-600 dark:text-gray-400">Effective Date: February 2026 | Version 1.1</p>
               </div>
             </div>
           </CardHeader>
@@ -41,7 +41,9 @@ export default function TermsOfService() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using LotteryPro ("the Service"), you agree to be bound by these Terms of Service 
+              By accessing or using LotteryPro ("the Service"), accessible at{" "}
+              <a href="https://lotterypro.app" className="text-primary">https://lotterypro.app</a>, 
+              you agree to be bound by these Terms of Service 
               ("Terms"). These Terms constitute a legally binding agreement between you and LotteryPro 
               ("we," "us," or "our"). Your continued use of the Service constitutes acceptance of any 
               modifications to these Terms.
@@ -272,6 +274,7 @@ export default function TermsOfService() {
             </p>
             <ul>
               <li>Email: legal@russellnomer.com</li>
+              <li>Website: <a href="https://lotterypro.app" className="text-primary">https://lotterypro.app</a></li>
               <li>Support: <Link href="/support"><a className="text-primary">Submit a Support Ticket</a></Link></li>
             </ul>
 

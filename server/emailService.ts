@@ -38,7 +38,7 @@ This code will upgrade your account to: ${targetTier.toUpperCase()} TIER
 • Cannot be hacked, transferred, or reused
 
 🔗 REDEEM YOUR CODE:
-Visit: https://your-lottery-app.replit.app/admin
+Visit: https://lotterypro.app/admin
 Scroll down to "Test VIP Code Redemption" section
 Enter your email and the VIP code above
 
@@ -89,7 +89,7 @@ Russell Nomer Platform
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://your-lottery-app.replit.app/admin" 
+          <a href="https://lotterypro.app/admin" 
              style="background: linear-gradient(135deg, #dc3545, #e91e63); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
             🔑 Redeem VIP Code Now
           </a>
@@ -228,7 +228,7 @@ export function generateDrawDayReminderHTML(
           </div>
 
           <p style="color: #718096; font-size: 14px; text-align: center; margin-top: 30px;">
-            Or generate fresh numbers on <a href="https://lotterypro.com" style="color: ${gameConfig.color}; text-decoration: none; font-weight: bold;">LotteryPro.com</a>
+            Or generate fresh numbers on <a href="https://lotterypro.app" style="color: ${gameConfig.color}; text-decoration: none; font-weight: bold;">LotteryPro.app</a>
           </p>
         </div>
 
@@ -239,8 +239,8 @@ export function generateDrawDayReminderHTML(
             Educational Lottery Analysis Platform
           </p>
           <p style="color: #A0AEC0; font-size: 12px; margin: 0;">
-            <a href="https://lotterypro.com/unsubscribe?email=${encodeURIComponent(userEmail)}" style="color: #A0AEC0; text-decoration: underline;">Unsubscribe</a> | 
-            <a href="https://lotterypro.com/preferences?email=${encodeURIComponent(userEmail)}" style="color: #A0AEC0; text-decoration: underline;">Email Preferences</a>
+            <a href="https://lotterypro.app/unsubscribe?email=${encodeURIComponent(userEmail)}" style="color: #A0AEC0; text-decoration: underline;">Unsubscribe</a> | 
+            <a href="https://lotterypro.app/preferences?email=${encodeURIComponent(userEmail)}" style="color: #A0AEC0; text-decoration: underline;">Email Preferences</a>
           </p>
         </div>
 
