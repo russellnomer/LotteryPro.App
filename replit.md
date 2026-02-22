@@ -85,6 +85,44 @@ The platform features a responsive design with a mobile-first approach, utilizin
 - Database table: `referral_codes`
 - Frontend: `ReferralWidget` component with copy-to-clipboard and social share buttons
 
+### SEO & Analytics (February 2026)
+
+**1. Open Graph & Twitter Card Meta Tags** ✅
+- `SEOHead` component using `react-helmet-async` for per-page dynamic meta tags
+- OG and Twitter Card tags on 8 major pages (home, music, subscription, pools, performance, privacy, terms, auth)
+- Default fallback tags in `index.html`
+- Domain: `https://lotterypro.app`
+
+**2. Google Tag Manager Integration** ✅
+- GTM container ID: `GTM-P3JTF25N`
+- Script in `<head>` and noscript iframe after `<body>`
+- Custom dataLayer events via `client/src/lib/analytics.ts`:
+  - `spin_wheel`, `number_generation`, `subscription_view`, `subscription_click`
+  - `referral_share`, `pool_join`, `music_play`, `virtual_page_view`
+- Tracking wired into: SpinWheel, subscription page, ReferralWidget, home page generation
+
+**3. SEO Blog Section** ✅
+- Routes: `/blog` (index), `/blog/:slug` (individual posts)
+- 4 educational posts: frequency analysis, odds comparison, pool guide, generation methods
+- Internal CTAs linking to app features
+- Blog link in main navigation
+
+**4. Progressive Web App (PWA)** ✅
+- `manifest.json` with standalone display, indigo theme (#6366f1)
+- Service worker (`sw.js`) with network-first caching (skips API routes)
+- `PWAInstallPrompt` component: shows after 3+ visits, dismissable for 7 days
+- Apple mobile web app meta tags
+- Registered in `main.tsx`
+
+**5. One-Time Purchases via Stripe** ✅
+- Credit packs: 10 credits/$4.99, 25/$9.99, 50/$17.99
+- 24-hour day pass: $2.99
+- Stripe Checkout (one-time payment mode)
+- API endpoints: `/api/purchases/create-checkout`, `/api/purchases/verify/:sessionId`, `/api/purchases/my-credits`
+- Database table: `one_time_purchases`
+- UI in subscription page under "Quick Access Packs" section
+- Auto-verification on success redirect with `{CHECKOUT_SESSION_ID}`
+
 ## External Dependencies
 
 ### Database

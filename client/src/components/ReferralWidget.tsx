@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Share2, Copy, Gift, Users, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { analytics } from '@/lib/analytics';
 import { useState } from "react";
 
 export default function ReferralWidget() {
@@ -26,6 +27,7 @@ export default function ReferralWidget() {
     if (referralLink) {
       navigator.clipboard.writeText(referralLink);
       setCopied(true);
+      analytics.trackReferralShare('copy');
       toast({
         title: "Copied!",
         description: "Referral link copied to clipboard",
@@ -43,6 +45,7 @@ export default function ReferralWidget() {
     };
     
     if (urls[platform]) {
+      analytics.trackReferralShare(platform);
       window.open(urls[platform], '_blank', 'width=600,height=400');
     }
   };

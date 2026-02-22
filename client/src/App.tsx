@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import Navigation from "@/components/Navigation";
 import CookieConsent from "@/components/CookieConsent";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import DisclaimerModal from "@/components/DisclaimerModal";
 import AgeGateModal from "@/components/AgeGateModal";
 import Footer from "@/components/Footer";
@@ -23,6 +24,7 @@ import TermsOfService from "@/pages/terms";
 import Support from "@/pages/support";
 import SocialMarketing from "@/pages/social-marketing";
 import Pools from "@/pages/pools";
+import { BlogIndex, BlogPost } from "@/pages/blog";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -45,6 +47,8 @@ function Router() {
           <Route path="/support" component={Support} />
           <Route path="/social-marketing" component={SocialMarketing} />
           <Route path="/pools" component={Pools} />
+          <Route path="/blog" component={BlogIndex} />
+          <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/accessibility" component={Accessibility} />
           <Route component={NotFound} />
         </Switch>
@@ -64,6 +68,7 @@ function App() {
           <Toaster />
           <Router />
           <CookieConsent />
+          <PWAInstallPrompt />
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>

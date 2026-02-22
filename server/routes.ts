@@ -2297,6 +2297,167 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // ==================== ONE-TIME PURCHASES (Stripe Checkout) ====================
+
+  const PURCHASE_OPTIONS: Record<string, { name: string; credits: number; amount: number; description: string }> = {
+    credit_pack_10: { name: '10 Credit Pack', credits: 10, amount: 499, description: '10 generation credits' },
+    credit_pack_25: { name: '25 Credit Pack', credits: 25, amount: 999, description: '25 generation credits' },
+    credit_pack_50: { name: '50 Credit Pack', credits: 50, amount: 1799, description: '50 generation credits' },
+    day_pass: { name: '24-Hour Day Pass', credits: 0, amount: 299, description: 'Unlimited access for 24 hours' },
+  };
+
+  app.post("/api/purchases/create-checkout", async (req, res) => {
+    try {
+      const { purchaseType } = req.body;
+
+      if (!purchaseType || !PURCHASE_OPTIONS[purchaseType]) {
+        return res.status(400).json({ success: false, message: 'Invalid purchase type' });
+      }
+
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+
+      const option = PURCHASE_OPTIONS[purchaseType];
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+      const checkoutSession = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: option.name,
+              description: option.description,
+            },
+            unit_amount: option.amount,
+          },
+          quantity: 1,
+        }],
+        success_url: `${baseUrl}/subscription?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/subscription?purchase=cancelled`,
+        metadata: {
+          purchaseType,
+          userId: userId || '',
+          sessionId,
+        },
+      });
+
+      const { db } = await import('./db');
+      const { oneTimePurchases } = await import('@shared/schema');
+
+      await db.insert(oneTimePurchases).values({
+        userId,
+        sessionId,
+        purchaseType,
+        creditsGranted: option.credits,
+        stripeSessionId: checkoutSession.id,
+        status: 'pending',
+        amount: option.amount,
+      });
+
+      res.json({ success: true, url: checkoutSession.url });
+    } catch (error: any) {
+      console.error('Create checkout error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  app.get("/api/purchases/verify/:sessionId", async (req, res) => {
+    try {
+      const stripeSessionId = req.params.sessionId;
+
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+
+      const session = await stripe.checkout.sessions.retrieve(stripeSessionId);
+
+      const { db } = await import('./db');
+      const { oneTimePurchases, userAccounts } = await import('@shared/schema');
+      const { eq, sql } = await import('drizzle-orm');
+
+      const [purchase] = await db.select()
+        .from(oneTimePurchases)
+        .where(eq(oneTimePurchases.stripeSessionId, stripeSessionId))
+        .limit(1);
+
+      if (!purchase) {
+        return res.status(404).json({ success: false, message: 'Purchase not found' });
+      }
+
+      if (purchase.status === 'completed') {
+        return res.json({ success: true, status: 'completed', purchase });
+      }
+
+      if (session.payment_status === 'paid') {
+        const updates: Record<string, any> = { status: 'completed' };
+
+        if (purchase.purchaseType === 'day_pass') {
+          updates.passExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        }
+
+        await db.update(oneTimePurchases)
+          .set(updates)
+          .where(eq(oneTimePurchases.id, purchase.id));
+
+        if (purchase.userId && purchase.creditsGranted > 0) {
+          await db.update(userAccounts)
+            .set({
+              bonusGenerations: sql`COALESCE(${userAccounts.bonusGenerations}, 0) + ${purchase.creditsGranted}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(userAccounts.id, purchase.userId));
+        }
+
+        return res.json({ success: true, status: 'completed', purchase: { ...purchase, status: 'completed' } });
+      }
+
+      res.json({ success: true, status: purchase.status, purchase });
+    } catch (error: any) {
+      console.error('Verify purchase error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  app.get("/api/purchases/my-credits", async (req, res) => {
+    try {
+      const userId = req.user?.id || null;
+      const sessionId = req.sessionID || `guest_${req.ip}`;
+
+      const { db } = await import('./db');
+      const { oneTimePurchases } = await import('@shared/schema');
+      const { eq, and, gt, sql } = await import('drizzle-orm');
+
+      const identifier = userId
+        ? eq(oneTimePurchases.userId, userId)
+        : eq(oneTimePurchases.sessionId, sessionId);
+
+      const completedPurchases = await db.select()
+        .from(oneTimePurchases)
+        .where(and(identifier, eq(oneTimePurchases.status, 'completed')));
+
+      const totalCredits = completedPurchases.reduce((sum, p) => sum + (p.creditsGranted || 0), 0);
+
+      const now = new Date();
+      const activeDayPass = completedPurchases.find(
+        p => p.purchaseType === 'day_pass' && p.passExpiresAt && new Date(p.passExpiresAt) > now
+      );
+
+      res.json({
+        success: true,
+        totalCredits,
+        hasActiveDayPass: !!activeDayPass,
+        dayPassExpiresAt: activeDayPass?.passExpiresAt || null,
+        purchases: completedPurchases,
+      });
+    } catch (error: any) {
+      console.error('Get credits error:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   // Usage enforcement endpoint
   app.post("/api/check-usage", requireAuth, async (req, res) => {
     try {

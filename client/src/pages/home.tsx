@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { GAME_CONFIG, ANALYSIS_METHODS, WHEEL_SYSTEMS, MethodologyType } from "@/lib/lottery-data";
 import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analysis";
 import { apiRequest } from "@/lib/queryClient";
+import { analytics } from '@/lib/analytics';
 import { TicketGeneration } from "@shared/schema";
 import { GAME_CONFIG as SHARED_GAME_CONFIG, GameType, ALL_GAME_TYPES, ALL_METHODOLOGIES } from "@shared/gameConfig";
 import AdSpace from "@/components/AdSpace";
@@ -111,6 +112,7 @@ export default function Home() {
     onSuccess: (data) => {
       setGeneratedNumbers(data);
       updateDailyUsage();
+      analytics.trackGeneration(selectedGame, selectedMethod, userTier);
       toast({
         title: "Numbers Generated!",
         description: `Generated ${GAME_CONFIG[selectedGame].name} numbers using ${ANALYSIS_METHODS[selectedMethod as keyof typeof ANALYSIS_METHODS].name} method.`

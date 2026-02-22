@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2, Crown, Sparkles } from "lucide-react";
+import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2, Crown, Sparkles, CreditCard, Clock, Package } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import SEOHead from "@/components/SEOHead";
+import { analytics } from '@/lib/analytics';
 
 const VIP_TIERS = ['premium', 'founder', 'lifetime'] as const;
 type VipTier = typeof VIP_TIERS[number];
@@ -106,6 +107,7 @@ function PayPalButton({ planId, planName, disabled }: { planId: string; planName
           },
           onApprove: async function(data: any) {
             console.log('Subscription approved:', data.subscriptionID);
+            analytics.trackSubscriptionClick(planName, 'paypal');
             toast({
               title: "Subscription Activated!",
               description: `Your ${planName} subscription is now active. Subscription ID: ${data.subscriptionID}`,
@@ -202,17 +204,126 @@ function PayPalButton({ planId, planName, disabled }: { planId: string; planName
   );
 }
 
+const ONE_TIME_PACKS = [
+  {
+    id: 'credit_pack_10',
+    name: '10 Credit Pack',
+    price: '$4.99',
+    description: 'Perfect for trying out premium picks',
+    credits: 10,
+    icon: Package,
+    badge: null,
+  },
+  {
+    id: 'credit_pack_25',
+    name: '25 Credit Pack',
+    price: '$9.99',
+    description: 'Most popular - save 20%',
+    credits: 25,
+    icon: Package,
+    badge: 'Most Popular',
+  },
+  {
+    id: 'credit_pack_50',
+    name: '50 Credit Pack',
+    price: '$17.99',
+    description: 'Best value - save 28%',
+    credits: 50,
+    icon: Package,
+    badge: 'Best Value',
+  },
+  {
+    id: 'day_pass',
+    name: '24-Hour Day Pass',
+    price: '$2.99',
+    description: 'Unlimited access for a day',
+    credits: null,
+    icon: Clock,
+    badge: null,
+  },
+];
+
 export default function SubscriptionPage() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [stateConfirmed, setStateConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [paypalLoaded, setPaypalLoaded] = useState(false);
+  const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
   
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const userTier = (user as any)?.subscriptionTier;
   const isVipUser = isAuthenticated && isVipTier(userTier);
 
   const canPurchase = ageVerified && stateConfirmed && termsAccepted;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const purchaseStatus = params.get('purchase');
+    const sessionId = params.get('session_id');
+
+    if (purchaseStatus === 'success') {
+      if (sessionId) {
+        fetch(`/api/purchases/verify/${sessionId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.status === 'completed') {
+              toast({
+                title: "Purchase Complete!",
+                description: "Your credits have been added to your account.",
+              });
+            }
+          })
+          .catch(() => {});
+      } else {
+        toast({
+          title: "Purchase Complete!",
+          description: "Your credits have been added to your account.",
+        });
+      }
+      window.history.replaceState({}, '', '/subscription');
+    } else if (purchaseStatus === 'cancelled') {
+      toast({
+        title: "Purchase Cancelled",
+        description: "Your purchase was cancelled. No charges were made.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, '', '/subscription');
+    }
+  }, [toast]);
+
+  const handleOneTimePurchase = async (purchaseType: string) => {
+    setPurchaseLoading(purchaseType);
+    analytics.trackSubscriptionClick(purchaseType, 'stripe_onetime');
+
+    try {
+      const response = await fetch('/api/purchases/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ purchaseType }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to create checkout session.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPurchaseLoading(null);
+    }
+  };
 
   useEffect(() => {
     if (document.querySelector(`script[src*="paypal.com/sdk/js"]`)) {
@@ -502,7 +613,7 @@ export default function SubscriptionPage() {
                         <Button
                           className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold"
                           disabled={!canPurchase}
-                          onClick={() => window.open(STRIPE_PAYMENT_LINKS[plan.id], '_blank')}
+                          onClick={() => { analytics.trackSubscriptionClick(plan.name, 'stripe'); window.open(STRIPE_PAYMENT_LINKS[plan.id], '_blank'); }}
                           data-testid={`button-stripe-${plan.id}`}
                         >
                           <Zap className="w-4 h-4 mr-2" />
@@ -527,6 +638,80 @@ export default function SubscriptionPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* One-Time Purchase Packs */}
+        <div className="mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Quick Access Packs
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              No subscription needed — grab credits or a day pass instantly
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {ONE_TIME_PACKS.map((pack) => {
+              const IconComponent = pack.icon;
+              return (
+                <Card
+                  key={pack.id}
+                  className={`relative transition-all duration-300 hover:shadow-lg ${
+                    pack.badge === 'Most Popular' ? 'border-green-500 border-2' : ''
+                  } ${pack.badge === 'Best Value' ? 'border-amber-500 border-2' : ''}`}
+                  data-testid={`card-pack-${pack.id}`}
+                >
+                  {pack.badge && (
+                    <Badge className={`absolute -top-3 left-1/2 transform -translate-x-1/2 ${
+                      pack.badge === 'Best Value' ? 'bg-amber-500' : 'bg-green-500'
+                    }`}>
+                      {pack.badge}
+                    </Badge>
+                  )}
+
+                  <CardHeader className="text-center pb-2">
+                    <div className="bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900 dark:to-teal-900 rounded-full p-3 w-14 h-14 mx-auto mb-3 flex items-center justify-center">
+                      <IconComponent className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <CardTitle className="text-xl font-bold">{pack.name}</CardTitle>
+                    <CardDescription className="text-sm">{pack.description}</CardDescription>
+                    <div className="mt-2">
+                      <span className="text-3xl font-bold text-emerald-600">{pack.price}</span>
+                      <span className="text-gray-500 text-sm ml-1">one-time</span>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-2">
+                    <div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {pack.credits
+                        ? `${pack.credits} generation credits`
+                        : '24 hours of unlimited access'}
+                    </div>
+
+                    <Button
+                      className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold"
+                      disabled={!canPurchase || purchaseLoading === pack.id}
+                      onClick={() => handleOneTimePurchase(pack.id)}
+                      data-testid={`button-buy-${pack.id}`}
+                    >
+                      {purchaseLoading === pack.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Buy Now
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
         {/* Jackpocket Referral - Premium Partner CTA */}

@@ -8,6 +8,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { analytics } from '@/lib/analytics';
 import SessionTimeReminder from '@/components/SessionTimeReminder';
 import SpinRegistrationModal from './SpinRegistrationModal';
 
@@ -100,6 +101,7 @@ export default function SpinWheel() {
         setWonPrize(PRIZES[prizeIndex]);
         setSpinCount(prev => prev + 1);
         setSpinAnnouncement(`Spin complete! You won: ${PRIZES[prizeIndex].displayName}`);
+        analytics.trackSpin(PRIZES[prizeIndex].displayName, isAuthenticated);
         queryClient.invalidateQueries({ queryKey: ['/api/spin/status'] });
         
         toast({

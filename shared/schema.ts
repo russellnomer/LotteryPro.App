@@ -919,3 +919,25 @@ export type InsertPoolTransaction = typeof poolTransactions.$inferInsert;
 
 export type PoolWinning = typeof poolWinnings.$inferSelect;
 export type InsertPoolWinning = typeof poolWinnings.$inferInsert;
+
+// ==================== ONE-TIME PURCHASES ====================
+export const oneTimePurchases = pgTable("one_time_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  sessionId: text("session_id"),
+  purchaseType: text("purchase_type").notNull(),
+  creditsGranted: integer("credits_granted").notNull().default(0),
+  passExpiresAt: timestamp("pass_expires_at"),
+  stripeSessionId: text("stripe_session_id"),
+  status: text("status").notNull().default("pending"),
+  amount: integer("amount").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOneTimePurchaseSchema = createInsertSchema(oneTimePurchases).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertOneTimePurchase = z.infer<typeof insertOneTimePurchaseSchema>;
+export type OneTimePurchase = typeof oneTimePurchases.$inferSelect;
