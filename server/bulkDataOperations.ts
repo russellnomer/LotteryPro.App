@@ -68,10 +68,10 @@ export class BulkDataOperations {
     
     for (let attempt = 0; attempt < this.MAX_RETRIES; attempt++) {
       try {
-        // Direct insert without conflict handling for now
         const result = await db
           .insert(lotteryDraws)
           .values(batch)
+          .onConflictDoNothing()
           .returning({ id: lotteryDraws.id });
         
         inserted = result.length;
@@ -110,10 +110,13 @@ export class BulkDataOperations {
         const result = await db
           .insert(lotteryDraws)
           .values(draw)
+          .onConflictDoNothing()
           .returning({ id: lotteryDraws.id });
         
         if (result.length > 0) {
           inserted++;
+        } else {
+          skipped++;
         }
         
       } catch (error) {

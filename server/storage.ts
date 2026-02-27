@@ -524,6 +524,7 @@ export class DatabaseStorage implements IStorage {
   async createDraw(insertDraw: InsertDraw): Promise<LotteryDraw> {
     const [draw] = await db.insert(lotteryDraws)
       .values(insertDraw)
+      .onConflictDoNothing()
       .returning();
     return draw;
   }
