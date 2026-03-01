@@ -13,9 +13,15 @@ interface LotteryApiResponse {
  * and maintains statistically significant sample datasets
  */
 export class LotteryDataService {
-  private readonly API_ENDPOINTS = {
+  private readonly API_ENDPOINTS: Record<string, string> = {
     powerball: 'https://data.ny.gov/resource/d6yy-54nr.json',
-    megamillions: 'https://data.ny.gov/resource/5xaw-6ayf.json'
+    megamillions: 'https://data.ny.gov/resource/5xaw-6ayf.json',
+    millionaireforlife: 'https://data.ny.gov/resource/a4w9-a3tp.json',
+    nylotto: 'https://data.ny.gov/resource/6nbc-h7bj.json',
+    take5: 'https://data.ny.gov/resource/dg63-4siq.json',
+    pick10: 'https://data.ny.gov/resource/bycu-cw7c.json',
+    numbers: 'https://data.ny.gov/resource/hsys-3def.json',
+    win4: 'https://data.ny.gov/resource/hsys-3def.json'
   };
 
   private readonly MINIMUM_SAMPLE_SIZE = 200; // Ultra-maximum statistical significance
@@ -31,13 +37,18 @@ export class LotteryDataService {
     try {
       await Promise.all([
         this.updateGameData('powerball'),
-        this.updateGameData('megamillions')
+        this.updateGameData('megamillions'),
+        this.updateGameData('millionaireforlife'),
+        this.updateGameData('nylotto'),
+        this.updateGameData('take5'),
+        this.updateGameData('pick10'),
+        this.updateGameData('numbers'),
+        this.updateGameData('win4')
       ]);
       
       console.log('✅ All lottery games updated with latest data');
     } catch (error: any) {
       console.error('❌ Error updating lottery data:', error.message || error);
-      // Fallback to generating realistic current data
       await this.generateCurrentRealisticData();
     }
   }
@@ -45,7 +56,7 @@ export class LotteryDataService {
   /**
    * Update data for a specific lottery game
    */
-  private async updateGameData(game: 'powerball' | 'megamillions'): Promise<void> {
+  private async updateGameData(game: string): Promise<void> {
     try {
       // Check current dataset size
       const existingDraws = await storage.getDraws(game);
@@ -100,65 +111,91 @@ export class LotteryDataService {
   /**
    * Fetch latest results from NY State Open Data API (data.ny.gov)
    */
-  private async fetchLatestResults(game: 'powerball' | 'megamillions'): Promise<LotteryApiResponse[]> {
-    const url = `${this.API_ENDPOINTS[game]}?$order=draw_date%20DESC&$limit=500`;
+  private async fetchLatestResults(game: string): Promise<LotteryApiResponse[]> {
+    const endpoint = this.API_ENDPOINTS[game];
+    if (!endpoint) return this.generateRealisticCurrentResults(game);
+
+    const url = `${endpoint}?$order=draw_date%20DESC&$limit=1000`;
     console.log(`🌐 Fetching real ${game} data from data.ny.gov...`);
 
     try {
-      const response = await fetch(url, {
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (!response.ok) {
-        throw new Error(`API returned status ${response.status}: ${response.statusText}`);
-      }
+      const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error(`API status ${response.status}`);
 
       const rawData: any[] = await response.json();
-
-      if (!Array.isArray(rawData) || rawData.length === 0) {
-        throw new Error('API returned empty or invalid data');
-      }
+      if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('Empty API response');
 
       const results: LotteryApiResponse[] = [];
 
       for (const record of rawData) {
         try {
-          if (!record.draw_date || !record.winning_numbers) continue;
-
+          if (!record.draw_date) continue;
           const drawDate = record.draw_date.split('T')[0];
-          const numbers = record.winning_numbers.trim().split(/\s+/).map(Number);
-          let mainNumbers: number[];
-          let bonusNumber: number;
 
-          if (game === 'megamillions') {
-            if (numbers.length < 5 || !record.mega_ball) continue;
-            mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
-            bonusNumber = parseInt(record.mega_ball);
+          if (game === 'numbers') {
+            const val = record.evening_daily || record.midday_daily;
+            if (!val) continue;
+            const str = val.toString().padStart(3, '0');
+            const digits = [parseInt(str[0]), parseInt(str[1]), parseInt(str[2])];
+            if (digits.some(isNaN)) continue;
+            results.push({ game, drawDate, mainNumbers: digits, bonusNumber: 0 });
+
+          } else if (game === 'win4') {
+            const val = record.evening_win_4 || record.midday_win_4;
+            if (!val) continue;
+            const str = val.toString().padStart(4, '0');
+            const digits = [parseInt(str[0]), parseInt(str[1]), parseInt(str[2]), parseInt(str[3])];
+            if (digits.some(isNaN)) continue;
+            results.push({ game, drawDate, mainNumbers: digits, bonusNumber: 0 });
+
+          } else if (game === 'take5') {
+            const winStr = record.evening_winning_numbers || record.midday_winning_numbers;
+            if (!winStr) continue;
+            const nums = winStr.trim().split(/\s+/).map(Number).sort((a: number, b: number) => a - b);
+            if (nums.length < 5 || nums.some(isNaN)) continue;
+            results.push({ game, drawDate, mainNumbers: nums.slice(0, 5), bonusNumber: 0 });
+
+          } else if (game === 'nylotto') {
+            if (!record.winning_numbers) continue;
+            const nums = record.winning_numbers.trim().split(/\s+/).map(Number).sort((a: number, b: number) => a - b);
+            if (nums.length < 6 || nums.some(isNaN)) continue;
+            const bonus = record.bonus ? parseInt(record.bonus) : 0;
+            results.push({ game, drawDate, mainNumbers: nums.slice(0, 6), bonusNumber: bonus });
+
+          } else if (game === 'pick10') {
+            if (!record.winning_numbers) continue;
+            const allNums = record.winning_numbers.trim().split(/\s+/).map(Number);
+            if (allNums.length < 10 || allNums.some(isNaN)) continue;
+            const sorted = allNums.sort((a: number, b: number) => a - b);
+            results.push({ game, drawDate, mainNumbers: sorted.slice(0, 10), bonusNumber: 0 });
+
+          } else if (game === 'megamillions') {
+            if (!record.winning_numbers || !record.mega_ball) continue;
+            const nums = record.winning_numbers.trim().split(/\s+/).map(Number).sort((a: number, b: number) => a - b);
+            if (nums.length < 5 || nums.some(isNaN)) continue;
+            results.push({ game, drawDate, mainNumbers: nums.slice(0, 5), bonusNumber: parseInt(record.mega_ball) });
+
+          } else if (game === 'millionaireforlife') {
+            if (!record.winning_numbers || !record.mill_ball) continue;
+            const nums = record.winning_numbers.trim().split(/\s+/).map(Number).sort((a: number, b: number) => a - b);
+            if (nums.length < 5 || nums.some(isNaN)) continue;
+            results.push({ game, drawDate, mainNumbers: nums.slice(0, 5), bonusNumber: parseInt(record.mill_ball) });
+
           } else {
-            if (numbers.length < 6) continue;
-            mainNumbers = numbers.slice(0, 5).sort((a: number, b: number) => a - b);
-            bonusNumber = numbers[5];
+            // Powerball and generic: winning_numbers has 5 main + bonus at end
+            if (!record.winning_numbers) continue;
+            const nums = record.winning_numbers.trim().split(/\s+/).map(Number);
+            if (nums.length < 6 || nums.some(isNaN)) continue;
+            const mainNums = nums.slice(0, 5).sort((a: number, b: number) => a - b);
+            results.push({ game, drawDate, mainNumbers: mainNums, bonusNumber: nums[5] });
           }
-
-          if (mainNumbers.some(isNaN) || isNaN(bonusNumber)) continue;
-
-          results.push({
-            game,
-            drawDate,
-            mainNumbers,
-            bonusNumber,
-            jackpot: record.multiplier ? `${record.multiplier}x Multiplier` : undefined
-          });
-        } catch (parseError) {
-          // Skip malformed records
-        }
+        } catch { /* skip malformed */ }
       }
 
       console.log(`✅ Fetched ${results.length} real ${game} draws from data.ny.gov`);
       return results;
     } catch (error: any) {
-      console.error(`⚠️ Failed to fetch real ${game} data: ${error.message}`);
-      console.log(`🔄 Falling back to generated ${game} data`);
+      console.error(`⚠️ Failed to fetch ${game}: ${error.message} — using fallback`);
       return this.generateRealisticCurrentResults(game);
     }
   }
@@ -166,58 +203,45 @@ export class LotteryDataService {
   /**
    * Generate realistic lottery data for current dates
    */
-  private generateRealisticCurrentResults(game: 'powerball' | 'megamillions'): LotteryApiResponse[] {
+  private generateRealisticCurrentResults(game: string): LotteryApiResponse[] {
     const results: LotteryApiResponse[] = [];
     const currentDate = new Date();
-    
-    // Generate results for the last 500 draws (about 5 years of data)
+    const dailyGames = ['millionaireforlife', 'numbers', 'win4', 'pick10', 'cash4life'];
+    const twiceDaily = ['take5'];
+    const daysBetween = game === 'powerball' ? 2.33
+      : game === 'megamillions' ? 3.5
+      : game === 'nylotto' ? 3.5
+      : (dailyGames.includes(game) || twiceDaily.includes(game)) ? 1 : 2;
+
     for (let i = 0; i < 500; i++) {
       const drawDate = new Date(currentDate);
-      
-      // Powerball draws: Monday, Wednesday, Saturday
-      // MegaMillions draws: Tuesday, Friday
-      if (game === 'powerball') {
-        drawDate.setDate(currentDate.getDate() - (i * 2.33)); // ~3 draws per week
-      } else {
-        drawDate.setDate(currentDate.getDate() - (i * 3.5)); // ~2 draws per week
-      }
-
-      const result = this.generateSingleDraw(game, drawDate.toISOString().split('T')[0]);
-      results.push(result);
+      drawDate.setDate(currentDate.getDate() - Math.round(i * daysBetween));
+      results.push(this.generateSingleDraw(game, drawDate.toISOString().split('T')[0]));
     }
-
-    return results.reverse(); // Oldest first
+    return results.reverse();
   }
 
-  /**
-   * Generate a single realistic lottery draw
-   */
-  private generateSingleDraw(game: 'powerball' | 'megamillions', date: string): LotteryApiResponse {
+  private generateSingleDraw(game: string, date: string): LotteryApiResponse {
     if (game === 'powerball') {
-      // Powerball: 5 numbers from 1-69, bonus from 1-26
-      const mainNumbers = this.generateRandomNumbers(5, 1, 69);
-      const bonusNumber = Math.floor(Math.random() * 26) + 1;
-      
-      return {
-        game,
-        drawDate: date,
-        mainNumbers: mainNumbers.sort((a, b) => a - b),
-        bonusNumber,
-        jackpot: this.generateJackpotAmount()
-      };
-    } else {
-      // MegaMillions: 5 numbers from 1-70, bonus from 1-24
-      const mainNumbers = this.generateRandomNumbers(5, 1, 70);
-      const bonusNumber = Math.floor(Math.random() * 24) + 1;
-      
-      return {
-        game,
-        drawDate: date,
-        mainNumbers: mainNumbers.sort((a, b) => a - b),
-        bonusNumber,
-        jackpot: this.generateJackpotAmount()
-      };
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 69).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 26) + 1, jackpot: this.generateJackpotAmount() };
+    } else if (game === 'megamillions') {
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 70).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 25) + 1, jackpot: this.generateJackpotAmount() };
+    } else if (game === 'millionaireforlife') {
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 58).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 5) + 1, jackpot: '$1,000,000/yr For Life' };
+    } else if (game === 'nylotto') {
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(6, 1, 59).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 59) + 1 };
+    } else if (game === 'take5') {
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 39).sort((a, b) => a - b), bonusNumber: 0 };
+    } else if (game === 'pick10') {
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(10, 1, 80).sort((a, b) => a - b), bonusNumber: 0 };
+    } else if (game === 'cash4life') {
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 60).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 4) + 1 };
+    } else if (game === 'numbers') {
+      return { game, drawDate: date, mainNumbers: [0, 1, 2].map(() => Math.floor(Math.random() * 10)), bonusNumber: 0 };
+    } else if (game === 'win4') {
+      return { game, drawDate: date, mainNumbers: [0, 1, 2, 3].map(() => Math.floor(Math.random() * 10)), bonusNumber: 0 };
     }
+    return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 69).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 26) + 1 };
   }
 
   /**

@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import youtubeRoutes from "./routes/youtube";
 import youtubeService from "./youtubeService";
-import { insertTicketSchema, insertDrawSchema, type GameType } from "@shared/schema";
+import { insertTicketSchema, insertDrawSchema, type GameType, ALL_GAME_TYPES, GAME_CONFIG } from "@shared/schema";
 import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
@@ -121,7 +121,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get("/api/draws/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
@@ -137,7 +137,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get("/api/draws/:game/full", async (req, res) => {
     try {
       const game = req.params.game as GameType;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
@@ -178,7 +178,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get("/api/loading/status/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
@@ -203,7 +203,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.post("/api/generate/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
 
@@ -254,70 +254,73 @@ Canonical: https://lotterypro.app/.well-known/security.txt
       let mainNumbers: number[];
       let bonusNumber: number;
       
-      if (method === 'hot') {
-        // Use cached frequency maps for instant hot number analysis
+      const gc = GAME_CONFIG[game as GameType] || GAME_CONFIG.powerball;
+      const maxMain = gc.mainNumbers.max;
+      const minMain = gc.mainNumbers.min;
+      const mainCount = gc.mainNumbers.count;
+      const maxBonus = gc.bonusNumber ? gc.bonusNumber.max : 0;
+      const isDigitGame = (gc as any).digitGame === true;
+
+      if (isDigitGame) {
+        // Digit games (Numbers, Win 4): each position is independently 0-9, repetition allowed
+        if (method === 'hot') {
+          const { mainFreq } = await lotteryCache.getFrequencyMaps(game);
+          const sortedDigits = Array.from(mainFreq.entries())
+            .filter(([d]) => d >= 0 && d <= 9)
+            .sort((a, b) => b[1] - a[1])
+            .map(([d]) => d);
+          mainNumbers = Array.from({ length: mainCount }, (_, i) => sortedDigits[i % sortedDigits.length] ?? Math.floor(Math.random() * 10));
+        } else {
+          mainNumbers = Array.from({ length: mainCount }, () => Math.floor(Math.random() * 10));
+        }
+        bonusNumber = 0;
+
+      } else if (method === 'hot') {
         const { mainFreq, bonusFreq } = await lotteryCache.getFrequencyMaps(game);
         
-        // Get most frequent numbers
         const sortedNumbers = Array.from(mainFreq.entries())
+          .filter(([num]) => num >= minMain && num <= maxMain)
           .sort((a, b) => b[1] - a[1])
           .map(([num]) => num);
         
-        const maxBonus = game === 'powerball' ? 26 : 24;
         const sortedBonus = Array.from(bonusFreq.entries())
-          .filter(([num]) => num >= 1 && num <= maxBonus) // Filter to valid range
+          .filter(([num]) => num >= 1 && num <= maxBonus)
           .sort((a, b) => b[1] - a[1])
           .map(([num]) => num);
         
-        // Select top frequent numbers with some randomness
-        mainNumbers = sortedNumbers.slice(0, 8).sort(() => 0.5 - Math.random()).slice(0, 5).sort((a, b) => a - b);
-        bonusNumber = sortedBonus[0] || Math.floor(Math.random() * maxBonus) + 1;
+        mainNumbers = sortedNumbers.slice(0, mainCount + 3).sort(() => 0.5 - Math.random()).slice(0, mainCount).sort((a, b) => a - b);
+        bonusNumber = maxBonus > 0 ? (sortedBonus[0] || Math.floor(Math.random() * maxBonus) + 1) : 0;
         
       } else if (method === 'balanced') {
-        // Balanced selection across ranges
-        const maxMain = game === 'powerball' ? 69 : 70;
-        const ranges = {
-          low: Math.floor(maxMain / 3),
-          mid: Math.floor((maxMain * 2) / 3),
-          high: maxMain
-        };
+        const range = maxMain - minMain;
+        const low = minMain + Math.floor(range / 3);
+        const mid = minMain + Math.floor((range * 2) / 3);
         
-        mainNumbers = [
-          Math.floor(Math.random() * ranges.low) + 1,
-          Math.floor(Math.random() * (ranges.mid - ranges.low)) + ranges.low + 1,
-          Math.floor(Math.random() * (ranges.high - ranges.mid)) + ranges.mid + 1,
-          Math.floor(Math.random() * maxMain) + 1,
-          Math.floor(Math.random() * maxMain) + 1
-        ].filter((num, index, arr) => arr.indexOf(num) === index)
-         .slice(0, 5)
-         .sort((a, b) => a - b);
-        
-        // Fill if needed
-        while (mainNumbers.length < 5) {
-          const newNum = Math.floor(Math.random() * maxMain) + 1;
-          if (!mainNumbers.includes(newNum)) {
-            mainNumbers.push(newNum);
-          }
+        const candidates = [
+          Math.floor(Math.random() * (low - minMain + 1)) + minMain,
+          Math.floor(Math.random() * (mid - low)) + low + 1,
+          Math.floor(Math.random() * (maxMain - mid)) + mid + 1,
+          Math.floor(Math.random() * range) + minMain,
+          Math.floor(Math.random() * range) + minMain
+        ].filter((num, index, arr) => arr.indexOf(num) === index).slice(0, mainCount).sort((a, b) => a - b);
+
+        mainNumbers = candidates;
+        while (mainNumbers.length < mainCount) {
+          const newNum = Math.floor(Math.random() * range) + minMain;
+          if (!mainNumbers.includes(newNum)) mainNumbers.push(newNum);
         }
         mainNumbers.sort((a, b) => a - b);
-        
-        bonusNumber = Math.floor(Math.random() * (game === 'powerball' ? 26 : 24)) + 1;
+        bonusNumber = maxBonus > 0 ? Math.floor(Math.random() * maxBonus) + 1 : 0;
         
       } else {
-        // Random generation
-        const maxMain = game === 'powerball' ? 69 : 70;
-        const maxBonus = game === 'powerball' ? 26 : 24;
-        
         mainNumbers = [];
-        while (mainNumbers.length < 5) {
-          const num = Math.floor(Math.random() * maxMain) + 1;
-          if (!mainNumbers.includes(num)) {
-            mainNumbers.push(num);
-          }
+        const usedNums = new Set<number>();
+        while (mainNumbers.length < mainCount) {
+          const num = Math.floor(Math.random() * (maxMain - minMain + 1)) + minMain;
+          if (!usedNums.has(num)) { usedNums.add(num); mainNumbers.push(num); }
         }
         mainNumbers.sort((a, b) => a - b);
-        
-        bonusNumber = Math.floor(Math.random() * maxBonus) + 1;
+        bonusNumber = maxBonus > 0 ? Math.floor(Math.random() * maxBonus) + 1 : 0;
       }
       
       // Save generated ticket
@@ -329,19 +332,11 @@ Canonical: https://lotterypro.app/.well-known/security.txt
       });
       
       // Ensure we have exactly 5 main numbers and 1 bonus = 6 total
-      if (mainNumbers.length !== 5) {
-        return res.status(500).json({ message: "Failed to generate exactly 5 main numbers" });
+      if (mainNumbers.length !== mainCount) {
+        return res.status(500).json({ message: `Failed to generate exactly ${mainCount} main numbers` });
       }
 
-      const gameConfigs: Record<string, { maxMain: number; maxBonus: number; mainCount: number }> = {
-        powerball: { maxMain: 69, maxBonus: 26, mainCount: 5 },
-        megamillions: { maxMain: 70, maxBonus: 25, mainCount: 5 },
-        nylotto: { maxMain: 59, maxBonus: 59, mainCount: 6 },
-        cash4life: { maxMain: 60, maxBonus: 4, mainCount: 5 },
-        take5: { maxMain: 39, maxBonus: 0, mainCount: 5 },
-        pick10: { maxMain: 80, maxBonus: 0, mainCount: 10 }
-      };
-      const gameConf = gameConfigs[game] || gameConfigs.powerball;
+      const gameConf = { maxMain, maxBonus, mainCount };
 
       res.json({
         mainNumbers,
@@ -1544,7 +1539,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get("/api/analysis/:game", async (req, res) => {
     try {
       const game = req.params.game as GameType;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
@@ -2082,7 +2077,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
       const game = req.params.game as GameType;
       const method = req.query.method as string;
       
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ message: "Invalid game type" });
       }
       
@@ -2602,7 +2597,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get('/api/advanced-strategies/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ error: 'Invalid game type' });
       }
 
@@ -2627,7 +2622,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get('/api/wheeling-systems/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ error: 'Invalid game type' });
       }
 
@@ -2650,7 +2645,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get('/api/enhanced-analysis/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ error: 'Invalid game type' });
       }
 
@@ -2680,7 +2675,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get('/api/combined-analysis/:game', requirePro, async (req, res) => {
     try {
       const { game } = req.params;
-      if (!['powerball', 'megamillions'].includes(game)) {
+      if (!ALL_GAME_TYPES.includes(game as GameType)) {
         return res.status(400).json({ error: 'Invalid game type' });
       }
 

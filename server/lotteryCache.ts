@@ -1,5 +1,5 @@
 import { storage } from "./storage";
-import { type LotteryDraw, type GameType } from "@shared/schema";
+import { type LotteryDraw, type GameType, GAME_CONFIG } from "@shared/schema";
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -206,10 +206,10 @@ export class LotteryCache {
     const mainFreq = new Map<number, number>();
     const bonusFreq = new Map<number, number>();
     
-    // Determine valid ranges based on game type (from first draw if available)
-    const gameType = draws[0]?.game;
-    const maxBonus = gameType === 'powerball' ? 26 : 24;
-    const maxMain = gameType === 'powerball' ? 69 : 70;
+    const gameType = draws[0]?.game as GameType | undefined;
+    const gameConf = gameType && GAME_CONFIG[gameType] ? GAME_CONFIG[gameType] : GAME_CONFIG.powerball;
+    const maxBonus = gameConf.bonusNumber ? gameConf.bonusNumber.max : 0;
+    const maxMain = gameConf.mainNumbers.max;
     
     draws.forEach(draw => {
       // Process main numbers - filter to valid range
@@ -276,7 +276,8 @@ export class LotteryCache {
     
     await Promise.all([
       this.loadFullDataset('powerball'),
-      this.loadFullDataset('megamillions')
+      this.loadFullDataset('megamillions'),
+      this.loadFullDataset('millionaireforlife')
     ]);
     
     console.log('✅ Cache refresh complete!');

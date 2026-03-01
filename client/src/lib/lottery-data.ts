@@ -60,6 +60,36 @@ export const GAME_CONFIG = {
     icon: 'fas fa-dice-d20',
     drawDays: ['Daily'],
     price: 1
+  },
+  millionaireforlife: {
+    name: 'Millionaire For Life',
+    mainNumbers: { min: 1, max: 58, count: 5 },
+    bonusNumber: { min: 1, max: 5, name: 'Mill Ball' },
+    color: 'emerald',
+    odds: '1 in 3,838,380',
+    icon: 'fas fa-crown',
+    drawDays: ['Daily'],
+    price: 5
+  },
+  numbers: {
+    name: 'Numbers',
+    mainNumbers: { min: 0, max: 9, count: 3 },
+    bonusNumber: null,
+    color: 'rose',
+    odds: '1 in 1,000',
+    icon: 'fas fa-hashtag',
+    drawDays: ['Twice Daily'],
+    price: 1
+  },
+  win4: {
+    name: 'Win 4',
+    mainNumbers: { min: 0, max: 9, count: 4 },
+    bonusNumber: null,
+    color: 'amber',
+    odds: '1 in 10,000',
+    icon: 'fas fa-4',
+    drawDays: ['Twice Daily'],
+    price: 1
   }
 } as const;
 
