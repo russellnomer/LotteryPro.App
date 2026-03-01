@@ -87,6 +87,17 @@ The platform features a responsive design with a mobile-first approach, utilizin
 
 ### SEO & Analytics (February 2026)
 
+**6. NY Scratch-Off Helper** ✅
+- Real-time prize data from official NY State Open Data API (`data.ny.gov/resource/nzqa-7unk.json`)
+- Fetches all 110+ active NY scratch-off games with remaining prize tiers
+- Calculates: total remaining prize pool, big prizes left ($10K+), value scores, % remaining
+- Rank system: Top Pick / Good Value / Fair / Low Value based on prize math
+- Filters: search by name, max price slider, min big prizes slider, category, sort-by
+- Expandable prize tier table per game showing all prize levels
+- 1-hour cache to avoid hammering the state API
+- Route: `/scratch-offs` | Service: `server/scratchOffService.ts` | API: `GET /api/scratchoffs`
+- Navigation: "Scratch-Off Helper" added as second nav item
+
 **1. Open Graph & Twitter Card Meta Tags** ✅
 - `SEOHead` component using `react-helmet-async` for per-page dynamic meta tags
 - OG and Twitter Card tags on 8 major pages (home, music, subscription, pools, performance, privacy, terms, auth)

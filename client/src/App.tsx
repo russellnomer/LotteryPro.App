@@ -24,6 +24,7 @@ import TermsOfService from "@/pages/terms";
 import Support from "@/pages/support";
 import SocialMarketing from "@/pages/social-marketing";
 import Pools from "@/pages/pools";
+import ScratchOffs from "@/pages/scratch-offs";
 import { BlogIndex, BlogPost } from "@/pages/blog";
 import NotFound from "@/pages/not-found";
 
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/support" component={Support} />
           <Route path="/social-marketing" component={SocialMarketing} />
           <Route path="/pools" component={Pools} />
+          <Route path="/scratch-offs" component={ScratchOffs} />
           <Route path="/blog" component={BlogIndex} />
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/accessibility" component={Accessibility} />

@@ -3226,6 +3226,31 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // ── Scratch-Off Helper ────────────────────────────────────────
+  app.get('/api/scratchoffs', async (req, res) => {
+    try {
+      const { getScratchOffGames } = await import('./scratchOffService');
+      const games = await getScratchOffGames();
+      res.json({ games, fetchedAt: new Date().toISOString(), source: 'data.ny.gov' });
+    } catch (error: any) {
+      console.error('Scratch-off data fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch scratch-off data', details: error.message });
+    }
+  });
+
+  app.post('/api/scratchoffs/refresh', requireAdmin, async (_req, res) => {
+    try {
+      // Clear the cache by re-importing (module cache bust not possible, so we do a live refresh)
+      const mod = await import('./scratchOffService');
+      // @ts-ignore — reach into internal cache to reset
+      if ((mod as any).cache) (mod as any).cache = null;
+      const games = await mod.getScratchOffGames();
+      res.json({ success: true, gamesRefreshed: games.length });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
