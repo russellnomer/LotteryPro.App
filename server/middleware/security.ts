@@ -11,7 +11,7 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
     "font-src 'self' https://fonts.gstatic.com; " +
     "img-src 'self' data: https: blob:; " +
     "connect-src 'self' https:; " +
-    "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.paypal.com https://www.sandbox.paypal.com; " +
+    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.paypal.com https://www.sandbox.paypal.com; " +
     "object-src 'none'; " +
     "base-uri 'self';"
   );

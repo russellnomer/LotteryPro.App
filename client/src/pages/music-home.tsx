@@ -108,6 +108,81 @@ export default function MusicHome() {
         </div>
       </div>
 
+      {/* Featured Music Videos */}
+      <div className="bg-black py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <Badge className="bg-red-600 text-white text-sm px-4 py-1 mb-3">
+              <Youtube className="h-3.5 w-3.5 mr-1.5 inline" /> Official Music Videos
+            </Badge>
+            <h2 className="text-2xl md:text-3xl font-bold text-white">Russell Nomer • Music Videos</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Video 1 */}
+            <div>
+              <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-purple-900/50 border border-gray-800"
+                   style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full"
+                  src="https://www.youtube.com/embed/iVJuqfxwdec?rel=0&modestbranding=1"
+                  title="Welcome To The Grove - Russell Nomer Official Music Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              <div className="mt-3 text-center">
+                <p className="text-white font-semibold">Welcome To The Grove</p>
+                <a
+                  href="https://youtu.be/iVJuqfxwdec"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm mt-1 transition-colors"
+                >
+                  <Youtube className="h-3.5 w-3.5" /> Watch on YouTube
+                </a>
+              </div>
+            </div>
+
+            {/* Video 2 */}
+            <div>
+              <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-purple-900/50 border border-gray-800"
+                   style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full"
+                  src="https://www.youtube.com/embed/5sE3a-OzgZY?rel=0&modestbranding=1"
+                  title="The Ballad of Sergeant Nutz - The Hidden Verse Version - Russell Nomer Music Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              <div className="mt-3 text-center">
+                <p className="text-white font-semibold">The Ballad of Sergeant Nutz — Hidden Verse Version</p>
+                <a
+                  href="https://youtu.be/5sE3a-OzgZY"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm mt-1 transition-colors"
+                >
+                  <Youtube className="h-3.5 w-3.5" /> Watch on YouTube
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-7">
+            <a
+              href="https://music.apple.com/search#q=Russell%20Nomer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
+            >
+              Stream on Apple Music
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Free Tier Advertisement */}
         {userTier === 'free' && (
