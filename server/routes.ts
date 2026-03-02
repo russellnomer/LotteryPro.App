@@ -3226,6 +3226,71 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // ── Premium Subscription Checkout ($7.99/mo or $69/yr) ───────
+  app.post('/api/subscription/checkout', async (req, res) => {
+    try {
+      const { plan } = req.body; // 'monthly' | 'annual'
+      if (!plan || !['monthly', 'annual'].includes(plan)) {
+        return res.status(400).json({ error: 'Invalid plan. Use monthly or annual.' });
+      }
+
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+
+      const isAnnual = plan === 'annual';
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const userId = req.user?.id || null;
+
+      const checkoutSession = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'LotteryPro Premium',
+              description: isAnnual
+                ? 'Annual plan — full premium access, cancel anytime'
+                : 'Monthly plan — full premium access, cancel anytime',
+              images: [],
+            },
+            unit_amount: isAnnual ? 6900 : 799, // $69.00/yr or $7.99/mo in cents
+            recurring: { interval: isAnnual ? 'year' : 'month' },
+          },
+          quantity: 1,
+        }],
+        success_url: `${baseUrl}/checkout-success?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+        cancel_url: `${baseUrl}/pricing?cancelled=1`,
+        allow_promotion_codes: true,
+        metadata: {
+          tier: 'premium',
+          plan,
+          userId: userId || '',
+        },
+      });
+
+      res.json({ success: true, url: checkoutSession.url });
+    } catch (error: any) {
+      console.error('Subscription checkout error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/subscription/status', async (req, res) => {
+    try {
+      if (!req.user) return res.json({ tier: 'free', status: 'active', isPremium: false });
+      const user = await storage.getUserById(req.user.id);
+      if (!user) return res.json({ tier: 'free', status: 'active', isPremium: false });
+      const premiumTiers = ['premium', 'pro', 'founder', 'lifetime', 'unlimited'];
+      res.json({
+        tier: user.subscriptionTier,
+        status: user.subscriptionStatus,
+        isPremium: premiumTiers.includes(user.subscriptionTier || 'free'),
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ── Scratch-Off Helper ────────────────────────────────────────
   app.get('/api/scratchoffs', async (req, res) => {
     try {

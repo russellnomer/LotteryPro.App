@@ -1,0 +1,50 @@
+You are an expert full-stack SaaS developer and conversion optimization specialist. My Replit project is LotteryPro[](https://lotterypro.app) — a real-time NY Scratch-Off Helper + lottery tools built by independent musician Russell Nomer. The goal is to turn this from an "albatross" (time sink with zero revenue) into a cash cow with simple recurring subscriptions while keeping the free tier strong enough to drive massive traffic that discovers my music catalog (535+ songs).
+
+Current problems:
+- Subscription model is too complex/vague ("various tier levels", mostly contest-based VIP giveaways).
+- Premium is hidden and not visible on the dashboard.
+- Free tier is TOO good — the entire scratch-off Value Score + rankings tool works without paying.
+- No clear pricing page, no Stripe checkout, no urgency.
+- No strong CTAs or banners.
+- Music discovery is there but not tied to monetization.
+
+New model I want (make this the ONLY paid option):
+- One simple plan: "LotteryPro Premium" at $7.99/month or $69/year (save 27%).
+- Cancel anytime, no contracts, instant access.
+- NO TRIAL. Direct subscribe → immediate premium features.
+- Keep the entire current free tier 100% functional (this drives traffic to my music nav link).
+
+Premium-only features (implement these):
+- Real-time push/email alerts when big prizes drop or Value Score hits 50+ on any NY game.
+- Full historical trends & payout probability charts (last 30/90 days).
+- Ad-free experience + unlimited daily generations.
+- Personal watchlist + CSV export of rankings.
+- Early access to new states (NJ, PA, etc.) when I add them.
+- Priority support + "funds new songs" thank-you page.
+
+Technical requirements (inspect the current codebase first — it's a modern web app with age gate, hourly data pulls from data.ny.gov, scratch-off dashboard, lottery generator, Daily Lucky Spin, and heavy music integration):
+1. Add Stripe integration (use test mode first). Create a /api/stripe route for checkout sessions and webhooks. Store subscription status in the database. Auto-upgrade users on successful payment.
+2. Create a clean /pricing page with feature comparison table (free vs Premium), pricing cards, and "Subscribe Now — $7.99/mo or $69/yr" buttons. Match the existing orange/red/yellow lottery design.
+3. Add prominent CTAs everywhere:
+   - Small floating banner on scratch-off dashboard: "Free tool shows current rankings. Go Premium for alerts + history — only $7.99/mo, cancel anytime"
+   - After "Top Picks Right Now" section: upgrade card.
+   - In nav: "Pricing" link next to "Russell’s Music".
+4. Music tie-in (very important for my brand):
+   - On checkout success page: "Thank you — your subscription directly funds new original songs from independent NYC musician Russell Nomer. Enjoy ad-free tools while you discover my music!"
+   - Mini embedded player on /pricing and dashboard footer linking to my Spotify/YouTube.
+5. Add simple email capture on dashboard (Mailchimp or built-in) for "Daily Top Picks" to nurture free users into subscribers.
+6. Update footer and about page with the new model and disclaimers.
+7. Make everything mobile-first, fast, and secure. Add basic analytics (page views on /pricing and conversion events).
+
+Work step-by-step:
+- Step 1: Analyze current files (routes, components, database schema, auth) and tell me what stack you're seeing.
+- Step 2: Implement Stripe keys placeholder and checkout flow (no trial logic at all).
+- Step 3: Build /pricing page and update nav.
+- Step 4: Add Premium feature gates (hide alerts/history behind subscription check).
+- Step 5: Add banners and CTAs on dashboard.
+- Step 6: Test the full flow in dev mode (I will provide Stripe test keys).
+- Step 7: Deploy and give me the exact changes summary.
+
+Do this cleanly, comment the code well, and keep the existing scratch-off logic untouched. This must convert cold traffic from TikTok/Reddit/X into $7.99/month subscribers while still sending thousands of people to my music. Prioritize high conversion over fancy features.
+
+Start now with Step 1 and show me your plan before coding.

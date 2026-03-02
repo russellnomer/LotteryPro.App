@@ -90,13 +90,21 @@ export async function handleStripeWebhook(req: Request, res: Response) {
             tier = productToPlanMapping[productName] || 'basic';
           }
           
-          const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
-          if (amountTotal >= 39) {
-            tier = 'premium';
-          } else if (amountTotal >= 19) {
-            tier = 'pro';
-          } else if (amountTotal >= 9) {
-            tier = 'basic';
+          // Metadata tier takes priority (set by /api/subscription/checkout)
+          if (session.metadata?.tier && ['basic','pro','premium'].includes(session.metadata.tier)) {
+            tier = session.metadata.tier as 'basic' | 'pro' | 'premium';
+          } else {
+            const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
+            if (amountTotal >= 39) {
+              tier = 'premium';
+            } else if (amountTotal >= 19) {
+              tier = 'pro';
+            } else if (amountTotal >= 7) {
+              // $7.99/month and $69/year both map to premium
+              tier = 'premium';
+            } else if (amountTotal >= 5) {
+              tier = 'basic';
+            }
           }
           
           let user = await storage.getUserByEmail(customerEmail);

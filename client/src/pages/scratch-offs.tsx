@@ -10,8 +10,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   Trophy, Star, TrendingUp, DollarSign, Ticket, Filter,
   ChevronDown, ChevronUp, RefreshCw, AlertCircle, Sparkles,
-  Medal, Flame, Target, Info
+  Medal, Flame, Target, Info, Zap, Bell
 } from "lucide-react";
+import { Link } from "wouter";
 import SEOHead from "@/components/SEOHead";
 
 interface PrizeTier {
@@ -402,6 +403,22 @@ export default function ScratchOffs() {
           </div>
         )}
 
+        {/* ── Premium upgrade banner ── */}
+        <div className="mb-6 bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-600 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Bell className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+            <p className="text-sm text-white">
+              <strong className="text-yellow-300">Free tool</strong> shows current rankings.
+              <span className="text-purple-200"> Go Premium for email alerts when big prizes drop + 30/90-day history.</span>
+            </p>
+          </div>
+          <Link href="/pricing">
+            <Button size="sm" className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold whitespace-nowrap flex-shrink-0">
+              <Zap className="w-3.5 h-3.5 mr-1" /> $7.99/mo — Upgrade
+            </Button>
+          </Link>
+        </div>
+
         {/* Top picks spotlight */}
         {!isLoading && filtered.length > 0 && filtered.filter(g => g.rank === 'top').length > 0 && (
           <div className="mb-6">
@@ -413,6 +430,24 @@ export default function ScratchOffs() {
               {filtered.filter(g => g.rank === 'top').slice(0, 3).map((game, i) => (
                 <GameCard key={game.gameNumber} game={game} rank={filtered.indexOf(game) + 1} />
               ))}
+            </div>
+
+            {/* Post-top-picks upgrade card */}
+            <div className="mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 justify-center sm:justify-start">
+                  <Bell className="w-4 h-4 text-orange-500" />
+                  Want alerts when these games hit Value Score 50+?
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Premium members get instant email alerts so they're first to know — no need to check manually.
+                </p>
+              </div>
+              <Link href="/pricing">
+                <Button className="bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-5 flex-shrink-0">
+                  Get Alerts — $7.99/mo
+                </Button>
+              </Link>
             </div>
           </div>
         )}

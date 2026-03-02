@@ -84,6 +84,7 @@ export default function Navigation() {
   const navItems = [
     { path: "/home", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },
     { path: "/scratch-offs", icon: Ticket, label: "Scratch-Off Helper", description: "Best scratch-offs to buy" },
+    { path: "/pricing", icon: CreditCard, label: "Go Premium — $7.99/mo", description: "Unlock alerts & history" },
     { path: "/pools", icon: Users, label: "Community Pools", description: "Join lottery pools" },
     { path: "/blog", icon: FileText, label: "Blog", description: "Tips & strategies" },
     { path: "/music", icon: Music, label: "Russell's Music", description: "ASCAP artist catalog" },
