@@ -98,7 +98,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       connectSrc: ["'self'", "https://api.stripe.com", "https://www.ncpgambling.org", "wss:", "ws:"],
       frameSrc: ["'self'", "https://js.stripe.com", "https://www.youtube.com", "https://youtube.com"],
-      frameAncestors: ["'self'"],
+      frameAncestors: ["'self'", "https://replit.com", "https://*.replit.com", "https://*.replit.dev", "https://*.spock.replit.dev", "https://*.kirk.replit.dev", "https://*.picard.replit.dev"],
       formAction: ["'self'"],
       baseUri: ["'self'"],
     },

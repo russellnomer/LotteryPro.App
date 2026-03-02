@@ -16,8 +16,8 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
     "base-uri 'self';"
   );
 
-  // Prevent clickjacking - OWASP A04:2021
-  res.setHeader('X-Frame-Options', 'DENY');
+  // Allow Replit preview pane to embed the app (preview uses an iframe)
+  // X-Frame-Options removed in favour of CSP frame-ancestors below
   
   // Prevent MIME type sniffing - OWASP A05:2021
   res.setHeader('X-Content-Type-Options', 'nosniff');
