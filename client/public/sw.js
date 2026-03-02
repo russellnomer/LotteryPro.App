@@ -1,6 +1,5 @@
-const CACHE_NAME = 'lotterypro-v1';
+const CACHE_NAME = 'lotterypro-v3';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
 ];
 
@@ -23,19 +22,28 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  
+
   if (request.method !== 'GET') return;
   if (url.pathname.startsWith('/api/')) return;
-  
+  if (url.pathname.startsWith('/__')) return;
+  if (url.pathname.includes('workspace_iframe')) return;
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request).catch(() => caches.match('/')));
+    return;
+  }
+
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && url.origin === self.location.origin) {
+    caches.match(request).then((cached) => {
+      const network = fetch(request).then((response) => {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      })
-      .catch(() => caches.match(request))
+      });
+      return cached || network;
+    })
   );
 });
