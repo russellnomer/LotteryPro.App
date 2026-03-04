@@ -2532,11 +2532,39 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         email: user.email,
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
-        mfaEnabled: user.mfaEnabled
+        mfaEnabled: user.mfaEnabled,
+        homeState: (user as any).homeState || null
       });
     } catch (error) {
       console.error('Get user error:', error);
       res.json(null);
+    }
+  });
+
+  // Update user's home state preference
+  app.patch("/api/auth/user/state", async (req, res) => {
+    try {
+      const sessionToken = req.headers.authorization?.replace('Bearer ', '') || req.session?.sessionToken;
+      if (!sessionToken) return res.status(401).json({ error: 'Not authenticated' });
+
+      const session = await storage.getUserSession(sessionToken);
+      if (!session || session.expiresAt < new Date()) return res.status(401).json({ error: 'Session expired' });
+
+      const { homeState } = req.body;
+      if (!homeState || typeof homeState !== 'string' || homeState.length !== 2) {
+        return res.status(400).json({ error: 'Invalid state code' });
+      }
+
+      const { db } = await import('./db');
+      const { eq } = await import('drizzle-orm');
+      const { userAccounts } = await import('@shared/schema');
+      await db.update(userAccounts)
+        .set({ homeState: homeState.toUpperCase() })
+        .where(eq(userAccounts.id, session.userId));
+
+      res.json({ success: true, homeState: homeState.toUpperCase() });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

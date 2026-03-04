@@ -17,6 +17,7 @@ import { TicketGeneration } from "@shared/schema";
 import { GAME_CONFIG as SHARED_GAME_CONFIG, GameType, ALL_GAME_TYPES, ALL_METHODOLOGIES } from "@shared/gameConfig";
 import AdSpace from "@/components/AdSpace";
 import JackpocketBanner from "@/components/JackpocketBanner";
+import { getStateConfig } from "@shared/stateConfig";
 
 // VIP tier detection - these tiers bypass all limits
 const VIP_TIERS = ['premium', 'founder', 'lifetime', 'unlimited', 'pro'];
@@ -245,6 +246,10 @@ export default function Home() {
                   ) : (
                     <><strong>VIP {userTier.charAt(0).toUpperCase() + userTier.slice(1)} Member</strong> - Unlimited generations, no ads, priority access</>
                   )}
+                  {(user as any)?.homeState && (() => {
+                    const sc = getStateConfig((user as any).homeState);
+                    return sc ? <span className="ml-2 text-sm opacity-80">• {sc.flag} {sc.name} {sc.dataStatus === 'full' ? '(full data)' : '(national games)'}</span> : null;
+                  })()}
                 </span>
                 <Badge className={userTier === 'founder' ? 'bg-amber-600 text-white' : 'bg-purple-600 text-white'}>
                   <Star className="h-3 w-3 mr-1" />

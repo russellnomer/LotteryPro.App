@@ -23,7 +23,7 @@ The platform features a responsive design with a mobile-first approach, utilizin
 ### Technical Implementations
 - **Frontend**: React 18 with TypeScript, Vite bundler, Wouter for routing, TanStack Query for state management.
 - **Backend**: Node.js with Express.js, TypeScript, Drizzle ORM with Neon serverless PostgreSQL, RESTful API.
-- **Database**: PostgreSQL with Drizzle ORM, using `lottery_draws`, `generated_tickets`, `prediction_results`, `performance_stats`, `user_accounts`, `user_sessions`, and `sessions` tables. JSONB fields store flexible data like number arrays and MFA backup codes. UUID primary keys are used.
+- **Database**: PostgreSQL with Drizzle ORM, using `lottery_draws`, `generated_tickets`, `prediction_results`, `performance_stats`, `user_accounts`, `user_sessions`, and `sessions` tables. JSONB fields store flexible data like number arrays and MFA backup codes. UUID primary keys are used. `userAccounts.homeState` (varchar 2) stores the user's US state code.
 - **Core Services**: Includes automated real-time lottery data fetching, statistical analysis (frequency, hot/cold numbers), multiple number generation algorithms (hot numbers, balanced, wheel systems), prediction tracking, and performance analytics. **Historical Tracking System**: Automated daily pick generation for all methods (Hot, Balanced, Wheel, Random, Advanced, Numerology, Real-time), one-to-one ticket-to-draw matching with deduplication, and comprehensive win/loss analysis at multiple spending levels ($2, $10, $20, $50 per draw).
 - **Authentication**: Secure user registration, login with bcrypt password hashing, Google Authenticator TOTP-based MFA with QR code generation and backup codes, and secure token-based session management.
 - **Advertising**: `AdSpace` component supporting various sizes, integrated with Google AdSense for production and development testing.
@@ -153,3 +153,30 @@ The platform features a responsive design with a mobile-first approach, utilizin
 
 ### Payment Processing
 - **PayPal SDK**: `@paypal/paypal-server-sdk` for payment processing, configured for both sandbox (development) and production environments.
+
+## Multi-State Platform (March 2026)
+
+**7. Multi-State Framework** ✅
+- `shared/stateConfig.ts` defines all 50 states + DC with: data status (full/national-only), state games list, representative contact URL, flag emoji, lottery website
+- NY = `full` (live API from data.ny.gov); all others = `national-only` (Powerball + MegaMillions + state draw games listed)
+- Prohibited states (AL, AK, HI, MS, NV, UT) flagged and blocked from registration
+- `userAccounts.homeState` (varchar 2) stores user's state; saved on registration and updatable via PATCH `/api/auth/user/state`
+- `/api/auth/user` response now includes `homeState` field
+
+**8. State-Aware Scratch-Off Page** ✅
+- `/scratch-offs` page detects logged-in user's `homeState` and renders appropriate content
+- NY users: full real-time scratch-off prize helper (existing feature)
+- Other states: `StateDataPanel` component with civic advocacy content
+- Unauthenticated users: see NY data by default + state picker dropdown to browse any state
+- State badge shown in navigation bar for logged-in users
+
+**9. Civic Advocacy Feature** ✅
+- `client/src/components/StateDataPanel.tsx` — shown for non-NY states
+- Section 1: State header with flag, data availability status
+- Section 2: Available draw games (Powerball, MegaMillions, state games)
+- Section 3: "What [State] Isn't Telling You" — explains the NY transparency standard
+- Section 4: Pre-written letter template users can copy with one click (addressed to state lottery commission)
+- Section 5: "Find My Representative" link → openstates.org pre-filled for state
+- Section 6: Social sharing buttons (Twitter, Facebook, copy text)
+- Section 7: "Notify Me" email opt-in for when state data becomes available
+- Letter template: `SAMPLE_LETTER_TEMPLATE(stateName)` export from stateConfig.ts

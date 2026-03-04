@@ -25,10 +25,12 @@ import {
   Lock,
   Loader2,
   FileText,
-  Ticket
+  Ticket,
+  MapPin
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getStateConfig } from "@shared/stateConfig";
 
 export default function Navigation() {
   const [location, setLocation] = useLocation();
@@ -43,7 +45,13 @@ export default function Navigation() {
     staleTime: 30000,
   });
   
+  const { data: userData } = useQuery<{ homeState?: string; email?: string } | null>({
+    queryKey: ['/api/auth/user'],
+    staleTime: 60000,
+  });
+
   const isAdminAuthenticated = sessionData?.isAdmin === true;
+  const userStateConfig = userData?.homeState ? getStateConfig(userData.homeState) : null;
 
   const loginMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -111,7 +119,17 @@ export default function Navigation() {
               </div>
               <div>
                 <h1 className="text-xl font-bold">LotteryPro</h1>
-                <p className="text-xs text-blue-200">Russell Nomer Platform</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-blue-200">Russell Nomer Platform</p>
+                  {userStateConfig && (
+                    <Link href="/scratch-offs">
+                      <span className="text-xs bg-white/15 hover:bg-white/25 text-yellow-200 rounded-full px-2 py-0.5 flex items-center gap-1 transition-colors cursor-pointer">
+                        <MapPin className="w-2.5 h-2.5" />
+                        {userStateConfig.flag} {userStateConfig.code}
+                      </span>
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </Link>

@@ -10,10 +10,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { 
   Trophy, Star, TrendingUp, DollarSign, Ticket, Filter,
   ChevronDown, ChevronUp, RefreshCw, AlertCircle, Sparkles,
-  Medal, Flame, Target, Info, Zap, Bell
+  Medal, Flame, Target, Info, Zap, Bell, MapPin, LogIn
 } from "lucide-react";
 import { Link } from "wouter";
 import SEOHead from "@/components/SEOHead";
+import StateDataPanel from "@/components/StateDataPanel";
+import { ALL_STATES, getStateConfig } from "@shared/stateConfig";
 
 interface PrizeTier {
   prizeAmount: string;
@@ -190,11 +192,25 @@ export default function ScratchOffs() {
   const [minBigPrizes, setMinBigPrizes] = useState(0);
   const [sortBy, setSortBy] = useState<'valueScore' | 'bigPrizesLeft' | 'totalRemainingValue' | 'pctRemaining' | 'price'>('valueScore');
   const [rankFilter, setRankFilter] = useState<'all' | 'top' | 'good' | 'fair'>('all');
+  const [browseState, setBrowseState] = useState<string>('NY'); // state picker for unauthenticated users
+
+  // Get current user to determine their home state
+  const { data: user, isLoading: userLoading } = useQuery<{ id: string; email: string; homeState?: string } | null>({
+    queryKey: ['/api/auth/user'],
+    staleTime: 60000,
+  });
+
+  const isAuthenticated = !!user;
+  // Effective state: logged-in user's state, or the browse picker value, defaulting to NY
+  const effectiveStateCode = isAuthenticated ? (user?.homeState || 'NY') : browseState;
+  const showingNY = effectiveStateCode === 'NY' || effectiveStateCode === 'OTHER' || !effectiveStateCode;
+  const stateConfig = getStateConfig(effectiveStateCode) || getStateConfig('NY')!;
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<ScratchOffResponse>({
     queryKey: ['/api/scratchoffs'],
     staleTime: 3600 * 1000,
     refetchOnWindowFocus: false,
+    enabled: showingNY, // only fetch NY scratch-off data when needed
   });
 
   const filtered = useMemo(() => {
@@ -220,8 +236,8 @@ export default function ScratchOffs() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
       <SEOHead
-        title="NY Scratch-Off Helper - Best Games to Play Today | LotteryPro"
-        description="Find the best NY scratch-off lottery games to play based on real-time remaining prize data from official NY State sources. See which games still have big prizes left."
+        title="Scratch-Off Helper - Best Lottery Tickets by State | LotteryPro"
+        description="Find the best scratch-off lottery games to play based on remaining prize data. NY users get real-time data from official state sources. All states get national game analysis."
         url="https://lotterypro.app/scratch-offs"
       />
 
@@ -230,12 +246,57 @@ export default function ScratchOffs() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="flex items-center justify-center gap-3 mb-3">
             <Ticket className="w-8 h-8" />
-            <h1 className="text-3xl font-bold">NY Scratch-Off Helper</h1>
+            <h1 className="text-3xl font-bold">
+              {showingNY ? 'NY Scratch-Off Helper' : `${stateConfig.name} Lottery`}
+            </h1>
             <Sparkles className="w-8 h-8" />
           </div>
           <p className="text-yellow-100 text-lg max-w-2xl mx-auto">
-            Real-time remaining prize data from official NY State sources — find games that still have big prizes left
+            {showingNY
+              ? 'Real-time remaining prize data from official NY State sources — find games that still have big prizes left'
+              : `Lottery data and resources for ${stateConfig.name} players`}
           </p>
+
+          {/* State picker */}
+          <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 bg-white/15 border border-white/30 rounded-full px-3 py-1.5">
+              <MapPin className="w-4 h-4 text-yellow-200" />
+              <span className="text-sm text-yellow-100">Viewing:</span>
+              {isAuthenticated && user?.homeState ? (
+                <span className="text-sm font-semibold">
+                  {stateConfig.flag} {stateConfig.name}
+                  {user?.homeState && <span className="text-yellow-200 font-normal"> (your state)</span>}
+                </span>
+              ) : (
+                <Select value={browseState} onValueChange={setBrowseState}>
+                  <SelectTrigger className="h-7 bg-transparent border-none text-white text-sm font-semibold p-0 w-auto focus:ring-0 shadow-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {ALL_STATES.filter(s => !s.prohibited).map(s => (
+                      <SelectItem key={s.code} value={s.code}>
+                        {s.flag} {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            {isAuthenticated && user?.homeState && user.homeState !== 'NY' && (
+              <Link href="/home">
+                <button className="text-xs bg-yellow-500/30 hover:bg-yellow-500/50 text-yellow-100 border border-yellow-400/40 rounded-full px-3 py-1.5 transition-colors">
+                  Generate Numbers for {stateConfig.name} Games
+                </button>
+              </Link>
+            )}
+            {!isAuthenticated && (
+              <Link href="/auth">
+                <button className="text-xs bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1.5">
+                  <LogIn className="w-3.5 h-3.5" /> Sign in to set your state permanently
+                </button>
+              </Link>
+            )}
+          </div>
 
           {/* Live summary stats */}
           {data && (
@@ -264,6 +325,14 @@ export default function ScratchOffs() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6">
+
+        {/* Non-NY state panel */}
+        {!showingNY && stateConfig && (
+          <StateDataPanel stateConfig={stateConfig} />
+        )}
+
+        {/* NY full tool — only shown for NY state or default */}
+        {showingNY && <>
         {/* Disclaimer */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 flex items-start gap-2 text-sm text-amber-800">
           <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -484,6 +553,7 @@ export default function ScratchOffs() {
           Prize data sourced from the official NY State Open Data portal (data.ny.gov) • Refreshes hourly •
           For educational and entertainment purposes only • Gambling involves risk • Must be 18+
         </div>
+        </>}
       </div>
     </div>
   );

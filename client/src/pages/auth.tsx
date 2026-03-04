@@ -12,9 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import SEOHead from "@/components/SEOHead";
 
-const PROHIBITED_STATES = [
-  'AL', 'AK', 'HI', 'MS', 'NV', 'UT'
-];
+import { ELIGIBLE_STATES, PROHIBITED_STATE_CODES } from "@shared/stateConfig";
+
+const PROHIBITED_STATES = PROHIBITED_STATE_CODES;
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,8 @@ export default function AuthPage() {
     password: '',
     subscriptionTier: 'basic',
     mfaCode: '',
-    userId: ''
+    userId: '',
+    homeState: ''
   });
   const [mfaData, setMfaData] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -72,13 +73,17 @@ export default function AuthPage() {
   };
 
   const handleRegister = async () => {
+    if (PROHIBITED_STATES.includes(formData.homeState)) {
+      throw new Error(`Lottery services are not available in your state. Please select a different state or contact support.`);
+    }
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: formData.email,
         password: formData.password,
-        subscriptionTier: formData.subscriptionTier
+        subscriptionTier: formData.subscriptionTier,
+        homeState: formData.homeState || undefined
       })
     });
 
@@ -528,7 +533,38 @@ export default function AuthPage() {
             </Select>
           </div>
 
-          <div className="space-y-3 border-t pt-4">
+          <div className="space-y-4 border-t pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="homeState">Your State <span className="text-gray-400 font-normal">(optional — sets your local lottery data)</span></Label>
+              <Select
+                value={formData.homeState}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, homeState: value }));
+                  setStateConfirmed(!PROHIBITED_STATES.includes(value));
+                }}
+              >
+                <SelectTrigger id="homeState" data-testid="select-home-state">
+                  <SelectValue placeholder="Select your state..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-64 overflow-y-auto">
+                  {ELIGIBLE_STATES.map(s => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.flag} {s.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="OTHER">🌍 Outside USA / Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.homeState && PROHIBITED_STATES.includes(formData.homeState) && (
+                <p className="text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Lottery services are not permitted in this state.
+                </p>
+              )}
+              {formData.homeState === 'NY' && (
+                <p className="text-xs text-emerald-600">New York users get full scratch-off prize tracking!</p>
+              )}
+            </div>
+
             <div className="flex items-start space-x-2">
               <Checkbox 
                 id="ageVerify" 
@@ -538,18 +574,6 @@ export default function AuthPage() {
               />
               <label htmlFor="ageVerify" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
                 I confirm I am 18 years of age or older
-              </label>
-            </div>
-            
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="stateConfirm" 
-                checked={stateConfirmed}
-                onCheckedChange={(checked) => setStateConfirmed(checked === true)}
-                data-testid="checkbox-state-confirm"
-              />
-              <label htmlFor="stateConfirm" className="text-sm text-gray-700 dark:text-gray-300 leading-tight cursor-pointer">
-                I confirm I do not reside in AL, AK, HI, MS, NV, or UT (where lottery services are prohibited)
               </label>
             </div>
 
@@ -582,7 +606,7 @@ export default function AuthPage() {
 
           <Button 
             type="submit" 
-            disabled={isLoading || !ageVerified || !stateConfirmed || !termsAccepted} 
+            disabled={isLoading || !ageVerified || !termsAccepted || PROHIBITED_STATES.includes(formData.homeState)} 
             className="w-full"
             data-testid="button-create-account"
           >

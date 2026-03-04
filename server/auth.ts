@@ -63,7 +63,8 @@ export class MFAService {
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  subscriptionTier: z.enum(['basic', 'pro', 'premium'])
+  subscriptionTier: z.enum(['basic', 'pro', 'premium']),
+  homeState: z.string().length(2).toUpperCase().optional()
 });
 
 const loginSchema = z.object({
@@ -79,7 +80,7 @@ const mfaSetupSchema = z.object({
 // Auth routes
 export async function register(req: Request, res: Response) {
   try {
-    const { email, password, subscriptionTier } = registerSchema.parse(req.body);
+    const { email, password, subscriptionTier, homeState } = registerSchema.parse(req.body);
     
     // Check if user already exists
     const existingUser = await storage.getUserByEmail(email);
@@ -96,7 +97,8 @@ export async function register(req: Request, res: Response) {
       passwordHash,
       subscriptionTier,
       subscriptionStatus: 'active',
-      mfaEnabled: 0 // MFA setup required after registration
+      mfaEnabled: 0, // MFA setup required after registration
+      ...(homeState ? { homeState } : {})
     });
 
     res.json({ 

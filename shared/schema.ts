@@ -76,6 +76,7 @@ export const userAccounts = pgTable("user_accounts", {
   vipPoints: integer("vip_points").notNull().default(0), // Accumulated VIP points from spins
   spinStreak: integer("spin_streak").notNull().default(0), // Consecutive daily spins
   lastSpinDate: date("last_spin_date"), // Last spin date for streak tracking
+  homeState: varchar("home_state", { length: 2 }), // 2-letter US state code, e.g. 'NY'
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
