@@ -2,23 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 
 // Security headers middleware (OWASP, CIS, NIST compliance)
+// NOTE: Content-Security-Policy is handled exclusively by helmet() in server/index.ts
+// so that only ONE CSP header is sent per response. Duplicate CSP headers cause
+// the browser to enforce the strictest union, breaking Vite HMR and the Replit preview.
 export function securityHeaders(req: Request, res: Response, next: NextFunction) {
-  // Content Security Policy - OWASP A05:2021
-  res.setHeader('Content-Security-Policy', 
-    "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://www.googleadservices.com https://tpc.googlesyndication.com https://www.paypal.com https://www.sandbox.paypal.com; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
-    "img-src 'self' data: https: blob:; " +
-    "connect-src 'self' https:; " +
-    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.paypal.com https://www.sandbox.paypal.com; " +
-    "object-src 'none'; " +
-    "base-uri 'self';"
-  );
-
-  // Allow Replit preview pane to embed the app (preview uses an iframe)
-  // X-Frame-Options removed in favour of CSP frame-ancestors below
-  
   // Prevent MIME type sniffing - OWASP A05:2021
   res.setHeader('X-Content-Type-Options', 'nosniff');
   
