@@ -373,3 +373,58 @@ export async function sendAllDrawReminders(game: 'powerball' | 'megamillions'): 
     return 0;
   }
 }
+
+export async function sendPasswordResetEmail(
+  recipientEmail: string,
+  resetToken: string
+): Promise<{ success: boolean; message: string }> {
+  const resetUrl = `https://lotterypro.app/auth?reset=${resetToken}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 28px;">🎰 LotteryPro Password Reset</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">Russell Nomer Platform</p>
+      </div>
+      <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; margin-top: 2px;">
+        <h2 style="color: #333;">Reset Your Password</h2>
+        <p style="color: #555;">Someone requested a password reset for your LotteryPro account. If this was you, click the button below:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">Reset My Password</a>
+        </div>
+        <p style="color: #888; font-size: 14px;">This link expires in <strong>30 minutes</strong>.</p>
+        <p style="color: #888; font-size: 14px;">If you didn't request this, you can safely ignore this email — your password won't change.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">LotteryPro · Educational lottery analysis platform · <a href="https://lotterypro.app" style="color: #667eea;">lotterypro.app</a></p>
+      </div>
+    </div>
+  `;
+
+  const text = `LotteryPro Password Reset\n\nClick the link below to reset your password (expires in 30 minutes):\n\n${resetUrl}\n\nIf you didn't request this, ignore this email.`;
+
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) {
+    console.log(`📧 PASSWORD RESET EMAIL (SendGrid not configured). Reset URL: ${resetUrl}`);
+    return { success: false, message: 'Email service not configured — check server logs for reset link' };
+  }
+
+  try {
+    const sgMailModule = await import('@sendgrid/mail');
+    const sgMail = sgMailModule.default;
+    sgMail.setApiKey(apiKey);
+
+    await sgMail.send({
+      to: recipientEmail,
+      from: { email: 'notifications@lotterypro.com', name: 'Russell Nomer - LotteryPro' },
+      subject: '🔐 LotteryPro Password Reset',
+      html,
+      text,
+    });
+
+    console.log(`✅ Password reset email sent to ${recipientEmail}`);
+    return { success: true, message: 'Reset email sent' };
+  } catch (error: any) {
+    console.error('❌ Failed to send password reset email:', error?.message || error);
+    return { success: false, message: 'Failed to send email' };
+  }
+}

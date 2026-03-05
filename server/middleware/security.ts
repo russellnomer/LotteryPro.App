@@ -136,11 +136,12 @@ export function securityLogger(req: Request, res: Response, next: NextFunction) 
 export function sessionSecurity(req: Request, res: Response, next: NextFunction) {
   // Set secure cookie flags for production
   if (process.env.NODE_ENV === 'production') {
-    res.cookie = function(name: string, value: any, options: any = {}) {
+    const originalCookie = res.cookie.bind(res);
+    (res as any).cookie = function(name: string, value: any, options: any = {}) {
       options.secure = true;
       options.httpOnly = true;
-      options.sameSite = 'strict';
-      return res.cookie(name, value, options);
+      if (!options.sameSite) options.sameSite = 'lax';
+      return originalCookie(name, value, options);
     };
   }
   

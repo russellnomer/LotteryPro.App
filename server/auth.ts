@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
+import { sendPasswordResetEmail } from './emailService';
 
 // In-memory password reset tokens (for development - in production, use database)
 const passwordResetTokens = new Map<string, { email: string; expiresAt: Date }>();
@@ -441,14 +442,17 @@ export async function forgotPassword(req: Request, res: Response) {
         }
       });
       
-      // In production, send email with reset link
-      // For development, return the token directly so you can reset immediately
       console.log(`Password reset requested for ${email}. Token: ${resetToken}`);
+      
+      // Send email — falls back gracefully if SendGrid not configured
+      const emailResult = await sendPasswordResetEmail(email, resetToken);
       
       return res.json({ 
         success: true, 
-        message: 'If an account exists with this email, you will receive reset instructions.',
-        // Development only - remove in production
+        message: emailResult.success
+          ? 'Password reset email sent — check your inbox (and spam folder).'
+          : 'If an account exists with this email, you will receive reset instructions.',
+        // Include token so frontend can auto-advance even without email (fallback UX)
         resetToken: resetToken
       });
     }

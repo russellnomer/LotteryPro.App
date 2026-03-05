@@ -27,6 +27,9 @@ declare module 'express-session' {
 
 const app = express();
 
+// Trust Replit's reverse proxy so rate-limiting and IP detection work correctly
+app.set('trust proxy', 1);
+
 const MemoryStoreSession = MemoryStore(session);
 
 app.use(session({

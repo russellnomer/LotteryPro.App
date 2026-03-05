@@ -43,6 +43,10 @@ export default function AuthPage() {
       setAuthStep('register');
     } else if (params.get('forgot') === 'true') {
       setAuthStep('forgot-password');
+    } else if (params.get('reset')) {
+      // Email link: /auth?reset=TOKEN — auto-fill token and show reset form
+      setResetToken(params.get('reset')!);
+      setAuthStep('reset-password');
     }
   }, []);
 
