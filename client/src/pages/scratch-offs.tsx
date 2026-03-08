@@ -28,7 +28,7 @@ interface PrizeTier {
 interface ScratchOffGame {
   gameNumber: string;
   gameName: string;
-  price: number;
+  price: number | null;
   totalRemainingWinners: number;
   totalRemainingValue: number;
   bigPrizesLeft: number;
@@ -94,7 +94,9 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs text-gray-500">Game #{game.gameNumber}</span>
                 <span className="text-xs text-gray-400">•</span>
-                <span className="text-sm font-bold text-green-700">${game.price}/ticket</span>
+                <span className="text-sm font-bold text-green-700">
+                  {game.price !== null ? `$${game.price}/ticket` : 'Price: see store'}
+                </span>
               </div>
             </div>
           </div>
@@ -218,13 +220,17 @@ export default function ScratchOffs() {
     return data.games
       .filter(g => {
         if (search && !g.gameName.toLowerCase().includes(search.toLowerCase()) && !g.gameNumber.includes(search)) return false;
-        if (g.price > maxPrice) return false;
+        if (g.price !== null && g.price > maxPrice) return false;
         if (g.bigPrizesLeft < minBigPrizes) return false;
         if (rankFilter !== 'all' && g.rank !== rankFilter) return false;
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'price') return a.price - b.price;
+        if (sortBy === 'price') {
+          const pa = a.price ?? Infinity;
+          const pb = b.price ?? Infinity;
+          return pa - pb;
+        }
         return (b[sortBy] as number) - (a[sortBy] as number);
       });
   }, [data, search, maxPrice, minBigPrizes, sortBy, rankFilter]);
