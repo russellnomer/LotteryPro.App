@@ -33,20 +33,19 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
 
 // Rate limiting middleware - OWASP A07:2021, CIS Control 6
 export const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  windowMs: 15 * 60 * 1000, // 15 minute window
+  max: 20, // 20 attempts per window — generous for real users, still stops bots
   message: {
-    error: 'Too many authentication attempts. Please try again in 15 minutes.',
-    retryAfter: '15 minutes'
+    error: 'TOO_MANY_ATTEMPTS',
+    retryAfter: 15
   },
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
   keyGenerator: (req) => {
-    // Use express-rate-limit's built-in IP handling for proper IPv6 support
     const forwarded = req.headers['x-forwarded-for'] as string;
-    const ip = forwarded ? forwarded.split(',')[0].trim() : req.connection.remoteAddress;
-    return ip || 'unknown';
+    const ip = forwarded ? forwarded.split(',')[0].trim() : req.socket?.remoteAddress;
+    return `${ip || 'unknown'}:${(req.body?.email || '').toLowerCase()}`;
   }
 });
 

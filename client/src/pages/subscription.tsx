@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2, Crown, Sparkles, CreditCard, Clock, Package } from "lucide-react";
+import BiometricSetup from "@/components/BiometricSetup";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -463,6 +464,10 @@ export default function SubscriptionPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div className="max-w-md mx-auto mb-6">
+                <BiometricSetup userTier={userTier} />
               </div>
               
               <div className="text-center space-y-4">

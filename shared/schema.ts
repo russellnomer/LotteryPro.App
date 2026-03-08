@@ -942,3 +942,20 @@ export const insertOneTimePurchaseSchema = createInsertSchema(oneTimePurchases).
 
 export type InsertOneTimePurchase = z.infer<typeof insertOneTimePurchaseSchema>;
 export type OneTimePurchase = typeof oneTimePurchases.$inferSelect;
+
+// WebAuthn / Biometric credentials
+export const webauthnCredentials = pgTable("webauthn_credentials", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => userAccounts.id, { onDelete: "cascade" }),
+  credentialId: text("credential_id").notNull().unique(),
+  publicKey: text("public_key").notNull(),
+  counter: integer("counter").notNull().default(0),
+  deviceName: text("device_name").notNull().default("My Device"),
+  transports: jsonb("transports"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUsedAt: timestamp("last_used_at"),
+});
+
+export const insertWebauthnCredentialSchema = createInsertSchema(webauthnCredentials).omit({ id: true, createdAt: true });
+export type InsertWebauthnCredential = z.infer<typeof insertWebauthnCredentialSchema>;
+export type WebauthnCredential = typeof webauthnCredentials.$inferSelect;

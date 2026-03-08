@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Smartphone, Lock, Eye, EyeOff, AlertTriangle, CheckCircle } from "lucide-react";
+import { Shield, Smartphone, Lock, Eye, EyeOff, AlertTriangle, CheckCircle, Fingerprint, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import SEOHead from "@/components/SEOHead";
+import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 
 import { ELIGIBLE_STATES, PROHIBITED_STATE_CODES } from "@shared/stateConfig";
 
@@ -34,6 +35,9 @@ export default function AuthPage() {
   });
   const [mfaData, setMfaData] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+  const [lockoutMinutes, setLockoutMinutes] = useState(0);
+  const [biometricSupported, setBiometricSupported] = useState(false);
   const { toast } = useToast();
 
   // Handle URL query parameters for auth flow
@@ -44,11 +48,57 @@ export default function AuthPage() {
     } else if (params.get('forgot') === 'true') {
       setAuthStep('forgot-password');
     } else if (params.get('reset')) {
-      // Email link: /auth?reset=TOKEN — auto-fill token and show reset form
       setResetToken(params.get('reset')!);
       setAuthStep('reset-password');
     }
   }, []);
+
+  // Detect if biometric authentication is available on this device
+  useEffect(() => {
+    if (window.PublicKeyCredential) {
+      window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+        .then(available => setBiometricSupported(available))
+        .catch(() => setBiometricSupported(false));
+    }
+  }, []);
+
+  const handleBiometricLogin = useCallback(async () => {
+    setIsBiometricLoading(true);
+    setErrors([]);
+    try {
+      const optionsRes = await fetch('/api/auth/webauthn/login-options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email || undefined }),
+      });
+      const options = await optionsRes.json();
+      if (!optionsRes.ok) throw new Error(options.error || 'Could not start biometric login.');
+
+      const { challengeKey, ...authOptions } = options;
+      const authResponse = await startAuthentication({ optionsJSON: authOptions });
+
+      const verifyRes = await fetch('/api/auth/webauthn/login-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response: authResponse, challengeKey }),
+      });
+      const data = await verifyRes.json();
+      if (!verifyRes.ok) throw new Error(data.error || 'Biometric verification failed.');
+
+      localStorage.setItem('sessionToken', data.sessionToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      toast({ title: 'Welcome back!', description: 'Signed in with biometrics.' });
+      window.location.href = '/';
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError') {
+        setErrors(['Biometric prompt was cancelled. Please try again or sign in with your password.']);
+      } else {
+        setErrors([err.message || 'Biometric sign-in failed. Please use your password.']);
+      }
+    } finally {
+      setIsBiometricLoading(false);
+    }
+  }, [formData.email, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +120,13 @@ export default function AuthPage() {
         await handleResetPassword();
       }
     } catch (error: any) {
-      setErrors([error.message || 'An error occurred']);
+      const msg: string = error.message || '';
+      if (msg === 'TOO_MANY_ATTEMPTS' || msg.toLowerCase().includes('too many')) {
+        setLockoutMinutes(15);
+        setErrors(['too_many_attempts']);
+      } else {
+        setErrors([msg || 'Something went wrong. Please try again.']);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -319,11 +375,31 @@ export default function AuthPage() {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Welcome Back</CardTitle>
-        <CardDescription>
-          Sign in to your LotteryPro account
-        </CardDescription>
+        <CardDescription>Sign in to your LotteryPro account</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Biometric sign-in — shown when device supports it */}
+        {biometricSupported && authStep !== 'mfa-verify' && (
+          <div className="space-y-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base font-medium border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950 flex items-center justify-center gap-3"
+              onClick={handleBiometricLogin}
+              disabled={isBiometricLoading}
+              data-testid="button-biometric-login"
+            >
+              <Fingerprint className={`h-5 w-5 text-indigo-600 ${isBiometricLoading ? 'animate-pulse' : ''}`} />
+              {isBiometricLoading ? 'Verifying…' : 'Sign in with Face ID / Fingerprint'}
+            </Button>
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+              <span className="text-xs text-gray-400 uppercase tracking-wide">or use password</span>
+              <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -331,6 +407,7 @@ export default function AuthPage() {
               id="email"
               type="email"
               required
+              autoComplete="email"
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
             />
@@ -343,6 +420,7 @@ export default function AuthPage() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 required
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
               />
@@ -352,6 +430,7 @@ export default function AuthPage() {
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3"
                 onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
@@ -360,27 +439,27 @@ export default function AuthPage() {
 
           {authStep === 'mfa-verify' && (
             <div className="space-y-2">
-              <Label htmlFor="mfaCodeLogin">Authentication Code</Label>
+              <Label htmlFor="mfaCodeLogin">6-Digit Authentication Code</Label>
               <Input
                 id="mfaCodeLogin"
                 type="text"
+                inputMode="numeric"
                 maxLength={6}
-                placeholder="Enter 6-digit code"
+                placeholder="000000"
                 value={formData.mfaCode}
                 onChange={(e) => setFormData(prev => ({ ...prev, mfaCode: e.target.value.replace(/\D/g, '') }))}
-                className="text-center tracking-widest"
+                className="text-center text-xl tracking-widest"
+                autoFocus
               />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Enter the code from your Google Authenticator app
-              </p>
+              <p className="text-sm text-gray-500">Open Google Authenticator on your phone and enter the code shown.</p>
             </div>
           )}
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Signing in...' : 'Sign In'}
+          <Button type="submit" disabled={isLoading} className="w-full h-11 text-base">
+            {isLoading ? 'Signing in…' : 'Sign In'}
           </Button>
 
-          <div className="text-center mt-4">
+          <div className="text-center">
             <button
               type="button"
               onClick={() => setAuthStep('forgot-password')}
@@ -523,20 +602,6 @@ export default function AuthPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="subscription">Subscription Plan</Label>
-            <Select value={formData.subscriptionTier} onValueChange={(value) => setFormData(prev => ({ ...prev, subscriptionTier: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="basic">Basic - $9.99/month</SelectItem>
-                <SelectItem value="pro">Pro - $19.99/month</SelectItem>
-                <SelectItem value="premium">Premium - $29.99/month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-4 border-t pt-4">
             <div className="space-y-2">
               <Label htmlFor="homeState">Your State <span className="text-gray-400 font-normal">(optional — sets your local lottery data)</span></Label>
@@ -625,7 +690,41 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
       <SEOHead title="Login or Register" description="Create your free LotteryPro account to access lottery analysis tools, save picks, and join community pools." path="/auth" />
       <div className="max-w-4xl mx-auto">
-        {errors.length > 0 && (
+        {errors.includes('too_many_attempts') ? (
+          <Alert className="mb-6 border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+            <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+            <AlertDescription className="text-orange-900 dark:text-orange-100">
+              <p className="font-semibold text-base mb-1">Too many sign-in attempts</p>
+              <p className="text-sm mb-3">For your security, sign-in has been paused for a few minutes. You haven't been locked out — just take a short break and try again.</p>
+              <div className="flex flex-col gap-2 text-sm">
+                <p>In the meantime, you can:</p>
+                <button
+                  type="button"
+                  onClick={() => { setErrors([]); setAuthStep('forgot-password'); }}
+                  className="text-left text-orange-700 dark:text-orange-300 underline hover:no-underline"
+                >
+                  → Reset your password via email
+                </button>
+                {biometricSupported && (
+                  <button
+                    type="button"
+                    onClick={() => { setErrors([]); handleBiometricLogin(); }}
+                    className="text-left text-orange-700 dark:text-orange-300 underline hover:no-underline"
+                  >
+                    → Sign in with Face ID / fingerprint (no password needed)
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setErrors([])}
+                  className="text-left text-orange-500 hover:underline mt-1"
+                >
+                  → Try again now
+                </button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : errors.length > 0 && (
           <Alert className="mb-6 border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
             <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
             <AlertDescription className="text-red-800 dark:text-red-200">

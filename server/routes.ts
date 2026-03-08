@@ -8,6 +8,7 @@ import { seedHistoricalData } from "./seedData";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, optionalAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword } from "./auth";
+import { webauthnRegisterOptions, webauthnRegisterVerify, webauthnLoginOptions, webauthnLoginVerify, webauthnListCredentials, webauthnDeleteCredential } from "./webauthnRoutes";
 import { 
   createPayPalSubscription, 
   activatePayPalSubscription,
@@ -2502,7 +2503,15 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
   app.post("/api/auth/forgot-password", authRateLimit, forgotPassword);
   app.post("/api/auth/reset-password", authRateLimit, resetPassword);
-  
+
+  // WebAuthn / Biometric login routes
+  app.post("/api/auth/webauthn/register-options", requireAuth, webauthnRegisterOptions);
+  app.post("/api/auth/webauthn/register-verify", requireAuth, webauthnRegisterVerify);
+  app.post("/api/auth/webauthn/login-options", webauthnLoginOptions);
+  app.post("/api/auth/webauthn/login-verify", webauthnLoginVerify);
+  app.get("/api/auth/webauthn/credentials", requireAuth, webauthnListCredentials);
+  app.delete("/api/auth/webauthn/credentials/:credentialId", requireAuth, webauthnDeleteCredential);
+
   // Get current user endpoint
   app.get("/api/auth/user", async (req, res) => {
     try {

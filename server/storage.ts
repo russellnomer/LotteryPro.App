@@ -964,15 +964,17 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Define usage limits by tier
-    const usageLimits = {
+    const usageLimits: Record<string, number> = {
       free: 1,
       basic: 5,
-      pro: 999,  // Unlimited
-      premium: 999,  // Unlimited
-      unlimited: 999  // Unlimited
+      pro: 9999,
+      premium: 9999,
+      unlimited: 9999,
+      founder: 9999,
+      lifetime: 9999,
     };
 
-    const limit = usageLimits[userData.subscriptionTier as keyof typeof usageLimits] || 1;
+    const limit = usageLimits[userData.subscriptionTier] ?? 1;
     const count = userData.dailyUsageCount || 0;
     const canUse = count < limit;
 
@@ -1048,15 +1050,17 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Define usage limits by tier
-    const usageLimits = {
+    const usageLimits: Record<string, number> = {
       free: 1,
       basic: 5,
-      pro: 999,  // Unlimited
-      premium: 999,  // Unlimited
-      unlimited: 999  // Unlimited
+      pro: 9999,
+      premium: 9999,
+      unlimited: 9999,
+      founder: 9999,
+      lifetime: 9999,
     };
 
-    const usageLimit = usageLimits[userData.subscriptionTier as keyof typeof usageLimits] || 1;
+    const usageLimit = usageLimits[userData.subscriptionTier] ?? 1;
 
     return {
       tier: userData.subscriptionTier,
