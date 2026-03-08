@@ -158,25 +158,32 @@ The platform features a responsive design with a mobile-first approach, utilizin
 
 **7. Multi-State Framework** ✅
 - `shared/stateConfig.ts` defines all 50 states + DC with: data status (full/national-only), state games list, representative contact URL, flag emoji, lottery website
-- NY = `full` (live API from data.ny.gov); all others = `national-only` (Powerball + MegaMillions + state draw games listed)
+- NY = `full` (live API from data.ny.gov); PA = `full` (scraped from palottery.pa.gov); all others = `national-only`
 - Prohibited states (AL, AK, HI, MS, NV, UT) flagged and blocked from registration
 - `userAccounts.homeState` (varchar 2) stores user's state; saved on registration and updatable via PATCH `/api/auth/user/state`
 - `/api/auth/user` response now includes `homeState` field
 
 **8. State-Aware Scratch-Off Page** ✅
 - `/scratch-offs` page detects logged-in user's `homeState` and renders appropriate content
-- NY users: full real-time scratch-off prize helper (existing feature)
+- States with `dataStatus: 'full'` (NY, PA): full real-time scratch-off prize helper
 - Other states: `StateDataPanel` component with civic advocacy content
 - Unauthenticated users: see NY data by default + state picker dropdown to browse any state
-- State badge shown in navigation bar for logged-in users
+- `GET /api/scratchoffs?state=NY` (data.ny.gov) | `GET /api/scratchoffs?state=PA` (palottery.pa.gov)
+- PA service: `server/paScratchOffService.ts` — scrapes Print-Scratch-Offs.aspx, parses HTML table, returns 200+ active games with real prices and prize data
 
 **9. Civic Advocacy Feature** ✅
-- `client/src/components/StateDataPanel.tsx` — shown for non-NY states
+- `client/src/components/StateDataPanel.tsx` — shown for states without public prize data
 - Section 1: State header with flag, data availability status
 - Section 2: Available draw games (Powerball, MegaMillions, state games)
-- Section 3: "What [State] Isn't Telling You" — explains the NY transparency standard
-- Section 4: Pre-written letter template users can copy with one click (addressed to state lottery commission)
+- Section 3: "What [State] Isn't Telling You" — explains the NY/PA transparency standard
+- Section 4: Pre-written letter template — cites NY and PA as precedents, includes specific requests
 - Section 5: "Find My Representative" link → openstates.org pre-filled for state
 - Section 6: Social sharing buttons (Twitter, Facebook, copy text)
 - Section 7: "Notify Me" email opt-in for when state data becomes available
 - Letter template: `SAMPLE_LETTER_TEMPLATE(stateName)` export from stateConfig.ts
+
+**10. Scratch-Off Price Accuracy** ✅
+- NY prices: scraped directly from nylottery.ny.gov (March 2026), 110 active games
+- Previous guessed/sequential lookup table replaced with verified prices
+- Games not in lookup show "Price: see store" instead of a made-up number
+- `server/scratchOffService.ts` PRICE_LOOKUP: only authoritative data, never guessed

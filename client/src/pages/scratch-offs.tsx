@@ -46,6 +46,7 @@ interface ScratchOffResponse {
   games: ScratchOffGame[];
   fetchedAt: string;
   source: string;
+  state: string;
 }
 
 const RANK_CONFIG = {
@@ -205,14 +206,16 @@ export default function ScratchOffs() {
   const isAuthenticated = !!user;
   // Effective state: logged-in user's state, or the browse picker value, defaulting to NY
   const effectiveStateCode = isAuthenticated ? (user?.homeState || 'NY') : browseState;
-  const showingNY = effectiveStateCode === 'NY' || effectiveStateCode === 'OTHER' || !effectiveStateCode;
   const stateConfig = getStateConfig(effectiveStateCode) || getStateConfig('NY')!;
+  // States that have real prize data we can show
+  const showingData = stateConfig.dataStatus === 'full';
+  const apiUrl = `/api/scratchoffs?state=${stateConfig.code}`;
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<ScratchOffResponse>({
-    queryKey: ['/api/scratchoffs'],
+    queryKey: [apiUrl],
     staleTime: 3600 * 1000,
     refetchOnWindowFocus: false,
-    enabled: showingNY, // only fetch NY scratch-off data when needed
+    enabled: showingData,
   });
 
   const filtered = useMemo(() => {
@@ -253,13 +256,13 @@ export default function ScratchOffs() {
           <div className="flex items-center justify-center gap-3 mb-3">
             <Ticket className="w-8 h-8" />
             <h1 className="text-3xl font-bold">
-              {showingNY ? 'NY Scratch-Off Helper' : `${stateConfig.name} Lottery`}
+              {showingData ? `${stateConfig.flag} ${stateConfig.name} Scratch-Off Helper` : `${stateConfig.name} Lottery`}
             </h1>
             <Sparkles className="w-8 h-8" />
           </div>
           <p className="text-yellow-100 text-lg max-w-2xl mx-auto">
-            {showingNY
-              ? 'Real-time remaining prize data from official NY State sources — find games that still have big prizes left'
+            {showingData
+              ? `Real-time remaining prize data from official ${stateConfig.name} sources — find games that still have big prizes left`
               : `Lottery data and resources for ${stateConfig.name} players`}
           </p>
 
@@ -332,18 +335,18 @@ export default function ScratchOffs() {
 
       <div className="max-w-5xl mx-auto px-4 py-6">
 
-        {/* Non-NY state panel */}
-        {!showingNY && stateConfig && (
+        {/* Non-data state panel — civic advocacy for states without public prize data */}
+        {!showingData && stateConfig && (
           <StateDataPanel stateConfig={stateConfig} />
         )}
 
-        {/* NY full tool — only shown for NY state or default */}
-        {showingNY && <>
+        {/* Full scratch-off tool — shown for states that publish prize data (NY, PA) */}
+        {showingData && <>
         {/* Disclaimer */}
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 flex items-start gap-2 text-sm text-amber-800">
           <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <span>
-            <strong>Educational tool only.</strong> Prize data is from official NY State open data and refreshes hourly. 
+            <strong>Educational tool only.</strong> Prize data is sourced from official {stateConfig.name} lottery records{stateConfig.code === 'NY' ? ' (data.ny.gov, refreshes hourly)' : stateConfig.code === 'PA' ? ' (palottery.pa.gov, updated weekly)' : ''}. 
             Value scores are analytical estimates — they do not predict or guarantee outcomes. Must be 18+ to purchase lottery tickets. 
             Please play responsibly.
           </span>

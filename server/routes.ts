@@ -3331,9 +3331,16 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   // ── Scratch-Off Helper ────────────────────────────────────────
   app.get('/api/scratchoffs', async (req, res) => {
     try {
-      const { getScratchOffGames } = await import('./scratchOffService');
-      const games = await getScratchOffGames();
-      res.json({ games, fetchedAt: new Date().toISOString(), source: 'data.ny.gov' });
+      const state = (req.query.state as string || 'NY').toUpperCase();
+      if (state === 'PA') {
+        const { getPAScratchOffGames } = await import('./paScratchOffService');
+        const games = await getPAScratchOffGames();
+        res.json({ games, fetchedAt: new Date().toISOString(), source: 'palottery.pa.gov', state: 'PA' });
+      } else {
+        const { getScratchOffGames } = await import('./scratchOffService');
+        const games = await getScratchOffGames();
+        res.json({ games, fetchedAt: new Date().toISOString(), source: 'data.ny.gov', state: 'NY' });
+      }
     } catch (error: any) {
       console.error('Scratch-off data fetch error:', error);
       res.status(500).json({ error: 'Failed to fetch scratch-off data', details: error.message });

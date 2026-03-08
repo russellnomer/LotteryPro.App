@@ -61,8 +61,8 @@ export const STATE_CONFIGS: Record<string, StateConfig> = {
   },
   PA: {
     code: 'PA', name: 'Pennsylvania', flag: '🔔',
-    dataStatus: 'national-only',
-    scratchOffApiUrl: null,
+    dataStatus: 'full',
+    scratchOffApiUrl: '/api/scratchoffs?state=PA',
     drawGames: [
       ...NATIONAL_GAMES,
       { name: 'Pick 2', type: 'draw', drawDays: 'Daily' },
@@ -74,7 +74,7 @@ export const STATE_CONFIGS: Record<string, StateConfig> = {
       { name: 'Treasure Hunt', type: 'draw', drawDays: 'Daily' },
     ],
     representativeUrl: 'https://openstates.org/find_your_legislator/?state=PA',
-    lotteryWebsite: 'https://www.palottery.state.pa.us',
+    lotteryWebsite: 'https://www.palottery.pa.gov',
     prohibited: false,
   },
   CT: {
@@ -262,25 +262,29 @@ export function getStateConfig(code: string): StateConfig | null {
   return STATE_CONFIGS[code?.toUpperCase()] || null;
 }
 
-export const SAMPLE_LETTER_TEMPLATE = (stateName: string) => `Subject: Request for Lottery Prize Transparency Data
+export const SAMPLE_LETTER_TEMPLATE = (stateName: string) => `Subject: Request for Lottery Scratch-Off Prize Transparency — A Consumer Protection Issue
 
-Dear [Representative Name],
+Dear [Representative Name / Lottery Commission Director],
 
-I am writing to request that ${stateName} publish its lottery scratch-off game remaining prize data as open, machine-readable public data — similar to what New York State currently provides through data.ny.gov.
+I am a ${stateName} resident and lottery player, and I am writing to ask for a change that would protect consumers at no cost to the state.
 
-New York publishes how many prizes remain for each scratch-off game, allowing players to make informed decisions about which tickets still have top prizes available. This transparency:
+THE REQUEST: Please publish ${stateName}'s scratch-off game remaining prize data as open, publicly accessible data — updated at least daily.
 
-1. Protects consumers from unknowingly buying tickets from games where all major prizes have already been claimed
-2. Builds public trust in the lottery system
-3. Aligns with modern open government principles
+THE PRECEDENT: New York State already does this. The NY Lottery publishes exactly how many prizes remain for every active scratch-off game through its open data portal (data.ny.gov/resource/nzqa-7unk.json). Any resident, developer, or journalist can see in real time whether a game's top prizes are still available. Pennsylvania also publishes this data at palottery.pa.gov.
 
-The data already exists — state lottery commissions are required to track it internally. Making it publicly available costs little and benefits residents greatly.
+WHY IT MATTERS FOR ${stateName.toUpperCase()} PLAYERS: Every scratch-off ticket has a fixed, pre-printed number of winning tickets. Once a game's top prizes are claimed, every ticket sold after that is guaranteed not to win those prizes — but players have no way of knowing this. In New York, a player can check before buying whether the $1,000,000 top prize is still available. In ${stateName}, they cannot. This information asymmetry benefits only the lottery commission.
 
-I respectfully request that ${stateName} Lottery Commission publish remaining prize data for all scratch-off games in an open, machine-readable format (JSON/CSV) updated at least daily.
+THE DATA ALREADY EXISTS: The ${stateName} Lottery Commission is required by law to track this data internally for audit and compliance purposes. Publishing it publicly requires only a simple data feed — a task any state IT department can accomplish in days.
 
-Thank you for your service and your consideration of this request.
+I respectfully request that the ${stateName} Lottery Commission:
+1. Publish remaining prize counts for all active scratch-off games
+2. Update the data at least daily
+3. Make it freely available in a machine-readable format (JSON or CSV)
+
+This is a transparency measure that builds public trust, protects consumers, and costs the state nothing. Thank you for your consideration.
 
 Sincerely,
 [Your Name]
 [Your Address]
-[Your City, ${stateName} ZIP]`;
+[Your City, ${stateName} ZIP Code]
+[Your Email / Phone]`;
