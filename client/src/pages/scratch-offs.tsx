@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,8 @@ interface ScratchOffGame {
   totalRemainingValue: number;
   bigPrizesLeft: number;
   topPrizeRemaining: number;
+  topPrizeTotal: number;
+  topPrizePct: number;
   topPrizeAmount: string;
   topPrizeValue: number;
   prizeTiers: PrizeTier[];
@@ -126,15 +129,42 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
         </div>
 
         {/* Top prize */}
-        <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-600" />
-            <span className="text-sm font-medium text-amber-800">Top Prize: {game.topPrizeAmount}</span>
-          </div>
-          <Badge variant="outline" className="text-amber-700 border-amber-400">
-            {game.topPrizeRemaining} left
-          </Badge>
-        </div>
+        {(() => {
+          const pct = game.topPrizePct ?? 0;
+          const bg = pct === 100 ? 'bg-emerald-50 border-emerald-300' : pct >= 50 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
+          const iconColor = pct === 100 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500';
+          const textColor = pct === 100 ? 'text-emerald-800' : pct >= 50 ? 'text-amber-800' : 'text-red-700';
+          const badgeColor = pct === 100 ? 'text-emerald-700 border-emerald-400 bg-emerald-50' : pct >= 50 ? 'text-amber-700 border-amber-400 bg-amber-50' : 'text-red-600 border-red-300 bg-red-50';
+          const total = game.topPrizeTotal ?? 0;
+          return (
+            <div className={`border rounded-lg px-3 py-2 ${bg}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Trophy className={`w-4 h-4 ${iconColor}`} />
+                  <span className={`text-sm font-medium ${textColor}`}>Top Prize: {game.topPrizeAmount}</span>
+                </div>
+                <Badge variant="outline" className={`${badgeColor} font-semibold`}>
+                  {game.topPrizeRemaining}{total > 0 ? ` of ${total}` : ''} left
+                </Badge>
+              </div>
+              {total > 0 && (
+                <div className="mt-1.5">
+                  <div className="flex justify-between text-xs mb-0.5">
+                    <span className={pct === 100 ? 'text-emerald-700 font-semibold' : pct >= 50 ? 'text-amber-700' : 'text-red-600'}>
+                      {pct === 100 ? '🟢 All top prizes still available' : pct >= 50 ? `🟡 ${pct}% of top prizes remain` : `🔴 Only ${pct}% of top prizes remain`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${pct === 100 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Value score bar */}
         <div>
@@ -193,7 +223,7 @@ export default function ScratchOffs() {
   const [search, setSearch] = useState('');
   const [maxPrice, setMaxPrice] = useState(30);
   const [minBigPrizes, setMinBigPrizes] = useState(0);
-  const [sortBy, setSortBy] = useState<'valueScore' | 'bigPrizesLeft' | 'totalRemainingValue' | 'pctRemaining' | 'price'>('valueScore');
+  const [sortBy, setSortBy] = useState<'valueScore' | 'bigPrizesLeft' | 'totalRemainingValue' | 'pctRemaining' | 'topPrizePct' | 'price'>('valueScore');
   const [rankFilter, setRankFilter] = useState<'all' | 'top' | 'good' | 'fair'>('all');
   const [browseState, setBrowseState] = useState<string>('NY'); // state picker for unauthenticated users
 
@@ -393,6 +423,7 @@ export default function ScratchOffs() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="valueScore">Value Score (Best)</SelectItem>
+                    <SelectItem value="topPrizePct">Top Prize % Left</SelectItem>
                     <SelectItem value="bigPrizesLeft">Big Prizes Left</SelectItem>
                     <SelectItem value="totalRemainingValue">Total Prize Pool</SelectItem>
                     <SelectItem value="pctRemaining">% Prizes Remaining</SelectItem>
@@ -448,12 +479,18 @@ export default function ScratchOffs() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => refetch()}
+                  onClick={async () => {
+                    // Bust both local and server cache to get truly fresh data
+                    const refreshUrl = `${apiUrl}&refresh=1`;
+                    await queryClient.invalidateQueries({ queryKey: [apiUrl] });
+                    await fetch(refreshUrl);
+                    refetch();
+                  }}
                   disabled={isFetching}
                   className="flex items-center gap-1"
                 >
                   <RefreshCw className={`w-3 h-3 ${isFetching ? 'animate-spin' : ''}`} />
-                  Refresh
+                  {isFetching ? 'Updating...' : 'Refresh Now'}
                 </Button>
               </div>
             </div>

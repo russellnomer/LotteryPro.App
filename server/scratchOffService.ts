@@ -16,6 +16,8 @@ export interface ScratchOffGame {
   totalRemainingValue: number;
   bigPrizesLeft: number;
   topPrizeRemaining: number;
+  topPrizeTotal: number;
+  topPrizePct: number; // % of top prizes still unclaimed (0-100)
   topPrizeAmount: string;
   topPrizeValue: number;
   prizeTiers: ScratchOffPrizeTier[];
@@ -198,6 +200,8 @@ function fetchJson(url: string): Promise<RawRow[]> {
 let cache: { data: ScratchOffGame[]; fetchedAt: number } | null = null;
 const CACHE_TTL = 3600 * 1000; // 1 hour
 
+export function clearNYCache() { cache = null; }
+
 export async function getScratchOffGames(): Promise<ScratchOffGame[]> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL) {
     return cache.data;
@@ -254,6 +258,9 @@ export async function getScratchOffGames(): Promise<ScratchOffGame[]> {
     else if (valueScore >= 0.3 && bigPrizesLeft >= 2) rank = 'good';
     else if (valueScore >= 0.15 || bigPrizesLeft >= 1) rank = 'fair';
 
+    const topPrizeTotal = topTier.total;
+    const topPrizePct = topPrizeTotal > 0 ? Math.round((topTier.unpaid / topPrizeTotal) * 100) : 0;
+
     games.push({
       gameNumber,
       gameName: name,
@@ -262,6 +269,8 @@ export async function getScratchOffGames(): Promise<ScratchOffGame[]> {
       totalRemainingValue,
       bigPrizesLeft,
       topPrizeRemaining: topTier.unpaid,
+      topPrizeTotal,
+      topPrizePct,
       topPrizeAmount: topTier.prizeAmount,
       topPrizeValue: topTier.prizeValue,
       prizeTiers: sortedByValue,

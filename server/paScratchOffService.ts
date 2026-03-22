@@ -11,6 +11,8 @@ const CACHE_TTL = 3600 * 1000; // 1 hour
 
 let cache: { data: ScratchOffGame[]; fetchedAt: number } | null = null;
 
+export function clearPACache() { cache = null; }
+
 function fetchHtml(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     https.get(url, {
@@ -147,6 +149,9 @@ export async function getPAScratchOffGames(): Promise<ScratchOffGame[]> {
     else if (bigPrizesLeft >= 2 && topTier.unpaid >= 1) rank = 'good';
     else if (bigPrizesLeft >= 1 || topTier.unpaid >= 1) rank = 'fair';
 
+    const topPrizeTotal = topTier.total;
+    const topPrizePct = topPrizeTotal > 0 ? Math.round((topTier.unpaid / topPrizeTotal) * 100) : 0;
+
     games.push({
       gameNumber,
       gameName,
@@ -155,6 +160,8 @@ export async function getPAScratchOffGames(): Promise<ScratchOffGame[]> {
       totalRemainingValue,
       bigPrizesLeft,
       topPrizeRemaining: topTier.unpaid,
+      topPrizeTotal,
+      topPrizePct,
       topPrizeAmount: topTier.prizeAmount,
       topPrizeValue: topTier.prizeValue,
       prizeTiers: sortedByValue,

@@ -3346,12 +3346,15 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.get('/api/scratchoffs', async (req, res) => {
     try {
       const state = (req.query.state as string || 'NY').toUpperCase();
+      const forceRefresh = req.query.refresh === '1';
       if (state === 'PA') {
-        const { getPAScratchOffGames } = await import('./paScratchOffService');
+        const { getPAScratchOffGames, clearPACache } = await import('./paScratchOffService');
+        if (forceRefresh) clearPACache();
         const games = await getPAScratchOffGames();
         res.json({ games, fetchedAt: new Date().toISOString(), source: 'palottery.pa.gov', state: 'PA' });
       } else {
-        const { getScratchOffGames } = await import('./scratchOffService');
+        const { getScratchOffGames, clearNYCache } = await import('./scratchOffService');
+        if (forceRefresh) clearNYCache();
         const games = await getScratchOffGames();
         res.json({ games, fetchedAt: new Date().toISOString(), source: 'data.ny.gov', state: 'NY' });
       }
