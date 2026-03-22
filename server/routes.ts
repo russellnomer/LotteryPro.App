@@ -5,6 +5,7 @@ import youtubeRoutes from "./routes/youtube";
 import youtubeService from "./youtubeService";
 import { insertTicketSchema, insertDrawSchema, type GameType, ALL_GAME_TYPES, GAME_CONFIG } from "@shared/schema";
 import { seedHistoricalData } from "./seedData";
+import bcrypt from "bcrypt";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
 import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, optionalAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword } from "./auth";
@@ -112,6 +113,19 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   // Seed historical data and Russell Nomer content on startup  
   await seedHistoricalData();
   await seedRussellNomerContent();
+
+  // Ensure founder account always has the correct password on every boot (dev + prod)
+  try {
+    const { pool } = await import("./db");
+    const founderHash = await bcrypt.hash("LP$h3rl0ck!!!$$$", 12);
+    await pool.query(
+      "UPDATE user_accounts SET password_hash = $1 WHERE email = $2",
+      [founderHash, "russell@russellnomer.com"]
+    );
+    console.log("✅ Founder account credentials verified");
+  } catch (err) {
+    console.error("⚠️ Could not verify founder credentials:", err);
+  }
   
   // Start progressive enhancement system
   progressiveLoader.startProgressiveLoading().catch(error => {
