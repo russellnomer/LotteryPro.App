@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
@@ -225,7 +225,8 @@ export default function ScratchOffs() {
   const [minBigPrizes, setMinBigPrizes] = useState(0);
   const [sortBy, setSortBy] = useState<'valueScore' | 'bigPrizesLeft' | 'totalRemainingValue' | 'pctRemaining' | 'topPrizePct' | 'price'>('valueScore');
   const [rankFilter, setRankFilter] = useState<'all' | 'top' | 'good' | 'fair'>('all');
-  const [browseState, setBrowseState] = useState<string>('NY'); // state picker for unauthenticated users
+  const [browseState, setBrowseState] = useState<string>('NY');
+  const [homeStateInitialized, setHomeStateInitialized] = useState(false);
 
   // Get current user to determine their home state
   const { data: user, isLoading: userLoading } = useQuery<{ id: string; email: string; homeState?: string } | null>({
@@ -234,8 +235,17 @@ export default function ScratchOffs() {
   });
 
   const isAuthenticated = !!user;
-  // Effective state: logged-in user's state, or the browse picker value, defaulting to NY
-  const effectiveStateCode = isAuthenticated ? (user?.homeState || 'NY') : browseState;
+
+  // Once user loads, default the picker to their home state (but let them browse freely after that)
+  useEffect(() => {
+    if (user && !homeStateInitialized) {
+      setBrowseState(user.homeState || 'NY');
+      setHomeStateInitialized(true);
+    }
+  }, [user, homeStateInitialized]);
+
+  // browseState is the single source of truth — works for all users logged in or not
+  const effectiveStateCode = browseState;
   const stateConfig = getStateConfig(effectiveStateCode) || getStateConfig('NY')!;
   // States that have real prize data we can show
   const showingData = stateConfig.dataStatus === 'full';
@@ -296,38 +306,24 @@ export default function ScratchOffs() {
               : `Lottery data and resources for ${stateConfig.name} players`}
           </p>
 
-          {/* State picker */}
+          {/* State picker — always a real dropdown for all users */}
           <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 bg-white/15 border border-white/30 rounded-full px-3 py-1.5">
               <MapPin className="w-4 h-4 text-yellow-200" />
               <span className="text-sm text-yellow-100">Viewing:</span>
-              {isAuthenticated && user?.homeState ? (
-                <span className="text-sm font-semibold">
-                  {stateConfig.flag} {stateConfig.name}
-                  {user?.homeState && <span className="text-yellow-200 font-normal"> (your state)</span>}
-                </span>
-              ) : (
-                <Select value={browseState} onValueChange={setBrowseState}>
-                  <SelectTrigger className="h-7 bg-transparent border-none text-white text-sm font-semibold p-0 w-auto focus:ring-0 shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-64">
-                    {ALL_STATES.filter(s => !s.prohibited).map(s => (
-                      <SelectItem key={s.code} value={s.code}>
-                        {s.flag} {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={browseState} onValueChange={setBrowseState}>
+                <SelectTrigger className="h-7 bg-transparent border-none text-white text-sm font-semibold p-0 w-auto focus:ring-0 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-64">
+                  {ALL_STATES.filter(s => !s.prohibited).map(s => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.flag} {s.name}{isAuthenticated && user?.homeState === s.code ? ' (your state)' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            {isAuthenticated && user?.homeState && user.homeState !== 'NY' && (
-              <Link href="/home">
-                <button className="text-xs bg-yellow-500/30 hover:bg-yellow-500/50 text-yellow-100 border border-yellow-400/40 rounded-full px-3 py-1.5 transition-colors">
-                  Generate Numbers for {stateConfig.name} Games
-                </button>
-              </Link>
-            )}
             {!isAuthenticated && (
               <Link href="/auth">
                 <button className="text-xs bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1.5">
