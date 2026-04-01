@@ -242,6 +242,19 @@ export default function StateDataPanel({ stateConfig, onNotifyRequest }: Props) 
           </a>
         </div>
       )}
+
+      {/* Russell Nomer attribution footer */}
+      <div className="text-center text-xs text-gray-400 border-t pt-4">
+        Tool built by independent musician{' '}
+        <a href="https://russellnomermusic.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Russell Nomer</a>
+        {' '}· Stream my music (entertainment only) →{' '}
+        <a href="https://music.apple.com/us/artist/russell-nomer/452485944" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Apple Music</a>
+        {' '}·{' '}
+        <a href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Spotify</a>
+        {' '}·{' '}
+        <a href="https://youtube.com/@russellnomermusic" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">YouTube</a>
+        {' '}· Play responsibly.
+      </div>
     </div>
   );
 }

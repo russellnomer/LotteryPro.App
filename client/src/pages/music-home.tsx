@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,8 +17,9 @@ import SEOHead from "@/components/SEOHead";
 import { Music, Heart, Star, Crown, DollarSign, Youtube, ExternalLink } from "lucide-react";
 
 export default function MusicHome() {
-  const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium'>('free');
-  const [userEmail] = useState<string>("demo@example.com");
+  const { user } = useAuth();
+  const userTier = (user as any)?.subscriptionTier || 'free';
+  const userEmail = (user as any)?.email || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
@@ -44,17 +46,6 @@ export default function MusicHome() {
                 <ExternalLink className="h-3 w-3" /> Official Site
               </a>
               
-              {/* Demo User Tier Switcher */}
-              <select 
-                value={userTier} 
-                onChange={(e) => setUserTier(e.target.value as any)}
-                className="px-2 py-1 text-xs border border-gray-300 rounded"
-              >
-                <option value="free">Free</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="premium">Premium</option>
-              </select>
             </nav>
           </div>
         </div>

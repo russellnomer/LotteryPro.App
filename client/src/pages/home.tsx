@@ -35,7 +35,67 @@ const SpinWheel = lazy(() => import("@/components/gamification/SpinWheel"));
 const PostGenerationModal = lazy(() => import("@/components/PostGenerationModal"));
 import SystemStatusIndicator from "@/components/SystemStatusIndicator";
 import SEOHead from "@/components/SEOHead";
-import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign, X } from "lucide-react";
+import { SiApplemusic, SiSpotify, SiYoutube } from 'react-icons/si';
+
+const MUSIC_DISMISSED_KEY = 'music_bar_dismissed';
+
+function PostPickMusicBar() {
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem(MUSIC_DISMISSED_KEY)) {
+      setDismissed(true);
+    }
+  }, []);
+
+  const dismiss = () => {
+    sessionStorage.setItem(MUSIC_DISMISSED_KEY, '1');
+    setDismissed(true);
+  };
+
+  if (dismissed) return null;
+
+  return (
+    <div className="mt-5 relative bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg px-4 py-3 flex flex-wrap items-center gap-3">
+      <button
+        onClick={dismiss}
+        aria-label="Dismiss"
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+      >
+        <X className="w-4 h-4" />
+      </button>
+      <Music className="w-4 h-4 text-purple-500 shrink-0" />
+      <span className="text-sm font-medium text-gray-700 mr-1">Stream while you wait for the draw:</span>
+      <div className="flex gap-2 flex-wrap">
+        <a
+          href="https://music.apple.com/us/artist/russell-nomer/452485944"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-r from-pink-500 to-rose-600 text-white text-xs font-semibold hover:from-pink-600 hover:to-rose-700 transition-colors"
+        >
+          <SiApplemusic className="w-3.5 h-3.5" /> Apple Music
+        </a>
+        <a
+          href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1DB954] text-white text-xs font-semibold hover:bg-[#1aa34a] transition-colors"
+        >
+          <SiSpotify className="w-3.5 h-3.5" /> Spotify
+        </a>
+        <a
+          href="https://youtube.com/@russellnomermusic"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#FF0000] text-white text-xs font-semibold hover:bg-[#cc0000] transition-colors"
+        >
+          <SiYoutube className="w-3.5 h-3.5" /> YouTube
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [selectedGame, setSelectedGame] = useState<GameType>('powerball');
@@ -459,6 +519,9 @@ export default function Home() {
                       </Badge>
                     </div>
                     
+                    {/* Post-pick Music Bar */}
+                    <PostPickMusicBar />
+
                     {/* Jackpocket Affiliate CTA - Revenue Generator */}
                     <div className="mt-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-6 text-white">
                       <div className="text-center mb-4">

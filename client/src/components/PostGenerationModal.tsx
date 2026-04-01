@@ -7,8 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Sparkles, Music, Book, UserPlus, Mail, ArrowRight, X } from 'lucide-react';
+import { Sparkles, Music, Book, Mail, ArrowRight, ExternalLink } from 'lucide-react';
 import { Link } from 'wouter';
+import { SiApplemusic, SiSpotify, SiYoutube } from 'react-icons/si';
+
+const APPLE_MUSIC_URL = 'https://music.apple.com/us/artist/russell-nomer/452485944';
+const SPOTIFY_URL = 'https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq';
+const YOUTUBE_URL = 'https://youtube.com/@russellnomermusic';
 
 interface PostGenerationModalProps {
   open: boolean;
@@ -42,7 +47,7 @@ export default function PostGenerationModal({
     onSuccess: () => {
       toast({
         title: 'Thanks for signing up!',
-        description: 'Check your email for lottery reminders and exclusive offers.',
+        description: 'Check your email for your free weekly smart picks.',
       });
       setStep('discover');
     },
@@ -132,12 +137,12 @@ export default function PostGenerationModal({
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-center">
                 <Mail className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                Never Miss a Draw!
+                Free Weekly Smart Picks!
               </DialogTitle>
             </DialogHeader>
 
             <p className="text-center text-gray-600 text-sm mb-6">
-              Get reminders before each drawing so you never forget to play your numbers.
+              Get free weekly smart picks + an exclusive unreleased Russell Nomer track delivered to your inbox.
             </p>
 
             <div className="space-y-4">
@@ -149,14 +154,15 @@ export default function PostGenerationModal({
                 className="text-center"
               />
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <Checkbox 
                   id="marketing"
                   checked={marketingConsent}
                   onCheckedChange={(checked) => setMarketingConsent(checked === true)}
+                  className="mt-0.5"
                 />
-                <label htmlFor="marketing" className="text-sm text-gray-600">
-                  Send me lottery tips and exclusive offers
+                <label htmlFor="marketing" className="text-xs text-gray-500 leading-relaxed">
+                  Send me weekly picks and exclusive music. You can unsubscribe anytime. We retain your email for up to 30 days after unsubscribing per our privacy policy.
                 </label>
               </div>
 
@@ -191,25 +197,58 @@ export default function PostGenerationModal({
             className="py-4"
           >
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-center mb-4">
-                Discover Russell Nomer
+              <DialogTitle className="text-xl font-bold text-center mb-1">
+                Support the Creator
               </DialogTitle>
             </DialogHeader>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <Link href="/music" onClick={handleClose}>
-                <div className="p-4 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200 transition-colors cursor-pointer text-center">
-                  <Music className="w-10 h-10 text-purple-600 mx-auto mb-2" />
-                  <span className="font-semibold text-purple-800">519 Songs</span>
-                  <p className="text-xs text-gray-600 mt-1">Stream on Spotify & Apple Music</p>
+            <p className="text-center text-gray-500 text-xs mb-5">
+              These tools are built by independent musician Russell Nomer. Stream his music to help fund new releases.
+            </p>
+
+            {/* Direct streaming buttons */}
+            <div className="space-y-2 mb-5">
+              <a
+                href={APPLE_MUSIC_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-lg bg-gradient-to-r from-pink-500 to-rose-600 text-white font-semibold hover:from-pink-600 hover:to-rose-700 transition-colors"
+              >
+                <SiApplemusic className="w-5 h-5" />
+                Stream on Apple Music
+              </a>
+              <a
+                href={SPOTIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-lg bg-[#1DB954] text-white font-semibold hover:bg-[#1aa34a] transition-colors"
+              >
+                <SiSpotify className="w-5 h-5" />
+                Stream on Spotify
+              </a>
+              <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-lg bg-[#FF0000] text-white font-semibold hover:bg-[#cc0000] transition-colors"
+              >
+                <SiYoutube className="w-5 h-5" />
+                Watch on YouTube
+              </a>
+            </div>
+
+            {/* Secondary links */}
+            <div className="flex gap-2 mb-4">
+              <Link href="/music" onClick={handleClose} className="flex-1">
+                <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-medium transition-colors cursor-pointer">
+                  <Music className="w-3.5 h-3.5" />
+                  Full Catalog (532 songs)
                 </div>
               </Link>
-
-              <Link href="/books" onClick={handleClose}>
-                <div className="p-4 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 hover:from-orange-200 hover:to-red-200 transition-colors cursor-pointer text-center">
-                  <Book className="w-10 h-10 text-orange-600 mx-auto mb-2" />
-                  <span className="font-semibold text-orange-800">35 Books</span>
-                  <p className="text-xs text-gray-600 mt-1">Available on Amazon</p>
+              <Link href="/books" onClick={handleClose} className="flex-1">
+                <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-medium transition-colors cursor-pointer">
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  35 Books on Amazon
                 </div>
               </Link>
             </div>
@@ -219,7 +258,7 @@ export default function PostGenerationModal({
               variant="outline"
               className="w-full"
             >
-              Start Playing
+              Back to Smart Picks
             </Button>
           </motion.div>
         )}

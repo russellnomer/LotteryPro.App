@@ -37,7 +37,7 @@ export default function ReferralWidget() {
   };
 
   const shareOnSocial = (platform: string) => {
-    const text = encodeURIComponent(`Join me on Russell Nomer's LotteryPro and get 3 free number generations! ${referralLink}`);
+    const text = encodeURIComponent(`AI smart picks from LotteryPro by independent musician Russell Nomer — get 3 free number generations! Stream my music: https://russellnomermusic.com ${referralLink}`);
     const urls: Record<string, string> = {
       twitter: `https://twitter.com/intent/tweet?text=${text}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`,
