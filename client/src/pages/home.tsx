@@ -31,7 +31,6 @@ const AstrologicalFeatures = lazy(() => import("@/components/AstrologicalFeature
 const RussellBiography = lazy(() => import("@/components/RussellBiography"));
 const RussellMusicPlayer = lazy(() => import("@/components/RussellMusicPlayer"));
 const ProfileSetup = lazy(() => import("@/components/ProfileSetup"));
-const SpinWheel = lazy(() => import("@/components/gamification/SpinWheel"));
 const PostGenerationModal = lazy(() => import("@/components/PostGenerationModal"));
 import SystemStatusIndicator from "@/components/SystemStatusIndicator";
 import SEOHead from "@/components/SEOHead";
@@ -344,15 +343,6 @@ export default function Home() {
         {/* Real-time System Status and Statistical Power Indicator */}
         <div className="mb-6">
           <SystemStatusIndicator showDetails={true} />
-        </div>
-
-        {/* Daily Spin-to-Win Gamification - Revenue Driver! */}
-        <div className="mb-8">
-          <Suspense fallback={
-            <div className="animate-pulse bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 h-96 rounded-lg"></div>
-          }>
-            <SpinWheel />
-          </Suspense>
         </div>
 
         {/* Game & Methodology Selectors */}
