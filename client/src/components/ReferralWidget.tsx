@@ -37,11 +37,14 @@ export default function ReferralWidget() {
   };
 
   const shareOnSocial = (platform: string) => {
-    const text = encodeURIComponent(`AI smart picks from LotteryPro by independent musician Russell Nomer — get 3 free number generations! Stream my music: https://russellnomermusic.com ${referralLink}`);
+    const attribution = `AI smart picks from LotteryPro by independent musician Russell Nomer — get 3 free number generations! Stream my music: https://russellnomermusic.com`;
+    const encodedText = encodeURIComponent(`${attribution} ${referralLink}`);
+    const encodedUrl = encodeURIComponent(referralLink);
+    const encodedAttribution = encodeURIComponent(attribution);
     const urls: Record<string, string> = {
-      twitter: `https://twitter.com/intent/tweet?text=${text}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}`,
+      twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedAttribution}`,
+      linkedin: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodeURIComponent('LotteryPro — AI Smart Picks')}&summary=${encodedAttribution}`,
     };
     
     if (urls[platform]) {

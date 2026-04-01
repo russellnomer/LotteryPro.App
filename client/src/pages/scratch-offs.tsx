@@ -596,17 +596,19 @@ export default function ScratchOffs() {
           For educational and entertainment purposes only • Gambling involves risk • Must be 18+
         </div>
 
-        {/* Russell Nomer attribution footer */}
-        <div className="mt-3 text-center text-xs text-gray-400">
-          Tool built by independent musician{' '}
-          <a href="https://russellnomermusic.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Russell Nomer</a>
-          {' '}· Stream my music (entertainment only) →{' '}
-          <a href="https://music.apple.com/us/artist/russell-nomer/452485944" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Apple Music</a>
-          {' '}·{' '}
-          <a href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Spotify</a>
-          {' '}·{' '}
-          <a href="https://youtube.com/@russellnomermusic" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">YouTube</a>
-          {' '}· Play responsibly.
+        {/* Russell Nomer attribution footer — single scrollable line on all viewports */}
+        <div className="mt-3 overflow-x-auto">
+          <p className="whitespace-nowrap text-center text-xs text-gray-400">
+            Tool built by independent musician{' '}
+            <a href="https://russellnomermusic.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Russell Nomer</a>
+            {' '}· Stream my music (entertainment only) →{' '}
+            <a href="https://music.apple.com/us/artist/russell-nomer/452485944" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Apple Music</a>
+            {' '}·{' '}
+            <a href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Spotify</a>
+            {' '}·{' '}
+            <a href="https://youtube.com/@russellnomermusic" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">YouTube</a>
+            {' '}· Play responsibly.
+          </p>
         </div>
         </>}
       </div>

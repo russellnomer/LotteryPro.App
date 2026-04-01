@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import type { UserAccount } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,8 +19,9 @@ import { Music, Heart, Star, Crown, DollarSign, Youtube, ExternalLink } from "lu
 
 export default function MusicHome() {
   const { user } = useAuth();
-  const userTier = (user as any)?.subscriptionTier || 'free';
-  const userEmail = (user as any)?.email || '';
+  const authUser = user as UserAccount | undefined;
+  const userTier = authUser?.subscriptionTier ?? 'free';
+  const userEmail = authUser?.email ?? '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
