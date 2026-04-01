@@ -1,0 +1,23 @@
+Recommended Guidance to Send Back to Replit (Copy-Paste Ready)
+Subject: Approved with Safety Tweaks – #1 Music Cross-Promotion & Conversion Funnel
+Hi Replit Team,
+I’ve reviewed the plan for #1 - Music Cross-Promotion & Conversion Funnel. It looks solid and directly addresses the conversion gaps. Please proceed with implementation exactly as described, incorporating these small safety and polish items:
+
+All streaming buttons and links (modal, music bar, scratch-offs footer): Open in new tabs with target="_blank" rel="noopener". Use the exact URLs provided.
+Post-pick music bar (home.tsx): Keep it compact and easily dismissable. Place it directly below the generated ticket card but before the Jackpocket section. Suggested headline: “While you wait for the draw, stream Russell’s music” with small, clean icons for Apple Music, Spotify, and YouTube.
+Email signup upgrade: Use the stronger hook: “Get free weekly picks + an exclusive unreleased Russell Nomer track”. Update consent language to clearly include “You can unsubscribe anytime” and reference 30-day data retention.
+Scratch-offs footer: One slim, non-intrusive line as specified. Suggested wording: “Tool built by independent musician Russell Nomer · Stream my music (entertainment only) → [Apple Music] [Spotify] [YouTube] · Play responsibly.”
+Social share text: Append naturally, e.g., “AI smart picks from LotteryPro by independent musician Russell Nomer · Stream my music: [short link]”. Update both referral widget and any post-pick share.
+PostGenerationModal: Replace the “519 Songs” card with direct streaming buttons. Keep the internal /music link as a secondary “View full catalog” option.
+Remove dev tier-switcher from music-home.tsx header.
+
+Please keep all existing disclaimers, age gate, and responsible gambling links intact. Do not imply any affiliation with the New York Lottery.
+Once complete, let me know so I can test the full post-pick flow (including modal and music bar), scratch-offs page, email signup, and social shares on both desktop and mobile.
+Thanks — this should help more lottery users discover and stream my music!
+Best,
+Russell Nomer
+Levittown, NY
+russellnomermusic.com | lotterypro.app
+
+This plan is ready to go and should deliver noticeable improvements in music engagement. After it’s live, we can measure results and decide on the next tasks (e.g., retailer map, freemium tiers, or further email funnel work).
+If you want me to suggest exact wording for the music bar card, social share messages, or email consent label — or prepare guidance for the next ticket on your list — just let me know.
