@@ -9,11 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Users, DollarSign, Calendar, Trophy, Plus, TrendingUp } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Users, DollarSign, Calendar, Trophy, Plus, TrendingUp, CheckCircle, AlertTriangle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import SEOHead from "@/components/SEOHead";
+
+const DISCLAIMER = "LotteryPro does not process or hold funds. All payments are made directly between participants off-platform. This tool is for entertainment coordination only.";
 
 interface Pool {
   id: string;
@@ -25,105 +28,102 @@ interface Pool {
   maxMembers: number;
   currentMembers: number;
   totalContributions: string;
-  adminFeePercent: string;
   netPoolAmount: string;
   status: string;
   totalTicketsPurchased: number;
+  createdBy: string;
   createdAt: string;
+}
+
+interface PoolMember {
+  id: string;
+  poolId: string;
+  userId: string | null;
+  displayName: string;
+  email: string;
+  contributionAmount: string;
+  paymentStatus: string;
+  paymentMethod: string | null;
+  sharePercentage: string;
+  status: string;
+  joinedAt: string;
+}
+
+interface PoolDetail {
+  pool: Pool;
+  members: PoolMember[];
+  tickets: any[];
 }
 
 export default function PoolsPage() {
   const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [detailPoolId, setDetailPoolId] = useState<string | null>(null);
+  const [logContribDialogOpen, setLogContribDialogOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
-  const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
 
   const { data: poolsData, isLoading } = useQuery<{ pools: Pool[] }>({
     queryKey: ['/api/pools'],
+  });
+
+  const { data: poolDetail } = useQuery<PoolDetail>({
+    queryKey: ['/api/pools', detailPoolId],
+    enabled: !!detailPoolId,
   });
 
   const pools = poolsData?.pools || [];
 
   const createPoolMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest('/api/pools/create', 'POST', data);
+      const res = await apiRequest('/api/pools/create', 'POST', data);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pools'] });
       setCreateDialogOpen(false);
-      toast({
-        title: "Pool Created!",
-        description: "Your lottery pool is now open for members to join.",
-      });
+      toast({ title: "Syndicate Created!", description: "Your lottery syndicate is now open for members to join." });
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create pool",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to create syndicate", variant: "destructive" });
     },
   });
 
   const joinPoolMutation = useMutation({
     mutationFn: async (data: any) => {
       const { poolId, ...rest } = data;
-      return await apiRequest(`/api/pools/${poolId}/join`, 'POST', rest);
-    },
-    onSuccess: (data) => {
-      setJoinDialogOpen(false);
-      setPendingMemberId(data.member.id);
-      setPaymentDialogOpen(true);
-      toast({
-        title: "Almost There!",
-        description: "Complete your payment to secure your spot in the pool.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to join pool",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const processPaymentMutation = useMutation({
-    mutationFn: async (data: { poolId: string; memberId: string }) => {
-      // Create PayPal order
-      const createResponse: any = await apiRequest(
-        `/api/pools/${data.poolId}/create-payment`,
-        'POST',
-        { memberId: data.memberId }
-      );
-      
-      // Simulate PayPal payment (in production, this would open PayPal dialog)
-      // For now, we'll auto-capture for testing
-      const captureResponse: any = await apiRequest(
-        `/api/pools/${data.poolId}/capture-payment`,
-        'POST',
-        { memberId: data.memberId, orderId: createResponse.orderId }
-      );
-      
-      return captureResponse;
+      const res = await apiRequest(`/api/pools/${poolId}/join`, 'POST', rest);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pools'] });
-      setPaymentDialogOpen(false);
-      setPendingMemberId(null);
+      if (detailPoolId) queryClient.invalidateQueries({ queryKey: ['/api/pools', detailPoolId] });
+      setJoinDialogOpen(false);
       toast({
-        title: "Payment Successful!",
-        description: "You're now an active member of the pool. Good luck!",
+        title: "Joined Syndicate!",
+        description: `Contact the organizer to arrange your $${selectedPool?.contributionPerMember} contribution off-platform (Venmo, Zelle, Cash, etc.).`,
       });
     },
-    onError: (error) => {
-      toast({
-        title: "Payment Failed",
-        description: error.message || "Failed to process payment",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to join syndicate", variant: "destructive" });
+    },
+  });
+
+  const logContribMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const { poolId, ...rest } = data;
+      const res = await apiRequest(`/api/pools/${poolId}/log-contribution`, 'POST', rest);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/pools', detailPoolId] });
+      setLogContribDialogOpen(false);
+      setSelectedMemberId(null);
+      toast({ title: "Contribution Logged!", description: "Member's contribution has been marked as received." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to log contribution", variant: "destructive" });
     },
   });
 
@@ -137,7 +137,6 @@ export default function PoolsPage() {
       targetDrawDate: formData.get('targetDrawDate'),
       contributionPerMember: parseFloat(formData.get('contributionPerMember') as string),
       maxMembers: parseInt(formData.get('maxMembers') as string),
-      adminFeePercent: 7.5,
       isPublic: true,
       requiresApproval: false,
     });
@@ -147,7 +146,6 @@ export default function PoolsPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     if (!selectedPool) return;
-    
     joinPoolMutation.mutate({
       poolId: selectedPool.id,
       displayName: formData.get('displayName'),
@@ -155,66 +153,73 @@ export default function PoolsPage() {
     });
   };
 
+  const handleLogContrib = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    if (!detailPoolId || !selectedMemberId) return;
+    logContribMutation.mutate({
+      poolId: detailPoolId,
+      memberId: selectedMemberId,
+      amount: formData.get('amount'),
+      method: formData.get('method'),
+      note: formData.get('note'),
+    });
+  };
+
   const getStatusBadge = (status: string) => {
-    const statusColors: Record<string, string> = {
-      open: 'bg-green-500',
-      full: 'bg-yellow-500',
-      active: 'bg-blue-500',
-      completed: 'bg-purple-500',
-      cancelled: 'bg-red-500',
+    const map: Record<string, string> = {
+      open: 'bg-green-500', full: 'bg-yellow-500', active: 'bg-blue-500',
+      completed: 'bg-purple-500', cancelled: 'bg-red-500',
     };
-    return (
-      <Badge className={`${statusColors[status] || 'bg-gray-500'}`}>
-        {status.toUpperCase()}
-      </Badge>
-    );
+    return <Badge className={map[status] || 'bg-gray-500'}>{status.toUpperCase()}</Badge>;
   };
 
   if (isLoading) {
-    return <div className="container mx-auto p-6">Loading pools...</div>;
+    return <div className="container mx-auto p-6">Loading syndicates...</div>;
   }
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <SEOHead title="Community Lottery Pools" description="Join lottery pools with fellow players. Pool contributions, share tickets, and dream together." path="/pools" />
-      <div className="flex justify-between items-center mb-8">
+      <SEOHead
+        title="Lottery Syndicate Tracker"
+        description="Coordinate your lottery syndicate group. Track members, generate shared tickets, and manage contributions off-platform."
+        path="/pools"
+      />
+
+      {/* Page header */}
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Community Lottery Pools</h1>
+          <h1 className="text-4xl font-bold mb-2">Lottery Syndicate Tracker</h1>
           <p className="text-muted-foreground">
-            Join forces with other players to buy more tickets and increase your winning chances!
+            Coordinate groups to generate shared tickets. Contributions happen off-platform.
           </p>
         </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button size="lg" data-testid="button-create-pool">
               <Plus className="mr-2 h-4 w-4" />
-              Create Pool
+              Create Syndicate
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Lottery Pool</DialogTitle>
-              <DialogDescription>
-                Set up a new community pool for the upcoming draw
-              </DialogDescription>
+              <DialogTitle>Create Lottery Syndicate</DialogTitle>
+              <DialogDescription>Set up a coordination group for the upcoming draw</DialogDescription>
             </DialogHeader>
+            <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200 text-xs">
+                {DISCLAIMER}
+              </AlertDescription>
+            </Alert>
             <form onSubmit={handleCreatePool} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Pool Name</label>
-                <Input
-                  name="name"
-                  placeholder="e.g., Friday MegaMillions Group"
-                  required
-                  data-testid="input-pool-name"
-                />
+                <label className="text-sm font-medium">Syndicate Name</label>
+                <Input name="name" placeholder="e.g., Friday MegaMillions Group" required data-testid="input-pool-name" />
               </div>
               <div>
                 <label className="text-sm font-medium">Description</label>
-                <Textarea
-                  name="description"
-                  placeholder="Share what makes your pool special..."
-                  data-testid="input-pool-description"
-                />
+                <Textarea name="description" placeholder="Share what makes your syndicate special..." data-testid="input-pool-description" />
               </div>
               <div>
                 <label className="text-sm font-medium">Game</label>
@@ -230,53 +235,36 @@ export default function PoolsPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Target Draw Date</label>
-                <Input
-                  type="datetime-local"
-                  name="targetDrawDate"
-                  required
-                  data-testid="input-draw-date"
-                />
+                <Input type="datetime-local" name="targetDrawDate" required data-testid="input-draw-date" />
               </div>
               <div>
-                <label className="text-sm font-medium">Contribution Per Member ($)</label>
-                <Input
-                  type="number"
-                  name="contributionPerMember"
-                  placeholder="20.00"
-                  step="0.01"
-                  min="5"
-                  required
-                  data-testid="input-contribution"
-                />
+                <label className="text-sm font-medium">Suggested Contribution Per Member ($)</label>
+                <Input type="number" name="contributionPerMember" placeholder="20.00" step="0.01" min="5" required data-testid="input-contribution" />
               </div>
               <div>
                 <label className="text-sm font-medium">Max Members</label>
-                <Input
-                  type="number"
-                  name="maxMembers"
-                  placeholder="10"
-                  min="2"
-                  max="100"
-                  required
-                  data-testid="input-max-members"
-                />
+                <Input type="number" name="maxMembers" placeholder="10" min="2" max="100" required data-testid="input-max-members" />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Note: 7.5% admin fee will be deducted from total pool amount
-              </p>
-              <Button type="submit" className="w-full" data-testid="button-submit-pool">
-                Create Pool
+              <Button type="submit" className="w-full" disabled={createPoolMutation.isPending} data-testid="button-submit-pool">
+                {createPoolMutation.isPending ? 'Creating...' : 'Create Syndicate'}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Global disclaimer */}
+      <Alert className="mb-6 border-blue-400 bg-blue-50 dark:bg-blue-950">
+        <AlertTriangle className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
+          {DISCLAIMER}
+        </AlertDescription>
+      </Alert>
+
+      {/* Pool cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {pools.map((pool: Pool) => {
           const fillPercent = (pool.currentMembers / pool.maxMembers) * 100;
-          const potentialTickets = Math.floor(parseFloat(pool.netPoolAmount) / 2);
-          
           return (
             <Card key={pool.id} className="hover:shadow-lg transition-shadow" data-testid={`card-pool-${pool.id}`}>
               <CardHeader>
@@ -294,7 +282,6 @@ export default function PoolsPage() {
                 {pool.description && (
                   <p className="text-sm text-muted-foreground">{pool.description}</p>
                 )}
-                
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Members</span>
@@ -302,9 +289,7 @@ export default function PoolsPage() {
                   </div>
                   <Progress value={fillPercent} className="h-2" />
                 </div>
-
                 <Separator />
-
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-green-600" />
@@ -316,8 +301,8 @@ export default function PoolsPage() {
                   <div className="flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-yellow-600" />
                     <div>
-                      <p className="text-muted-foreground">Pool Total</p>
-                      <p className="font-semibold">${parseFloat(pool.totalContributions).toFixed(2)}</p>
+                      <p className="text-muted-foreground">Logged Total</p>
+                      <p className="font-semibold">${parseFloat(pool.totalContributions || '0').toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -331,25 +316,35 @@ export default function PoolsPage() {
                     <TrendingUp className="h-4 w-4 text-purple-600" />
                     <div>
                       <p className="text-muted-foreground">Tickets</p>
-                      <p className="font-semibold">{potentialTickets}</p>
+                      <p className="font-semibold">{pool.totalTicketsPurchased || 0}</p>
                     </div>
                   </div>
                 </div>
-
                 <Separator />
-
-                <Button 
-                  className="w-full" 
-                  disabled={pool.status !== 'open'}
-                  onClick={() => {
-                    setSelectedPool(pool);
-                    setJoinDialogOpen(true);
-                  }}
-                  data-testid={`button-join-${pool.id}`}
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Join Pool
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => {
+                      setDetailPoolId(pool.id);
+                      setSelectedPool(pool);
+                    }}
+                  >
+                    View Details
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    disabled={pool.status !== 'open'}
+                    onClick={() => {
+                      setSelectedPool(pool);
+                      setJoinDialogOpen(true);
+                    }}
+                    data-testid={`button-join-${pool.id}`}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Join
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
@@ -359,124 +354,172 @@ export default function PoolsPage() {
       {pools.length === 0 && (
         <div className="text-center py-12">
           <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Active Pools</h3>
-          <p className="text-muted-foreground mb-4">
-            Be the first to create a community lottery pool!
-          </p>
+          <h3 className="text-xl font-semibold mb-2">No Active Syndicates</h3>
+          <p className="text-muted-foreground mb-4">Be the first to create a lottery syndicate group!</p>
           <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-first-pool">
             <Plus className="mr-2 h-4 w-4" />
-            Create Pool
+            Create Syndicate
           </Button>
         </div>
       )}
 
+      {/* Pool detail panel */}
+      {detailPoolId && poolDetail && (
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>{poolDetail.pool.name} — Contribution Ledger</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => { setDetailPoolId(null); setSelectedPool(null); }}>
+                  Close
+                </Button>
+              </div>
+              <CardDescription>
+                Members who have joined. The organizer logs confirmed off-platform payments below.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert className="mb-4 border-amber-500 bg-amber-50 dark:bg-amber-950">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800 dark:text-amber-200 text-xs">
+                  {DISCLAIMER}
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-3">
+                {poolDetail.members.length === 0 && (
+                  <p className="text-muted-foreground text-sm">No members yet.</p>
+                )}
+                {poolDetail.members.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="font-medium">{member.displayName || 'Anonymous'}</p>
+                      <p className="text-xs text-muted-foreground">{member.email}</p>
+                      {member.paymentMethod && (
+                        <p className="text-xs text-muted-foreground capitalize">via {member.paymentMethod}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="font-semibold">${parseFloat(member.contributionAmount).toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground">{member.sharePercentage}% share</p>
+                      </div>
+                      {member.paymentStatus === 'paid' ? (
+                        <Badge className="bg-green-500 gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Received
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Pending</Badge>
+                      )}
+                      {/* Show "Log Payment" button only for pool creator — server enforces this too */}
+                      {member.paymentStatus !== 'paid' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedMemberId(member.id);
+                            setLogContribDialogOpen(true);
+                          }}
+                        >
+                          Log Payment
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Join dialog */}
       <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Join {selectedPool?.name}</DialogTitle>
             <DialogDescription>
-              Contribute ${selectedPool?.contributionPerMember} to join this pool
+              Register your spot in this syndicate
             </DialogDescription>
           </DialogHeader>
+          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200 text-xs">
+              {DISCLAIMER}
+            </AlertDescription>
+          </Alert>
           <form onSubmit={handleJoinPool} className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Display Name</label>
-              <Input
-                name="displayName"
-                placeholder="Your name"
-                required
-                data-testid="input-join-name"
-              />
+              <label className="text-sm font-medium">Your Name</label>
+              <Input name="displayName" placeholder="Your name" required data-testid="input-join-name" />
             </div>
             <div>
               <label className="text-sm font-medium">Email</label>
-              <Input
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                required
-                data-testid="input-join-email"
-              />
+              <Input type="email" name="email" placeholder="your@email.com" required data-testid="input-join-email" />
             </div>
-            <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Contribution:</span>
+            <div className="bg-muted p-4 rounded-lg text-sm">
+              <div className="flex justify-between mb-2">
+                <span>Suggested contribution:</span>
                 <span className="font-semibold">${selectedPool?.contributionPerMember}</span>
               </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Admin Fee ({selectedPool?.adminFeePercent}%):</span>
-                <span>
-                  ${(parseFloat(selectedPool?.contributionPerMember || '0') * 
-                     parseFloat(selectedPool?.adminFeePercent || '0') / 100).toFixed(2)}
-                </span>
-              </div>
+              <p className="text-muted-foreground text-xs">
+                After joining, contact the organizer to arrange payment via Venmo, Zelle, CashApp, or cash.
+                The organizer will mark your contribution as received once payment is confirmed.
+              </p>
             </div>
-            <Button type="submit" className="w-full" data-testid="button-submit-join">
-              Join & Proceed to Payment
+            <Button type="submit" className="w-full" disabled={joinPoolMutation.isPending} data-testid="button-submit-join">
+              {joinPoolMutation.isPending ? 'Joining...' : 'Join Syndicate'}
             </Button>
           </form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+      {/* Log contribution dialog */}
+      <Dialog open={logContribDialogOpen} onOpenChange={setLogContribDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogTitle>Log Contribution Received</DialogTitle>
             <DialogDescription>
-              Secure your spot in {selectedPool?.name}
+              Mark that you have received this member's payment off-platform.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Pool Contribution:</span>
-                <span className="text-2xl font-bold">${selectedPool?.contributionPerMember}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Admin Fee ({selectedPool?.adminFeePercent}%):</span>
-                <span className="font-medium text-yellow-600">
-                  -${(parseFloat(selectedPool?.contributionPerMember || '0') * 
-                      parseFloat(selectedPool?.adminFeePercent || '0') / 100).toFixed(2)}
-                </span>
-              </div>
-              <Separator />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Net Pool Contribution:</span>
-                <span className="font-semibold text-green-600">
-                  ${(parseFloat(selectedPool?.contributionPerMember || '0') * 
-                      (1 - parseFloat(selectedPool?.adminFeePercent || '0') / 100)).toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                By completing payment, you agree to pool your contribution with other members. 
-                Winnings will be split proportionally among all paid members.
-              </p>
-            </div>
-
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={() => {
-                if (selectedPool && pendingMemberId) {
-                  processPaymentMutation.mutate({
-                    poolId: selectedPool.id,
-                    memberId: pendingMemberId
-                  });
+          <form onSubmit={handleLogContrib} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Amount Received ($)</label>
+              <Input
+                type="number"
+                name="amount"
+                step="0.01"
+                min="0.01"
+                defaultValue={
+                  poolDetail?.members.find(m => m.id === selectedMemberId)?.contributionAmount || ''
                 }
-              }}
-              disabled={processPaymentMutation.isPending}
-              data-testid="button-complete-payment"
-            >
-              {processPaymentMutation.isPending ? 'Processing...' : 'Complete Payment with PayPal'}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Payment Method</label>
+              <Select name="method" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="How was it paid?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="venmo">Venmo</SelectItem>
+                  <SelectItem value="cashapp">CashApp</SelectItem>
+                  <SelectItem value="zelle">Zelle</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Note (optional)</label>
+              <Input name="note" placeholder="e.g., Venmo reference #1234" />
+            </div>
+            <Button type="submit" className="w-full" disabled={logContribMutation.isPending}>
+              {logContribMutation.isPending ? 'Logging...' : 'Mark as Received'}
             </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              Production mode will use PayPal's secure checkout
-            </p>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

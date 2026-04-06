@@ -517,7 +517,6 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         targetDrawDate, 
         contributionPerMember, 
         maxMembers,
-        adminFeePercent,
         isPublic,
         requiresApproval 
       } = req.body;
@@ -526,15 +525,6 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(400).json({ 
           success: false, 
           message: 'Missing required fields' 
-        });
-      }
-      
-      // Validate admin fee is within acceptable range (5-10%)
-      const feePercent = adminFeePercent ? parseFloat(adminFeePercent) : 7.5;
-      if (feePercent < 5 || feePercent > 10) {
-        return res.status(400).json({
-          success: false,
-          message: 'Admin fee must be between 5% and 10%'
         });
       }
       
@@ -564,7 +554,6 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         targetDrawDate: new Date(targetDrawDate),
         contributionPerMember: contribution.toString(),
         maxMembers,
-        adminFeePercent: feePercent.toString(),
         isPublic: isPublic ?? true,
         requiresApproval: requiresApproval ?? false,
         createdBy: userId,
@@ -638,29 +627,34 @@ Canonical: https://lotterypro.app/.well-known/security.txt
           .where(eq(lotteryPools.id, poolId));
       }
       
-      res.json({ success: true, member, requiresPayment: true });
+      res.json({ success: true, member });
     } catch (error: any) {
       console.error('Join pool error:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   });
 
-  // Create PayPal payment order for pool membership
-  app.post("/api/pools/:poolId/create-payment", requireAuth, async (req, res) => {
+  // Log an off-platform contribution (pool creator only)
+  app.post("/api/pools/:poolId/log-contribution", requireAuth, async (req, res) => {
     try {
       const { db } = await import('./db');
-      const { lotteryPools, poolMembers } = await import('@shared/schema');
+      const { lotteryPools, poolMembers, poolTransactions } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
-      const { isPayPalConfigured } = await import('./paypal');
-      
-      if (!isPayPalConfigured) {
-        return res.status(503).json({ success: false, message: 'PayPal not configured' });
-      }
       
       const poolId = req.params.poolId;
-      const { memberId } = req.body;
+      const userId = req.user?.id;
+      const { memberId, amount, method, note } = req.body;
       
-      // Get pool and member details
+      if (!memberId || !amount || !method) {
+        return res.status(400).json({ success: false, message: 'memberId, amount, and method are required' });
+      }
+      
+      const validMethods = ['venmo', 'cashapp', 'zelle', 'cash', 'other'];
+      if (!validMethods.includes(method)) {
+        return res.status(400).json({ success: false, message: `method must be one of: ${validMethods.join(', ')}` });
+      }
+      
+      // Verify requester is the pool creator
       const [pool] = await db.select()
         .from(lotteryPools)
         .where(eq(lotteryPools.id, poolId))
@@ -670,126 +664,45 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(404).json({ success: false, message: 'Pool not found' });
       }
       
-      const [member] = await db.select()
-        .from(poolMembers)
-        .where(eq(poolMembers.id, memberId))
-        .limit(1);
-      
-      if (!member) {
-        return res.status(404).json({ success: false, message: 'Member not found' });
-      }
-      
-      const amount = parseFloat(member.contributionAmount);
-      
-      res.json({ 
-        success: true, 
-        message: 'PayPal order creation - use client-side PayPal SDK',
-        amount: amount.toFixed(2),
-        poolName: pool.name
-      });
-    } catch (error: any) {
-      console.error('Create payment error:', error);
-      res.status(500).json({ success: false, message: error.message });
-    }
-  });
-
-  // Capture PayPal payment and update pool financials
-  app.post("/api/pools/:poolId/capture-payment", requireAuth, async (req, res) => {
-    try {
-      const { db } = await import('./db');
-      const { poolMembers, lotteryPools, poolTransactions } = await import('@shared/schema');
-      const { eq } = await import('drizzle-orm');
-      const { isPayPalConfigured } = await import('./paypal');
-      
-      if (!isPayPalConfigured) {
-        return res.status(503).json({ success: false, message: 'PayPal not configured' });
-      }
-      
-      const poolId = req.params.poolId;
-      const { memberId, orderId, captureData } = req.body;
-      
-      // Get member details FIRST to validate expected amount
-      const [member] = await db.select()
-        .from(poolMembers)
-        .where(eq(poolMembers.id, memberId))
-        .limit(1);
-      
-      if (!member) {
-        return res.status(404).json({ success: false, message: 'Member not found' });
-      }
-      
-      const expectedAmount = parseFloat(member.contributionAmount);
-      const captureId = captureData?.captureId || orderId;
-      const amount = captureData?.amount || member.contributionAmount;
-      const actualAmount = parseFloat(amount);
-      
-      if (Math.abs(actualAmount - expectedAmount) > 0.01) {
-        console.error(`Payment amount mismatch: expected ${expectedAmount}, got ${actualAmount}`);
-        return res.status(400).json({
-          success: false,
-          message: `Payment amount mismatch. Expected $${expectedAmount}, received $${actualAmount}`
-        });
+      if (pool.createdBy !== userId) {
+        return res.status(403).json({ success: false, message: 'Only the pool creator can log contributions' });
       }
       
       // Update member payment status
       await db.update(poolMembers)
         .set({
           paymentStatus: 'paid',
-          paymentMethod: 'paypal',
-          paypalTransactionId: captureId,
+          paymentMethod: method,
           status: 'active'
         })
         .where(eq(poolMembers.id, memberId));
       
-      // Record transaction
+      // Record transaction with type 'logged' (no payment processor involved)
       await db.insert(poolTransactions).values({
         poolId,
         memberId,
-        type: 'contribution',
-        amount: amount.toString(),
+        type: 'logged',
+        amount: parseFloat(amount).toFixed(2),
         currency: 'USD',
-        paymentProvider: 'paypal',
-        providerTransactionId: captureId,
+        paymentProvider: method,
         status: 'completed',
-        notes: `PayPal order ${orderId} captured`,
+        notes: note || `Contribution logged by organizer via ${method}`,
         processedAt: new Date()
       });
       
       // Update pool financial totals
-      const [pool] = await db.select()
-        .from(lotteryPools)
-        .where(eq(lotteryPools.id, poolId))
-        .limit(1);
-      
       const newTotalContributions = parseFloat(pool.totalContributions || '0') + parseFloat(amount);
-      const adminFee = newTotalContributions * (parseFloat(pool.adminFeePercent || '0') / 100);
-      const netAmount = newTotalContributions - adminFee;
-      
-      // Count paid members only
-      const paidMembers = await db.select()
-        .from(poolMembers)
-        .where(eq(poolMembers.poolId, poolId));
-      
-      const paidCount = paidMembers.filter(m => m.paymentStatus === 'paid').length;
       
       await db.update(lotteryPools)
         .set({
-          currentMembers: paidCount,
           totalContributions: newTotalContributions.toString(),
-          adminFeeCollected: adminFee.toString(),
-          netPoolAmount: netAmount.toString(),
-          status: paidCount >= pool.maxMembers ? 'full' : 'open'
+          netPoolAmount: newTotalContributions.toString(),
         })
         .where(eq(lotteryPools.id, poolId));
       
-      res.json({ 
-        success: true, 
-        message: 'Payment captured successfully',
-        adminFeeCollected: adminFee.toFixed(2),
-        netPoolAmount: netAmount.toFixed(2)
-      });
+      res.json({ success: true, message: 'Contribution logged successfully' });
     } catch (error: any) {
-      console.error('Capture payment error:', error);
+      console.error('Log contribution error:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   });

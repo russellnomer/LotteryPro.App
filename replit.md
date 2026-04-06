@@ -65,16 +65,15 @@ The platform features a responsive design with a mobile-first approach, utilizin
 - Note: Requires SENDGRID_API_KEY to activate (currently logs to console)
 
 **4. Community Lottery Pools** ✅
-- Pool creation with authentication requirement, 5-10% admin fee validation, minimum $5 contribution
-- PayPal payment integration (create order → capture payment → update financials)
-- Payment validation ensures captured amount matches expected contribution
-- Admin fee automatically calculated and tracked (default 7.5%)
-- Pool management: browsing, creating, joining, member tracking
-- Ticket generation for pools using analysis engine
-- API endpoints: `/api/pools`, `/api/pools/:id`, `/api/pools/create`, `/api/pools/:id/join`, `/api/pools/:id/create-payment`, `/api/pools/:id/capture-payment`, `/api/pools/:id/generate-tickets`
-- Database tables: `lottery_pools`, `pool_members`, `pool_tickets`, `pool_transactions`, `pool_winnings`
-- Frontend: `/pools` page with create/join/payment UI
-- Known limitation: Frontend payment flow is simplified for development; production should use PayPal JS SDK for checkout UI
+- **Syndicate Tracker model** (compliance pivot, April 2026): No payment processing — LotteryPro never handles funds
+- Pool creation (auth + verified email required), minimum $5 suggested contribution, no admin fee
+- Members join and arrange payment off-platform (Venmo, Zelle, CashApp, cash, etc.)
+- Pool creator logs received contributions via `POST /api/pools/:id/log-contribution` (creator-only, server-enforced)
+- Contribution ledger UI on pool detail page shows pending/received status per member
+- Compliance disclaimer banner on pool list, create form, join dialog, and detail panel
+- API endpoints: `/api/pools`, `/api/pools/:id`, `/api/pools/create`, `/api/pools/:id/join`, `/api/pools/:id/log-contribution`, `/api/pools/:id/generate-tickets`
+- Database tables: `lottery_pools`, `pool_members`, `pool_tickets`, `pool_transactions`, `pool_winnings` (paypal fields retained but unused)
+- Frontend: `/pools` page renamed "Lottery Syndicate Tracker" with Contribution Ledger replacing PayPal flow
 
 **5. Referral Program** ✅
 - Automatic referral code generation (`RUSSELL` + timestamp)
