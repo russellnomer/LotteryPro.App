@@ -41,11 +41,12 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
     return (
       <div 
         className="fixed bottom-4 right-4 z-40 max-w-sm bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl p-4 text-white shadow-2xl animate-in slide-in-from-bottom-4"
+        style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
         data-testid="jackpocket-floating-banner"
       >
         <button 
           onClick={handleDismiss}
-          className="absolute top-2 right-2 opacity-70 hover:opacity-100"
+          className="absolute top-2 right-2 opacity-70 hover:opacity-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Dismiss"
         >
           <X className="h-4 w-4" />
@@ -71,7 +72,7 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
           <ExternalLink className="w-4 h-4 mr-2" />
           Get Started Free
         </Button>
-        <p className="text-center mt-2 font-bold" style={{ color: "#DC3545", fontSize: "10px" }}>
+        <p className="text-center mt-2 font-bold text-xs" style={{ color: "#DC3545", fontSize: "12px" }}>
           #ad Affiliate link: I may earn a commission at no extra cost to you (FTC compliant).
         </p>
       </div>
@@ -99,7 +100,7 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
             Play Now
           </Button>
         </div>
-        <p className="mt-1 font-bold" style={{ color: "#FFCCCB", fontSize: "10px" }}>
+        <p className="mt-1 font-bold text-xs" style={{ color: "#FFCCCB", fontSize: "12px" }}>
           #ad Affiliate link: I may earn a commission at no extra cost to you (FTC compliant).
         </p>
       </div>
@@ -132,7 +133,7 @@ export default function JackpocketBanner({ variant = "inline", onDismiss }: Jack
           Get Jackpocket
         </Button>
       </div>
-      <p className="text-center mt-3 font-bold" style={{ color: "#FFCCCB", fontSize: "10px" }}>
+      <p className="text-center mt-3 font-bold text-xs" style={{ color: "#FFCCCB", fontSize: "12px" }}>
         #ad Affiliate link: I may earn a commission at no extra cost to you (FTC compliant).
       </p>
     </div>

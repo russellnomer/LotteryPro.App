@@ -119,13 +119,13 @@ export default function AgeGateModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90"
+      className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/90 overflow-y-auto py-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="age-gate-title"
       data-testid="age-gate-modal"
     >
-      <div className="mx-4 max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800">
+      <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800 my-auto">
         <div className="flex items-center justify-center mb-4">
           <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
             <Shield className="w-8 h-8 text-amber-600 dark:text-amber-400" />

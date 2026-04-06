@@ -162,7 +162,7 @@ export default function VipCodeRedemption({ userEmail }: VipCodeRedemptionProps)
               variant="outline"
               size="sm"
               onClick={handlePaste}
-              className="px-3"
+              className="px-3 min-h-[44px] min-w-[44px]"
               aria-label="Paste VIP code from clipboard"
             >
               <Copy className="w-4 h-4" aria-hidden="true" />

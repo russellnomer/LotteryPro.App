@@ -19,14 +19,14 @@ export default function DisclaimerModal() {
 
   return (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 overflow-y-auto py-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="disclaimer-title"
       data-testid="disclaimer-modal"
     >
       <div 
-        className="mx-4 max-w-lg rounded-lg p-6 text-white shadow-2xl"
+        className="mx-4 w-full max-w-lg rounded-lg p-6 text-white shadow-2xl"
         style={{ backgroundColor: "#007BFF" }}
       >
         <h2 

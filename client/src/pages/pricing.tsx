@@ -252,7 +252,7 @@ export default function Pricing() {
                   { label: "YouTube", href: "https://www.youtube.com/@RussellNomer" },
                 ].map(({ label, href }) => (
                   <a key={label} href={href} target="_blank" rel="noopener noreferrer"
-                     className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full text-gray-300 transition-colors">
+                     className="text-sm bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-full text-gray-300 transition-colors min-h-[44px] flex items-center">
                     {label}
                   </a>
                 ))}

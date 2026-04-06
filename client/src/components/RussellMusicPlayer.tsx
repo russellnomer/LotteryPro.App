@@ -279,7 +279,7 @@ export default function RussellMusicPlayer() {
                         <Button 
                           size="sm" 
                           onClick={() => playSong(song)}
-                          className="bg-red-600 hover:bg-red-700 text-white"
+                          className="bg-red-600 hover:bg-red-700 text-white min-h-[44px]"
                         >
                           <Youtube className="h-3 w-3 mr-1" />
                           Play
@@ -288,6 +288,7 @@ export default function RussellMusicPlayer() {
                           size="sm" 
                           variant="outline"
                           onClick={() => window.open(song.url, '_blank')}
+                          className="min-h-[44px]"
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
                           View
@@ -320,7 +321,7 @@ export default function RussellMusicPlayer() {
                         <Button 
                           size="sm" 
                           onClick={() => playSong(song)}
-                          className="bg-red-600 hover:bg-red-700 text-white"
+                          className="bg-red-600 hover:bg-red-700 text-white min-h-[44px] min-w-[44px]"
                         >
                           <Youtube className="h-3 w-3" />
                         </Button>

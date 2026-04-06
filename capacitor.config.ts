@@ -9,6 +9,25 @@ const config: CapacitorConfig = {
   appId: 'com.lotterypro.app',
   appName: 'LotteryPro',
   webDir: 'dist/public',
+  ios: {
+    contentInset: 'always',
+    scrollEnabled: true,
+  },
+  plugins: {
+    Keyboard: {
+      resize: 'native',
+      style: 'dark',
+      resizeOnFullScreen: true,
+    },
+    StatusBar: {
+      style: 'default',
+      backgroundColor: '#1e3a5f',
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+    },
+  },
 };
 
 export default config;

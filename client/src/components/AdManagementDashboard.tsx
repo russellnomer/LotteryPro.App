@@ -319,6 +319,7 @@ export default function AdManagementDashboard() {
                     <label className="block text-sm font-medium mb-2">Priority (1-10)</label>
                     <Input
                       type="number"
+                      inputMode="numeric"
                       min="1"
                       max="10"
                       value={formData.priority}
@@ -347,6 +348,7 @@ export default function AdManagementDashboard() {
                     <label className="block text-sm font-medium mb-2">Max Views</label>
                     <Input
                       type="number"
+                      inputMode="numeric"
                       placeholder="Unlimited"
                       value={formData.maxViews}
                       onChange={(e) => setFormData(prev => ({ ...prev, maxViews: e.target.value }))}
@@ -357,6 +359,7 @@ export default function AdManagementDashboard() {
                     <label className="block text-sm font-medium mb-2">Max Clicks</label>
                     <Input
                       type="number"
+                      inputMode="numeric"
                       placeholder="Unlimited"
                       value={formData.maxClicks}
                       onChange={(e) => setFormData(prev => ({ ...prev, maxClicks: e.target.value }))}
@@ -367,6 +370,7 @@ export default function AdManagementDashboard() {
                     <label className="block text-sm font-medium mb-2">Rate per View ($)</label>
                     <Input
                       type="number"
+                      inputMode="decimal"
                       step="0.0001"
                       placeholder="0.0000"
                       value={formData.ratePerView}
@@ -378,6 +382,7 @@ export default function AdManagementDashboard() {
                     <label className="block text-sm font-medium mb-2">Rate per Click ($)</label>
                     <Input
                       type="number"
+                      inputMode="decimal"
                       step="0.01"
                       placeholder="0.00"
                       value={formData.ratePerClick}
@@ -409,6 +414,7 @@ export default function AdManagementDashboard() {
                     <label className="block text-sm font-medium mb-2">Rotation Weight (1-100)</label>
                     <Input
                       type="number"
+                      inputMode="numeric"
                       min="1"
                       max="100"
                       value={formData.rotationWeight}

@@ -178,14 +178,14 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
         {/* Prize tiers toggle */}
         <Collapsible open={expanded} onOpenChange={setExpanded}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-full text-xs text-gray-500 h-7">
+            <Button variant="ghost" size="sm" className="w-full text-sm text-gray-500 min-h-[44px]">
               {expanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
               {expanded ? 'Hide' : 'Show'} all {game.prizeTiers.length} prize tiers
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mt-2 rounded-lg border overflow-hidden">
-              <table className="w-full text-xs">
+            <div className="mt-2 rounded-lg border overflow-x-auto">
+              <table className="w-full text-xs min-w-[300px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="text-left p-2 font-medium text-gray-600">Prize</th>
@@ -326,7 +326,7 @@ export default function ScratchOffs() {
             </div>
             {!isAuthenticated && (
               <Link href="/auth">
-                <button className="text-xs bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-full px-3 py-1.5 transition-colors flex items-center gap-1.5">
+                <button className="text-sm bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-full px-4 py-3 transition-colors flex items-center gap-1.5 min-h-[44px]">
                   <LogIn className="w-3.5 h-3.5" /> Sign in to set your state permanently
                 </button>
               </Link>
@@ -483,7 +483,7 @@ export default function ScratchOffs() {
                     refetch();
                   }}
                   disabled={isFetching}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 min-h-[44px]"
                 >
                   <RefreshCw className={`w-3 h-3 ${isFetching ? 'animate-spin' : ''}`} />
                   {isFetching ? 'Updating...' : 'Refresh Now'}
@@ -524,7 +524,7 @@ export default function ScratchOffs() {
             </p>
           </div>
           <Link href="/pricing">
-            <Button size="sm" className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold whitespace-nowrap flex-shrink-0">
+            <Button size="sm" className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold whitespace-nowrap flex-shrink-0 min-h-[44px]">
               <Zap className="w-3.5 h-3.5 mr-1" /> $7.99/mo — Upgrade
             </Button>
           </Link>

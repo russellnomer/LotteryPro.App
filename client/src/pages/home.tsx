@@ -60,7 +60,7 @@ function PostPickMusicBar() {
       <button
         onClick={dismiss}
         aria-label="Dismiss"
-        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+        className="absolute top-0 right-0 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         <X className="w-4 h-4" />
       </button>
@@ -71,7 +71,7 @@ function PostPickMusicBar() {
           href="https://music.apple.com/us/artist/russell-nomer/452485944"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-r from-pink-500 to-rose-600 text-white text-xs font-semibold hover:from-pink-600 hover:to-rose-700 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-3 rounded-md bg-gradient-to-r from-pink-500 to-rose-600 text-white text-sm font-semibold hover:from-pink-600 hover:to-rose-700 transition-colors min-h-[44px]"
         >
           <SiApplemusic className="w-3.5 h-3.5" /> Apple Music
         </a>
@@ -79,7 +79,7 @@ function PostPickMusicBar() {
           href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1DB954] text-white text-xs font-semibold hover:bg-[#1aa34a] transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-3 rounded-md bg-[#1DB954] text-white text-sm font-semibold hover:bg-[#1aa34a] transition-colors min-h-[44px]"
         >
           <SiSpotify className="w-3.5 h-3.5" /> Spotify
         </a>
@@ -87,7 +87,7 @@ function PostPickMusicBar() {
           href="https://youtube.com/@russellnomermusic"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#FF0000] text-white text-xs font-semibold hover:bg-[#cc0000] transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-3 rounded-md bg-[#FF0000] text-white text-sm font-semibold hover:bg-[#cc0000] transition-colors min-h-[44px]"
         >
           <SiYoutube className="w-3.5 h-3.5" /> YouTube
         </a>
@@ -324,7 +324,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setEmailBannerDismissed(true)}
-                  className="flex-shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+                  className="flex-shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label="Dismiss"
                 >
                   <X className="h-4 w-4" />
@@ -392,7 +392,7 @@ export default function Home() {
                     <span className="text-orange-600 ml-2">• Daily limit reached</span>
                   )}
                 </span>
-                <Button size="sm" variant="outline" onClick={() => window.location.href = '/subscription'}>
+                <Button size="sm" variant="outline" className="min-h-[44px]" onClick={() => window.location.href = '/subscription'}>
                   <Crown className="h-4 w-4 mr-1" />
                   Upgrade
                 </Button>
@@ -716,11 +716,13 @@ export default function Home() {
                     {/* Frequency Chart */}
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="text-md font-semibold text-gray-800 mb-4">Which Numbers Show Up Most Often? (Spoiler: It Doesn't Matter!)</h4>
-                      <div className="h-64">
-                        <Chart 
-                          data={formatChartData(analysis.frequencyData)} 
-                          ariaLabel={`${selectedGame === 'powerball' ? 'Powerball' : 'MegaMillions'} historical number frequency chart showing how often each number has appeared`}
-                        />
+                      <div className="overflow-x-auto">
+                        <div className="h-64 min-w-[400px]">
+                          <Chart 
+                            data={formatChartData(analysis.frequencyData)} 
+                            ariaLabel={`${selectedGame === 'powerball' ? 'Powerball' : 'MegaMillions'} historical number frequency chart showing how often each number has appeared`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </>

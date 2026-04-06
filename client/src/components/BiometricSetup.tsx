@@ -132,7 +132,7 @@ export default function BiometricSetup({ userTier }: { userTier?: string }) {
                 size="sm"
                 onClick={() => deleteMutation.mutate(cred.id)}
                 disabled={deleteMutation.isPending}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 min-h-[44px] min-w-[44px]"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -143,7 +143,7 @@ export default function BiometricSetup({ userTier }: { userTier?: string }) {
             size="sm"
             onClick={handleSetup}
             disabled={isRegistering}
-            className="w-full mt-2 border-green-300 text-green-700 hover:bg-green-100"
+            className="w-full mt-2 min-h-[44px] border-green-300 text-green-700 hover:bg-green-100"
           >
             <Fingerprint className="h-4 w-4 mr-2" />
             {isRegistering ? 'Registering…' : 'Add Another Device'}
@@ -161,7 +161,7 @@ export default function BiometricSetup({ userTier }: { userTier?: string }) {
         size="sm"
         onClick={handleSetup}
         disabled={isRegistering}
-        className="flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+        className="flex items-center gap-2 min-h-[44px] border-indigo-200 text-indigo-700 hover:bg-indigo-50"
       >
         <Fingerprint className="h-4 w-4" />
         {isRegistering ? 'Setting up…' : 'Enable Face ID / Fingerprint Login'}
@@ -173,7 +173,7 @@ export default function BiometricSetup({ userTier }: { userTier?: string }) {
     <Card className="border-indigo-200 bg-indigo-50 dark:bg-indigo-950 dark:border-indigo-800 relative">
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+        className="absolute top-0 right-0 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" />

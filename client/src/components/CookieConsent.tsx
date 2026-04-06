@@ -66,6 +66,7 @@ export default function CookieConsent() {
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       data-testid="cookie-consent-banner"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -86,7 +87,7 @@ export default function CookieConsent() {
               variant="ghost" 
               size="sm" 
               onClick={rejectAll}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 min-h-[44px]"
               data-testid="button-reject-cookies"
             >
               <Ban className="w-4 h-4 mr-1" />
@@ -96,6 +97,7 @@ export default function CookieConsent() {
               variant="outline" 
               size="sm" 
               onClick={acceptEssential}
+              className="min-h-[44px]"
               data-testid="button-essential-cookies"
             >
               Essential Only
@@ -103,6 +105,7 @@ export default function CookieConsent() {
             <Button 
               size="sm" 
               onClick={acceptAll}
+              className="min-h-[44px]"
               data-testid="button-accept-cookies"
             >
               <Shield className="w-4 h-4 mr-2" />

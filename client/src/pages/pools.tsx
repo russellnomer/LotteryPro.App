@@ -241,11 +241,11 @@ export default function PoolsPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Suggested Contribution Per Member ($)</label>
-                <Input type="number" name="contributionPerMember" placeholder="20.00" step="0.01" min="5" required data-testid="input-contribution" />
+                <Input type="number" inputMode="decimal" name="contributionPerMember" placeholder="20.00" step="0.01" min="5" required data-testid="input-contribution" />
               </div>
               <div>
                 <label className="text-sm font-medium">Max Members</label>
-                <Input type="number" name="maxMembers" placeholder="10" min="2" max="100" required data-testid="input-max-members" />
+                <Input type="number" inputMode="numeric" name="maxMembers" placeholder="10" min="2" max="100" required data-testid="input-max-members" />
               </div>
               <Button type="submit" className="w-full" disabled={createPoolMutation.isPending} data-testid="button-submit-pool">
                 {createPoolMutation.isPending ? 'Creating...' : 'Create Syndicate'}
@@ -372,7 +372,7 @@ export default function PoolsPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>{poolDetail.pool.name} — Contribution Ledger</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => { setDetailPoolId(null); setSelectedPool(null); }}>
+                <Button variant="ghost" size="sm" className="min-h-[44px]" onClick={() => { setDetailPoolId(null); setSelectedPool(null); }}>
                   Close
                 </Button>
               </div>
@@ -418,6 +418,7 @@ export default function PoolsPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          className="min-h-[44px]"
                           onClick={() => {
                             setSelectedMemberUserId(member.userId!);
                             setLogContribDialogOpen(true);
@@ -490,6 +491,7 @@ export default function PoolsPage() {
               <label className="text-sm font-medium">Amount Received ($)</label>
               <Input
                 type="number"
+                inputMode="decimal"
                 name="amount"
                 step="0.01"
                 min="0.01"

@@ -95,7 +95,7 @@ export default function StateCombobox({
         aria-label="Select your state"
         data-testid={testId || "state-combobox-trigger"}
         className={cn(
-          "w-full h-10 px-3 pr-10 rounded-md border border-input bg-background text-sm",
+          "w-full h-11 px-3 pr-10 rounded-md border border-input bg-background text-base",
           "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "appearance-none cursor-pointer",

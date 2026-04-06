@@ -78,7 +78,7 @@ export default function BookRecommendations({ compact = false }: BookRecommendat
                       {book.title}
                     </h4>
                     {isTheGrove && (
-                      <Badge className="bg-green-600 text-white text-[10px] px-1.5 py-0">
+                      <Badge className="bg-green-600 text-white text-xs px-1.5 py-0">
                         🌟 NEW RELEASE
                       </Badge>
                     )}

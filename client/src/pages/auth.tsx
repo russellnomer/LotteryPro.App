@@ -443,6 +443,7 @@ export default function AuthPage() {
                     <Input
                       id="mfaCode"
                       type="text"
+                      inputMode="numeric"
                       maxLength={6}
                       placeholder="123456"
                       value={formData.mfaCode}

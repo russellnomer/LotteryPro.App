@@ -9,3 +9,16 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
+
+import("@capacitor/core").then(async ({ Capacitor }) => {
+  if (!Capacitor.isNativePlatform()) return;
+
+  const { App: CapApp } = await import("@capacitor/app");
+  CapApp.addListener("backButton", ({ canGoBack }) => {
+    if (canGoBack) {
+      window.history.back();
+    } else {
+      CapApp.exitApp();
+    }
+  });
+}).catch(() => {});

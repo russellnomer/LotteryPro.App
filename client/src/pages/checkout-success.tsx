@@ -40,15 +40,15 @@ export default function CheckoutSuccess() {
               </p>
               <div className="flex gap-3 mt-4 flex-wrap">
                 <a href="https://music.apple.com/search#q=Russell%20Nomer" target="_blank" rel="noopener noreferrer"
-                   className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full text-gray-300 transition-colors">
+                   className="text-sm bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-full text-gray-300 transition-colors min-h-[44px] flex items-center">
                   Apple Music
                 </a>
                 <a href="https://open.spotify.com/search/Russell%20Nomer" target="_blank" rel="noopener noreferrer"
-                   className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full text-gray-300 transition-colors">
+                   className="text-sm bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-full text-gray-300 transition-colors min-h-[44px] flex items-center">
                   Spotify
                 </a>
                 <a href="https://www.youtube.com/@RussellNomer" target="_blank" rel="noopener noreferrer"
-                   className="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-full text-gray-300 transition-colors">
+                   className="text-sm bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-full text-gray-300 transition-colors min-h-[44px] flex items-center">
                   YouTube
                 </a>
               </div>

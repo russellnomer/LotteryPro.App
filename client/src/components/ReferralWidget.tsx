@@ -80,6 +80,7 @@ export default function ReferralWidget() {
             onClick={copyToClipboard}
             variant="outline"
             size="icon"
+            className="min-h-[44px] min-w-[44px]"
             data-testid="button-copy-referral"
           >
             {copied ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
@@ -91,7 +92,7 @@ export default function ReferralWidget() {
             onClick={() => shareOnSocial('twitter')}
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 min-h-[44px]"
             data-testid="button-share-twitter"
           >
             <Share2 className="h-4 w-4 mr-2" />
@@ -101,7 +102,7 @@ export default function ReferralWidget() {
             onClick={() => shareOnSocial('facebook')}
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 min-h-[44px]"
             data-testid="button-share-facebook"
           >
             <Share2 className="h-4 w-4 mr-2" />
@@ -111,7 +112,7 @@ export default function ReferralWidget() {
             onClick={() => shareOnSocial('linkedin')}
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 min-h-[44px]"
             data-testid="button-share-linkedin"
           >
             <Share2 className="h-4 w-4 mr-2" />

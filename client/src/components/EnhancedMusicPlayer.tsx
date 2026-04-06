@@ -155,7 +155,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
                 size="sm" 
                 variant="outline"
                 onClick={() => handleLike(currentTrack)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 min-h-[44px]"
               >
                 <Heart className="h-3 w-3" />
                 Like
@@ -164,7 +164,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
                 size="sm" 
                 variant="outline"
                 onClick={() => handleShare(currentTrack)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 min-h-[44px]"
               >
                 <Share2 className="h-3 w-3" />
                 Share
@@ -205,7 +205,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
                     size="sm"
                     variant={currentTrack?.id === track.id && isPlaying ? "default" : "outline"}
                     onClick={() => handlePlay(track)}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 min-h-[44px]"
                   >
                     {currentTrack?.id === track.id && isPlaying ? (
                       <PauseIcon className="h-3 w-3" />
@@ -219,7 +219,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
                     size="sm"
                     variant="ghost"
                     onClick={() => handleLike(track)}
-                    className="flex items-center gap-1 text-red-500 hover:text-red-600"
+                    className="flex items-center gap-1 text-red-500 hover:text-red-600 min-h-[44px] min-w-[44px]"
                   >
                     <Heart className="h-3 w-3" />
                   </Button>
@@ -228,7 +228,7 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
                     size="sm"
                     variant="ghost"
                     onClick={() => handleShare(track)}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 min-h-[44px] min-w-[44px]"
                   >
                     <Share2 className="h-3 w-3" />
                   </Button>
@@ -245,21 +245,21 @@ export default function EnhancedMusicPlayer({ featured = false, compact = false 
               <TrendingUp className="h-4 w-4 mr-2" />
               💡 How Artists Really Get Paid (2024)
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
               <div className="bg-white p-3 rounded border">
                 <div className="font-semibold text-blue-600">Apple Music (Best for ASCAP)</div>
                 <div>$0.00735 per stream</div>
-                <div className="text-gray-600">Need ~136,000 streams for $1,000</div>
+                <div className="text-gray-600 text-xs">Need ~136,000 streams for $1,000</div>
               </div>
               <div className="bg-white p-3 rounded border">
                 <div className="font-semibold text-purple-600">Spotify</div>
                 <div>$0.00437 per stream</div>
-                <div className="text-gray-600">Need ~230,000 streams for $1,000</div>
+                <div className="text-gray-600 text-xs">Need ~230,000 streams for $1,000</div>
               </div>
               <div className="bg-white p-3 rounded border">
                 <div className="font-semibold text-red-600">YouTube Music</div>
                 <div>$0.0007 per stream</div>
-                <div className="text-gray-600">Need ~1.4M streams for $1,000</div>
+                <div className="text-gray-600 text-xs">Need ~1.4M streams for $1,000</div>
               </div>
             </div>
             

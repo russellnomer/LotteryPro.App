@@ -202,7 +202,7 @@ export default function Navigation() {
           <div className="md:hidden">
             {isAdminAuthenticated ? (
               <Link href="/admin">
-                <Button variant="outline" size="sm" className="border-red-400 text-red-200 hover:bg-red-600" data-testid="mobile-admin-link">
+                <Button variant="outline" size="sm" className="min-h-[44px] border-red-400 text-red-200 hover:bg-red-600" data-testid="mobile-admin-link">
                   🔑 Admin
                 </Button>
               </Link>
@@ -210,7 +210,7 @@ export default function Navigation() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="border-amber-400 text-amber-200 hover:bg-amber-600"
+                className="min-h-[44px] border-amber-400 text-amber-200 hover:bg-amber-600"
                 data-testid="mobile-admin-login-button"
                 onClick={openAdminDialog}
                 onTouchEnd={(e) => {
@@ -238,7 +238,7 @@ export default function Navigation() {
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     size="sm"
-                    className={`w-full justify-start ${
+                    className={`w-full justify-start min-h-[44px] ${
                       isActive 
                         ? "bg-white/20 text-white" 
                         : "text-blue-100 hover:text-white hover:bg-white/10"

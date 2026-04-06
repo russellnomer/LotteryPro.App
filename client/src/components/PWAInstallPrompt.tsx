@@ -70,13 +70,13 @@ export default function PWAInstallPrompt() {
             <div className="mt-3 flex gap-2">
               <button
                 onClick={handleInstall}
-                className="rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50"
+                className="rounded-lg bg-white px-4 py-3 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50 min-h-[44px]"
               >
                 Install
               </button>
               <button
                 onClick={handleDismiss}
-                className="rounded-lg px-4 py-1.5 text-sm font-medium text-white/80 transition hover:text-white"
+                className="rounded-lg px-4 py-3 text-sm font-medium text-white/80 transition hover:text-white min-h-[44px]"
               >
                 Maybe Later
               </button>
@@ -84,7 +84,7 @@ export default function PWAInstallPrompt() {
           </div>
           <button
             onClick={handleDismiss}
-            className="shrink-0 text-white/60 transition hover:text-white"
+            className="shrink-0 text-white/60 transition hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Dismiss"
           >
             <X className="h-5 w-5" />
