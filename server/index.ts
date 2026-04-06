@@ -36,13 +36,21 @@ app.set('trust proxy', 1);
 // ── Production HTTPS redirect ──
 // Replit's reverse proxy sets x-forwarded-proto. In production, redirect any
 // plain-HTTP request to HTTPS. No redirect in development (avoids localhost loops).
+// Allowlist guards against open-redirect via a crafted Host header.
+const ALLOWED_HTTPS_HOSTS = new Set([
+  'lotterypro.app',
+  'www.lotterypro.app',
+  ...(process.env.REPLIT_DOMAINS?.split(',').map(h => h.trim()) ?? []),
+]);
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (
     process.env.NODE_ENV === 'production' &&
     req.get('x-forwarded-proto') === 'http'
   ) {
-    const host = req.get('host') || 'lotterypro.app';
-    return res.redirect(301, `https://${host}${req.originalUrl}`);
+    const requestHost = req.get('host') || '';
+    // Only redirect to a known-safe host; fall back to canonical domain.
+    const safeHost = ALLOWED_HTTPS_HOSTS.has(requestHost) ? requestHost : 'lotterypro.app';
+    return res.redirect(301, `https://${safeHost}${req.originalUrl}`);
   }
   next();
 });
