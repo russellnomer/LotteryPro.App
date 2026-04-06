@@ -1,5 +1,16 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "jsSMeDEtDYUCxwo6ETnUh"
+uri = "file://assets/icon.png"
+type = "image"
+title = "lotterypro app icon"
+
+[[generated]]
+id = "0dCeDYIljb6KN4neMyO5e"
+uri = "file://assets/splash.png"
+type = "image"
+title = "lotterypro splash screen"
 
 [[outputs]]
 id = "QoVNxB4WeHIf7o1u138gH"

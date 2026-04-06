@@ -33,6 +33,15 @@ const app = express();
 // Trust Replit's reverse proxy so rate-limiting and IP detection work correctly
 app.set('trust proxy', 1);
 
+// ── Production HTTPS redirect ──
+// Replit's proxy sets x-forwarded-proto. Redirect http → https in production only.
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.get('x-forwarded-proto') === 'http') {
+    return res.redirect(301, `https://lotterypro.app${req.originalUrl}`);
+  }
+  next();
+});
+
 const MemoryStoreSession = MemoryStore(session);
 
 app.use(session({
@@ -225,6 +234,30 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+
+    if (process.env.NODE_ENV === 'production') {
+      // ── Production startup diagnostics ──
+      const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+      const stripeMode = stripeKey.startsWith('sk_live_') ? 'LIVE' : stripeKey ? 'TEST' : 'NOT SET';
+
+      const paypalClientId = process.env.PAYPAL_CLIENT_ID || '';
+      const paypalMode = paypalClientId ? (process.env.PAYPAL_ENVIRONMENT === 'production' ? 'LIVE' : 'SANDBOX') : 'NOT SET';
+
+      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'lotterypro.app';
+      const webhookUrl = `https://${domain}/api/stripe/webhook/<uuid>`;
+
+      console.log('');
+      console.log('══════════════════════════════════════════════');
+      console.log('  LotteryPro — Production Startup Diagnostics');
+      console.log('══════════════════════════════════════════════');
+      console.log(`  Stripe mode:    ${stripeMode}`);
+      console.log(`  PayPal mode:    ${paypalMode}`);
+      console.log(`  DB connected:   ${process.env.DATABASE_URL ? 'YES' : 'NOT SET'}`);
+      console.log(`  Stripe webhook: ${webhookUrl}`);
+      console.log(`  Domain:         https://${domain}`);
+      console.log('══════════════════════════════════════════════');
+      console.log('');
+    }
   });
 
   // ==================== PRODUCTION SCHEDULER ====================

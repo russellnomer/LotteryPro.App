@@ -45,6 +45,8 @@ integrations = ["javascript_openai:1.0.0", "javascript_sendgrid:1.0.0", "javascr
 
 [userenv.shared]
 ADMIN_PASSWORD = "LP$h3rl0ck!!!$$$"
+APPLE_BUNDLE_ID = "com.lotterypro.app"
+APPLE_ENVIRONMENT = "Sandbox"
 
 [postMerge]
 path = "scripts/post-merge.sh"

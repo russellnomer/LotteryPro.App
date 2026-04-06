@@ -46,7 +46,16 @@ import express from "express";
 import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
+  // ── Health check endpoint (used by Replit deploy health checks) ──
+  app.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+    });
+  });
+
   // Serve static files from public directory (robots.txt, security.txt)
   const publicPath = path.resolve(process.cwd(), "public");
   if (fs.existsSync(publicPath)) {
@@ -2820,6 +2829,163 @@ Canonical: https://lotterypro.app/.well-known/security.txt
       res.json({ success: true, gamesRefreshed: games.length });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ── Apple In-App Purchase (StoreKit 2) ────────────────────────────────────
+
+  /**
+   * POST /api/apple/verify-iap
+   * Called by the iOS app immediately after a StoreKit 2 purchase.
+   * Body: { signedTransactionInfo: string }
+   * The client sends the JWS-encoded signed transaction from
+   * Transaction.currentEntitlements on the device.
+   */
+  app.post('/api/apple/verify-iap', requireAuth, async (req, res) => {
+    try {
+      const { signedTransactionInfo } = req.body;
+      if (!signedTransactionInfo || typeof signedTransactionInfo !== 'string') {
+        return res.status(400).json({ success: false, error: 'signedTransactionInfo is required' });
+      }
+
+      const { verifyAppleTransaction } = await import('./appleIAP');
+      const result = await verifyAppleTransaction(signedTransactionInfo);
+
+      if (!result.valid) {
+        console.warn(`[AppleIAP] Invalid transaction for user ${req.user?.id}: ${result.error}`);
+        return res.status(422).json({ success: false, error: result.error });
+      }
+
+      const userId = req.user!.id;
+      const { db } = await import('./db');
+      const { userAccounts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+
+      // Normalize into existing subscription fields — no separate IAP table
+      await db.update(userAccounts)
+        .set({
+          subscriptionTier: result.subscriptionTier!,
+          subscriptionStatus: 'active',
+          updatedAt: new Date(),
+        })
+        .where(eq(userAccounts.id, userId));
+
+      console.log(`[AppleIAP] Activated ${result.subscriptionTier} for user ${userId} — txn ${result.transactionId}`);
+
+      return res.json({
+        success: true,
+        subscriptionTier: result.subscriptionTier,
+        productId: result.productId,
+        transactionId: result.transactionId,
+        expiresAt: result.expiresAt,
+        environment: result.environment,
+      });
+    } catch (error: any) {
+      console.error('[AppleIAP] verify-iap error:', error);
+      return res.status(500).json({ success: false, error: 'IAP verification failed' });
+    }
+  });
+
+  /**
+   * POST /api/apple/notifications
+   * Apple App Store Server Notifications v2 — keeps subscription status in sync.
+   * Configure this URL in App Store Connect → App → App Store Connect API → Subscriptions.
+   * URL: https://lotterypro.app/api/apple/notifications
+   */
+  app.post('/api/apple/notifications', async (req, res) => {
+    try {
+      const { signedPayload } = req.body;
+      if (!signedPayload || typeof signedPayload !== 'string') {
+        return res.status(400).json({ error: 'signedPayload is required' });
+      }
+
+      const { decodeAppleNotification } = await import('./appleIAP');
+      const notification = await decodeAppleNotification(signedPayload);
+
+      if (notification.error) {
+        console.warn('[AppleIAP] Notification decode error:', notification.error);
+        // Return 200 so Apple doesn't retry bad payloads
+        return res.status(200).json({ received: true });
+      }
+
+      console.log(`[AppleIAP] Notification: ${notification.notificationType}/${notification.subtype} — txn ${notification.originalTransactionId}`);
+
+      // Only act on known subscription-bearing notifications
+      if (notification.subscriptionTier && notification.originalTransactionId) {
+        const { db } = await import('./db');
+        const { userAccounts } = await import('@shared/schema');
+        const { sql, eq } = await import('drizzle-orm');
+
+        if (notification.revoked) {
+          // Subscription cancelled, refunded, or expired
+          await db.update(userAccounts)
+            .set({
+              subscriptionStatus: 'cancelled',
+              subscriptionTier: 'free',
+              updatedAt: new Date(),
+            })
+            .where(
+              sql`${userAccounts.paypalSubscriptionId} = ${notification.originalTransactionId}
+                  OR ${userAccounts.id} IN (
+                    SELECT id FROM user_accounts
+                    WHERE subscription_tier = ${notification.subscriptionTier}
+                    AND subscription_status = 'active'
+                    LIMIT 1
+                  )`
+            );
+        } else {
+          // Renewal or new subscription — keep tier active
+          // Note: We use paypalSubscriptionId field to store Apple's originalTransactionId
+          // This is the matching key between Apple notifications and our user records.
+          await db.update(userAccounts)
+            .set({
+              subscriptionStatus: 'active',
+              subscriptionTier: notification.subscriptionTier,
+              paypalSubscriptionId: notification.originalTransactionId,
+              updatedAt: new Date(),
+            })
+            .where(eq(userAccounts.paypalSubscriptionId, notification.originalTransactionId));
+        }
+      }
+
+      return res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('[AppleIAP] notifications handler error:', error);
+      // Always return 200 to Apple to prevent repeated delivery attempts
+      return res.status(200).json({ received: true });
+    }
+  });
+
+  /**
+   * GET /api/apple/subscription-status
+   * Returns current subscription tier for the authenticated user.
+   * iOS app calls this on launch to sync local entitlements with the server.
+   */
+  app.get('/api/apple/subscription-status', requireAuth, async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { userAccounts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+
+      const [user] = await db.select({
+        subscriptionTier: userAccounts.subscriptionTier,
+        subscriptionStatus: userAccounts.subscriptionStatus,
+      })
+        .from(userAccounts)
+        .where(eq(userAccounts.id, req.user!.id));
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      return res.json({
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        isPremium: user.subscriptionTier === 'premium' && user.subscriptionStatus === 'active',
+      });
+    } catch (error: any) {
+      console.error('[AppleIAP] subscription-status error:', error);
+      return res.status(500).json({ error: 'Failed to fetch subscription status' });
     }
   });
 
