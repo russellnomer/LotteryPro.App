@@ -475,13 +475,14 @@ export async function resetPassword(req: Request, res: Response) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    // Hash the submitted token and look it up in the DB
+    // Hash the submitted token and atomically consume it in a single UPDATE ... RETURNING.
+    // The WHERE clause requires used_at IS NULL, so only one concurrent request can win.
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const now = new Date();
 
     const [tokenRecord] = await db
-      .select()
-      .from(passwordResetTokensTable)
+      .update(passwordResetTokensTable)
+      .set({ usedAt: now })
       .where(
         and(
           eq(passwordResetTokensTable.tokenHash, tokenHash),
@@ -489,7 +490,7 @@ export async function resetPassword(req: Request, res: Response) {
           gt(passwordResetTokensTable.expiresAt, now)
         )
       )
-      .limit(1);
+      .returning();
 
     if (!tokenRecord) {
       return res.status(400).json({ error: 'Invalid or expired reset token' });
@@ -504,12 +505,6 @@ export async function resetPassword(req: Request, res: Response) {
     // Hash the new password and update
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await storage.updateUserPassword(user.id, passwordHash);
-
-    // Mark the token as used (single-use enforcement)
-    await db
-      .update(passwordResetTokensTable)
-      .set({ usedAt: now })
-      .where(eq(passwordResetTokensTable.tokenHash, tokenHash));
 
     console.log(`Password reset successful for ${tokenRecord.email}`);
 
