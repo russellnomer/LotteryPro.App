@@ -38,10 +38,6 @@ public class LotteryProIAPPlugin: CAPPlugin {
             do {
                 let products = try await Product.products(for: ids)
                 let productList = products.map { p -> [String: Any] in
-                    let formatter = NumberFormatter()
-                    formatter.numberStyle = .currency
-                    formatter.locale = p.priceFormatStyle.locale
-
                     return [
                         "productId": p.id,
                         "title": p.displayName,
@@ -97,7 +93,7 @@ public class LotteryProIAPPlugin: CAPPlugin {
                     call.reject("Payment cancelled by user", "PAYMENT_CANCELLED")
 
                 case .pending:
-                    call.reject("Payment pending approval")
+                    call.reject("Payment pending parental approval")
 
                 @unknown default:
                     call.reject("Unknown purchase result")
@@ -110,10 +106,22 @@ public class LotteryProIAPPlugin: CAPPlugin {
 
     // MARK: - restorePurchases
 
+    /// Syncs with the App Store first (handles new-device restore), then
+    /// collects all current entitlements and returns their JWS tokens.
     @objc func restorePurchases(_ call: CAPPluginCall) {
         Task {
+            // Explicit App Store sync — required for reliable restore on a new device
+            // or after re-installing the app. This triggers a sign-in prompt if needed.
+            do {
+                try await AppStore.sync()
+            } catch {
+                // Non-fatal: user may have cancelled the sign-in. Continue anyway.
+                print("[LotteryProIAP] AppStore.sync() warning: \(error.localizedDescription)")
+            }
+
             var transactions: [[String: Any]] = []
 
+            // Iterate verified current entitlements (non-expired subscriptions)
             for await result in Transaction.currentEntitlements {
                 switch result {
                 case .verified(let tx):

@@ -2887,6 +2887,56 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   });
 
   /**
+   * POST /api/iap/validate-receipt
+   * Alias for /api/apple/verify-iap — accepts the same StoreKit 2 JWS payload.
+   * Provided for compatibility with the documented IAP contract.
+   * Body: { signedTransactionInfo: string }
+   */
+  app.post('/api/iap/validate-receipt', requireAuth, async (req, res) => {
+    try {
+      const { signedTransactionInfo } = req.body;
+      if (!signedTransactionInfo || typeof signedTransactionInfo !== 'string') {
+        return res.status(400).json({ success: false, error: 'signedTransactionInfo is required' });
+      }
+
+      const { verifyAppleTransaction } = await import('./appleIAP');
+      const result = await verifyAppleTransaction(signedTransactionInfo);
+
+      if (!result.valid) {
+        console.warn(`[AppleIAP] Invalid transaction for user ${req.user?.id}: ${result.error}`);
+        return res.status(422).json({ success: false, error: result.error });
+      }
+
+      const userId = req.user!.id;
+      const { db } = await import('./db');
+      const { userAccounts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+
+      await db.update(userAccounts)
+        .set({
+          subscriptionTier: result.subscriptionTier!,
+          subscriptionStatus: 'active',
+          updatedAt: new Date(),
+        })
+        .where(eq(userAccounts.id, userId));
+
+      console.log(`[AppleIAP] validate-receipt: Activated ${result.subscriptionTier} for user ${userId} — txn ${result.transactionId}`);
+
+      return res.json({
+        success: true,
+        subscriptionTier: result.subscriptionTier,
+        productId: result.productId,
+        transactionId: result.transactionId,
+        expiresAt: result.expiresAt,
+        environment: result.environment,
+      });
+    } catch (error: unknown) {
+      console.error('[AppleIAP] validate-receipt error:', error);
+      return res.status(500).json({ success: false, error: 'IAP verification failed' });
+    }
+  });
+
+  /**
    * POST /api/apple/notifications
    * Apple App Store Server Notifications v2 — keeps subscription status in sync.
    * Configure this URL in App Store Connect → App → App Store Connect API → Subscriptions.
