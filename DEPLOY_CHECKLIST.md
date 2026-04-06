@@ -23,11 +23,14 @@ Go to **Replit → Secrets** and verify every item below is set to its LIVE valu
 | `APPLE_KEY_ID` | `HLWJ4VQ6SC` | Already set |
 | `APPLE_PRIVATE_KEY` | Contents of AuthKey_HLWJ4VQ6SC.p8 | Already set |
 | `APPLE_ENVIRONMENT` | Set to `Production` for live IAP | Change from `Sandbox` before App Store submission |
+| `SENDGRID_API_KEY` | (Optional) SendGrid API key for high-volume email | https://sendgrid.com/ → Settings → API Keys. Leave unset to use Gmail SMTP instead. |
 
-**Email (Gmail SMTP):**
-- `LotteryPro_Email` must be set — this is your Gmail app password for sending draw reminders and verification emails.
-- To generate: Gmail → Settings → Security → App Passwords → create one for "Mail"
-- Do NOT add SendGrid; the app uses Gmail SMTP via Nodemailer.
+**Email:**
+- **Primary (current):** The app uses Gmail SMTP via Nodemailer. Set `LotteryPro_Email` to your Gmail app password.
+  - To generate: Gmail → Settings → Security → App Passwords → create one for "Mail"
+- **Alternative (higher volume):** If you later need higher-volume transactional email, set `SENDGRID_API_KEY` with a SendGrid production API key.
+  - Create one at https://sendgrid.com/ → Settings → API Keys → Create API Key (Full Access)
+  - If `SENDGRID_API_KEY` is present, the email service will prefer it over Gmail SMTP.
 
 ---
 
