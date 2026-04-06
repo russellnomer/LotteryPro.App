@@ -294,10 +294,10 @@ export default function Home() {
                           body: JSON.stringify({ email: (user as any)?.email })
                         });
                         if (res.ok) {
-                          window.location.href = '/auth';
+                          window.location.href = '/auth?verify=1';
                         }
                       } catch {
-                        window.location.href = '/auth';
+                        window.location.href = '/auth?verify=1';
                       }
                     }}
                   >

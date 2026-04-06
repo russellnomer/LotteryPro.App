@@ -411,25 +411,17 @@ export async function sendDrawReminderEmail(data: DrawReminderData): Promise<boo
       status: 'pending',
     });
 
-    const transporter = getTransporter();
-    if (!transporter) {
-      console.log('📧 EMAIL SIMULATION (LotteryPro_Email secret not set):', {
-        to: data.to,
-        subject,
-        game: data.game,
-      });
+    // Route through central sendMail (Resend-first, Gmail fallback)
+    const text = `${data.game === 'powerball' ? 'Powerball' : 'MegaMillions'} draw is today! Log in to LotteryPro to check your numbers: https://lotterypro.app`;
+    try {
+      await sendMail({ to: data.to, subject, text, html: htmlContent });
+    } catch (err: any) {
+      console.error('❌ Email send failed:', err);
       await db.update(emailSendLog)
-        .set({ status: 'failed', errorMessage: 'LotteryPro_Email secret not configured' })
+        .set({ status: 'failed', errorMessage: err.message })
         .where(eq(emailSendLog.email, data.to));
       return false;
     }
-
-    await transporter.sendMail({
-      from: FROM_ADDRESS,
-      to: data.to,
-      subject,
-      html: htmlContent,
-    });
 
     await db.update(emailSendLog)
       .set({ status: 'sent', sentAt: new Date() })
@@ -530,22 +522,11 @@ export async function sendPasswordResetEmail(
 
   const text = `LotteryPro Password Reset\n\nClick the link below to reset your password (expires in 30 minutes):\n\n${resetUrl}\n\nIf you didn't request this, ignore this email.`;
 
-  const transporter = getTransporter();
-  if (!transporter) {
-    console.log(`📧 PASSWORD RESET EMAIL (LotteryPro_Email secret not set). Reset URL: ${resetUrl}`);
-    return { success: false, message: 'Email service not configured — check server logs for reset link' };
-  }
-
+  // Route through central sendMail (Resend-first, Gmail fallback)
   try {
-    await transporter.sendMail({
-      from: FROM_ADDRESS,
-      to: recipientEmail,
-      subject: '🔐 LotteryPro Password Reset',
-      html,
-      text,
-    });
+    const result = await sendMail({ to: recipientEmail, subject: '🔐 LotteryPro Password Reset', html, text });
     console.log(`✅ Password reset email sent to ${recipientEmail}`);
-    return { success: true, message: 'Reset email sent' };
+    return result;
   } catch (error: any) {
     console.error('❌ Failed to send password reset email:', error?.message || error);
     return { success: false, message: 'Failed to send email' };

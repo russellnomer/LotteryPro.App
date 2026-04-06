@@ -41,6 +41,7 @@ export default function AuthPage() {
   const [lockoutMinutes, setLockoutMinutes] = useState(0);
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [otpExpired, setOtpExpired] = useState(false);
   const resendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
@@ -54,6 +55,20 @@ export default function AuthPage() {
     } else if (params.get('reset')) {
       setResetToken(params.get('reset')!);
       setAuthStep('reset-password');
+    } else if (params.get('verify') === '1') {
+      // Logged-in user arriving from "verify your email" banner
+      setAuthStep('email-verify');
+      // Prefill email from logged-in user if available (set after mount via separate effect)
+    }
+  }, []);
+
+  // If user is already logged in and lands on /auth?verify=1, prefill their email
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verify') === '1' && formData.email === '') {
+      fetch('/api/auth/user').then(r => r.json()).then((u: any) => {
+        if (u?.email) setFormData(prev => ({ ...prev, email: u.email }));
+      }).catch(() => {});
     }
   }, []);
 
@@ -182,6 +197,7 @@ export default function AuthPage() {
   };
 
   const handleVerifyEmail = async () => {
+    setOtpExpired(false);
     const response = await fetch('/api/auth/verify-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -189,7 +205,10 @@ export default function AuthPage() {
     });
     const data = await response.json();
     if (!response.ok) {
-      if (data.code === 'invalid_code') throw new Error('That code is incorrect or has expired. Check your inbox or request a new one.');
+      if (data.code === 'invalid_code') {
+        setOtpExpired(true);
+        throw new Error('That code is incorrect or expired. Request a new one below.');
+      }
       throw new Error(data.error || 'Verification failed');
     }
     toast({ title: 'Email verified!', description: 'Your email has been confirmed.' });
@@ -210,6 +229,8 @@ export default function AuthPage() {
         return;
       }
       if (!response.ok) throw new Error(data.error);
+      setOtpExpired(false);
+      setFormData(prev => ({ ...prev, otpCode: '' }));
       toast({ title: 'Code sent!', description: 'Check your inbox for a new 6-digit code.' });
       startResendCooldown(60);
     } catch (err: any) {
@@ -771,6 +792,23 @@ export default function AuthPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {otpExpired && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800 p-3">
+              <p className="text-sm text-orange-800 dark:text-orange-200 font-medium mb-2">Code expired or incorrect</p>
+              <p className="text-xs text-orange-700 dark:text-orange-300 mb-2">Codes are valid for 15 minutes. Request a fresh one to continue.</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={resendCooldown > 0}
+                onClick={handleResendCode}
+                className="border-orange-400 text-orange-700 hover:bg-orange-100 dark:text-orange-300 dark:border-orange-600 dark:hover:bg-orange-900"
+              >
+                {resendCooldown > 0 ? `Wait ${resendCooldown}s` : 'Send new code'}
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="otpCode">Verification code</Label>
             <Input
@@ -783,7 +821,10 @@ export default function AuthPage() {
               required
               autoFocus
               value={formData.otpCode}
-              onChange={(e) => setFormData(prev => ({ ...prev, otpCode: e.target.value.replace(/\D/g, '') }))}
+              onChange={(e) => {
+                setOtpExpired(false);
+                setFormData(prev => ({ ...prev, otpCode: e.target.value.replace(/\D/g, '') }));
+              }}
               className="text-center text-2xl tracking-widest font-mono"
             />
             <p className="text-xs text-gray-500">Code expires in 15 minutes. Check your spam folder if you don't see it.</p>
