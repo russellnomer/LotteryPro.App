@@ -287,7 +287,7 @@ export default function ScratchOffs() {
       <SEOHead
         title="Scratch-Off Helper - Best Lottery Tickets by State | LotteryPro"
         description="Find the best scratch-off lottery games to play based on remaining prize data. NY users get real-time data from official state sources. All states get national game analysis."
-        url="https://lotterypro.app/scratch-offs"
+        path="/scratch-offs"
       />
 
       {/* Header */}

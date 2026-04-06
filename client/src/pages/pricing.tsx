@@ -77,7 +77,7 @@ export default function Pricing() {
       <SEOHead
         title="LotteryPro Premium — $7.99/month | Scratch-Off Alerts & Trends"
         description="Get email alerts when big prizes drop, historical prize trend charts, personal watchlists, and unlimited generations. One simple plan: $7.99/month or $69/year."
-        url="https://lotterypro.app/pricing"
+        path="/pricing"
       />
 
       {/* ── Header ── */}

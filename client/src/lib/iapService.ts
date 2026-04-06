@@ -205,11 +205,11 @@ export async function restorePurchases(): Promise<IAPRestoreResult> {
     const msg = err instanceof Error ? err.message : String(err);
 
     if (msg.includes("not implemented") || msg.includes("unimplemented")) {
-      return { success: false, error: "IAP is only available in the iOS app" };
+      return { success: false, restored: 0, error: "IAP is only available in the iOS app" };
     }
 
     console.error("[IAP] restorePurchases error:", msg);
-    return { success: false, error: msg || "Restore failed" };
+    return { success: false, restored: 0, error: msg || "Restore failed" };
   }
 }
 

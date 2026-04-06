@@ -69,7 +69,7 @@ async function getVerifier(): Promise<SignedDataVerifier> {
 
   const rootCerts = await getAppleRootCerts();
 
-  _verifier = new SignedDataVerifier(rootCerts, true, environment, bundleId, undefined);
+  _verifier = new SignedDataVerifier(rootCerts as Buffer[], true, environment, bundleId, undefined);
   return _verifier;
 }
 
