@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from './emailService';
-
-// In-memory password reset tokens (for development - in production, use database)
-const passwordResetTokens = new Map<string, { email: string; expiresAt: Date }>();
+import { db } from './db';
+import { passwordResetTokens as passwordResetTokensTable } from '@shared/schema';
+import { eq, and, isNull, gt } from 'drizzle-orm';
 
 // Extend Express Request interface
 declare global {
@@ -415,7 +415,7 @@ export const requireBasic = requireTier('basic');
 export const requirePro = requireTier('pro');
 export const requirePremium = requireTier('premium');
 
-// Password Reset Functions
+// Password Reset Functions — DB-backed (SHA-256 hashed, single-use, 30-min TTL)
 export async function forgotPassword(req: Request, res: Response) {
   try {
     const { email } = req.body;
@@ -424,43 +424,38 @@ export async function forgotPassword(req: Request, res: Response) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Check if user exists (but don't reveal this to the user for security)
+    // Check if user exists (don't reveal this to the caller for security)
     const user = await storage.getUserByEmail(email);
     
-    // Generate a secure reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-    
     if (user) {
-      // Store the token
-      passwordResetTokens.set(resetToken, { email, expiresAt });
-      
-      // Clean up expired tokens
-      Array.from(passwordResetTokens.entries()).forEach(([token, data]) => {
-        if (data.expiresAt < new Date()) {
-          passwordResetTokens.delete(token);
-        }
+      // Generate a secure random token and store only its SHA-256 hash
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+      await db.insert(passwordResetTokensTable).values({
+        email,
+        tokenHash,
+        expiresAt,
       });
-      
-      console.log(`Password reset requested for ${email}. Token: ${resetToken}`);
-      
-      // Send email — falls back gracefully if SendGrid not configured
+
+      console.log(`Password reset requested for ${email}`);
+
+      // Send email — falls back gracefully if transporter not configured
       const emailResult = await sendPasswordResetEmail(email, resetToken);
-      
-      return res.json({ 
-        success: true, 
+
+      return res.json({
+        success: true,
         message: emailResult.success
           ? 'Password reset email sent — check your inbox (and spam folder).'
           : 'If an account exists with this email, you will receive reset instructions.',
-        // Include token so frontend can auto-advance even without email (fallback UX)
-        resetToken: resetToken
       });
     }
-    
-    // Always return success for security (don't reveal if email exists)
-    res.json({ 
-      success: true, 
-      message: 'If an account exists with this email, you will receive reset instructions.'
+
+    // Always return success for security (don't reveal whether the email exists)
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, you will receive reset instructions.',
     });
   } catch (error: any) {
     console.error('Forgot password error:', error);
@@ -471,7 +466,7 @@ export async function forgotPassword(req: Request, res: Response) {
 export async function resetPassword(req: Request, res: Response) {
   try {
     const { token, newPassword } = req.body;
-    
+
     if (!token || !newPassword) {
       return res.status(400).json({ error: 'Token and new password are required' });
     }
@@ -480,38 +475,47 @@ export async function resetPassword(req: Request, res: Response) {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    // Look up the token
-    const tokenData = passwordResetTokens.get(token);
-    
-    if (!tokenData) {
+    // Hash the submitted token and look it up in the DB
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const now = new Date();
+
+    const [tokenRecord] = await db
+      .select()
+      .from(passwordResetTokensTable)
+      .where(
+        and(
+          eq(passwordResetTokensTable.tokenHash, tokenHash),
+          isNull(passwordResetTokensTable.usedAt),
+          gt(passwordResetTokensTable.expiresAt, now)
+        )
+      )
+      .limit(1);
+
+    if (!tokenRecord) {
       return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
 
-    if (tokenData.expiresAt < new Date()) {
-      passwordResetTokens.delete(token);
-      return res.status(400).json({ error: 'Reset token has expired' });
-    }
-
     // Get the user
-    const user = await storage.getUserByEmail(tokenData.email);
+    const user = await storage.getUserByEmail(tokenRecord.email);
     if (!user) {
       return res.status(400).json({ error: 'User not found' });
     }
 
-    // Hash the new password
+    // Hash the new password and update
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    
-    // Update the password
     await storage.updateUserPassword(user.id, passwordHash);
-    
-    // Delete the used token
-    passwordResetTokens.delete(token);
 
-    console.log(`Password reset successful for ${tokenData.email}`);
-    
-    res.json({ 
-      success: true, 
-      message: 'Password has been reset successfully' 
+    // Mark the token as used (single-use enforcement)
+    await db
+      .update(passwordResetTokensTable)
+      .set({ usedAt: now })
+      .where(eq(passwordResetTokensTable.tokenHash, tokenHash));
+
+    console.log(`Password reset successful for ${tokenRecord.email}`);
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully',
     });
   } catch (error: any) {
     console.error('Reset password error:', error);

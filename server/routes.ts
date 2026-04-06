@@ -79,12 +79,34 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   });
   
   // Admin authentication routes - server-side security
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'default-change-me';
-  
-  app.post('/api/admin/login', (req, res) => {
+  // On startup: if ADMIN_PASSWORD_HASH is missing but ADMIN_PASSWORD is set, log a bcrypt hash
+  // so the operator can copy it into the ADMIN_PASSWORD_HASH secret and remove ADMIN_PASSWORD.
+  (async () => {
+    if (!process.env.ADMIN_PASSWORD_HASH && process.env.ADMIN_PASSWORD) {
+      const autoHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+      console.warn('⚠️  ADMIN_PASSWORD_HASH is not set. To harden admin login, add this bcrypt hash as the ADMIN_PASSWORD_HASH secret and remove ADMIN_PASSWORD:');
+      console.warn(`   ADMIN_PASSWORD_HASH=${autoHash}`);
+      console.warn('   See SECURITY_NOTES.md for instructions.');
+    }
+  })();
+
+  app.post('/api/admin/login', async (req, res) => {
     const { password } = req.body;
-    
-    if (password === ADMIN_PASSWORD) {
+
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+    const adminPasswordPlain = process.env.ADMIN_PASSWORD;
+
+    let authenticated = false;
+
+    if (adminPasswordHash) {
+      // Preferred: bcrypt hash comparison
+      authenticated = await bcrypt.compare(password, adminPasswordHash);
+    } else if (adminPasswordPlain) {
+      // Fallback: plain comparison (deprecated — see startup warning above)
+      authenticated = password === adminPasswordPlain;
+    }
+
+    if (authenticated) {
       req.session.isAdmin = true;
       res.json({ success: true, message: 'Admin authenticated' });
     } else {
@@ -114,17 +136,22 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   await seedHistoricalData();
   await seedRussellNomerContent();
 
-  // Ensure founder account always has the correct password on every boot (dev + prod)
-  try {
-    const { pool } = await import("./db");
-    const founderHash = await bcrypt.hash("LP$h3rl0ck!!!$$$", 12);
-    await pool.query(
-      "UPDATE user_accounts SET password_hash = $1 WHERE email = $2",
-      [founderHash, "russell@russellnomer.com"]
-    );
-    console.log("✅ Founder account credentials verified");
-  } catch (err) {
-    console.error("⚠️ Could not verify founder credentials:", err);
+  // Sync founder account password from FOUNDER_PASSWORD env secret (no hardcoded credentials)
+  const founderPassword = process.env.FOUNDER_PASSWORD;
+  if (founderPassword) {
+    try {
+      const { pool } = await import("./db");
+      const founderHash = await bcrypt.hash(founderPassword, 12);
+      await pool.query(
+        "UPDATE user_accounts SET password_hash = $1 WHERE email = $2",
+        [founderHash, "russell@russellnomer.com"]
+      );
+      console.log("✅ Founder account credentials verified from FOUNDER_PASSWORD secret");
+    } catch (err) {
+      console.error("⚠️ Could not verify founder credentials:", err);
+    }
+  } else {
+    console.warn("⚠️  FOUNDER_PASSWORD env secret not set — skipping founder credential sync. See SECURITY_NOTES.md.");
   }
   
   // Start progressive enhancement system
@@ -995,8 +1022,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
-  // Track referral usage
-  app.post("/api/referral/track", async (req, res) => {
+  // Track referral usage (rate-limited to prevent code enumeration)
+  app.post("/api/referral/track", authRateLimit, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { referralCodes } = await import('@shared/schema');
@@ -1624,8 +1651,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
-  // VIP Code redemption route
-  app.post('/api/redeem-vip-code', async (req, res) => {
+  // VIP Code redemption route (rate-limited to prevent brute-force)
+  app.post('/api/redeem-vip-code', authRateLimit, async (req, res) => {
     try {
       const { redeemVipCode } = await import('./vipManagement');
       const { code, userEmail } = req.body;
@@ -2007,40 +2034,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
-  // VIP Code redemption routes (multiple endpoints for compatibility)
-  app.post('/api/vip/redeem', async (req, res) => {
-    try {
-      const { redeemVipCode } = await import('./vipManagement');
-      const { code, userEmail } = req.body;
-      
-      if (!code || !userEmail) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'VIP code and email are required' 
-        });
-      }
-
-      const ipAddress = req.ip;
-      const userAgent = req.get('User-Agent');
-
-      const result = await redeemVipCode(
-        { code: code.trim(), userEmail: userEmail.trim() },
-        ipAddress,
-        userAgent
-      );
-
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error redeeming VIP code:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Failed to redeem VIP code',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
-    }
-  });
-
-  app.post('/api/redeem-vip-code', async (req, res) => {
+  // VIP Code redemption routes (multiple endpoints for compatibility, both rate-limited)
+  app.post('/api/vip/redeem', authRateLimit, async (req, res) => {
     try {
       const { redeemVipCode } = await import('./vipManagement');
       const { code, userEmail } = req.body;
