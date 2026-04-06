@@ -12,6 +12,12 @@ uri = "file://assets/splash.png"
 type = "image"
 title = "lotterypro splash screen"
 
+[[generated]]
+id = "xn-AsPNs863e31f6EPkPt"
+uri = "file://attached_assets/iap-review-screenshot.png"
+type = "image"
+title = "LotteryPro paywall v5"
+
 [[outputs]]
 id = "QoVNxB4WeHIf7o1u138gH"
 uri = "file://ARCHITECTURE_SPEC.md"
