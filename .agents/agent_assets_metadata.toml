@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "QoVNxB4WeHIf7o1u138gH"
+uri = "file://ARCHITECTURE_SPEC.md"
+type = "text"
+title = "LotteryPro Architecture & Specification"
