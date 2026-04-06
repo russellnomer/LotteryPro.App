@@ -649,6 +649,11 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(400).json({ success: false, message: 'memberId, amount, and method are required' });
       }
       
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        return res.status(400).json({ success: false, message: 'amount must be a positive number' });
+      }
+      
       const validMethods = ['venmo', 'cashapp', 'zelle', 'cash', 'other'];
       if (!validMethods.includes(method)) {
         return res.status(400).json({ success: false, message: `method must be one of: ${validMethods.join(', ')}` });
@@ -694,7 +699,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         poolId,
         memberId,
         type: 'logged',
-        amount: parseFloat(amount).toFixed(2),
+        amount: parsedAmount.toFixed(2),
         currency: 'USD',
         paymentProvider: method,
         status: 'completed',
@@ -703,7 +708,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
       });
       
       // Update pool financial totals
-      const newTotalContributions = parseFloat(pool.totalContributions || '0') + parseFloat(amount);
+      const newTotalContributions = parseFloat(pool.totalContributions || '0') + parsedAmount;
       
       await db.update(lotteryPools)
         .set({

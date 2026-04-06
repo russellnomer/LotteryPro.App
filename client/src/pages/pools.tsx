@@ -77,7 +77,7 @@ export default function PoolsPage() {
 
   const createPoolMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest('/api/pools/create', 'POST', data);
+      const res = await apiRequest('POST', '/api/pools/create', data);
       return res.json();
     },
     onSuccess: () => {
@@ -93,7 +93,7 @@ export default function PoolsPage() {
   const joinPoolMutation = useMutation({
     mutationFn: async (data: any) => {
       const { poolId, ...rest } = data;
-      const res = await apiRequest(`/api/pools/${poolId}/join`, 'POST', rest);
+      const res = await apiRequest('POST', `/api/pools/${poolId}/join`, rest);
       return res.json();
     },
     onSuccess: () => {
@@ -113,7 +113,7 @@ export default function PoolsPage() {
   const logContribMutation = useMutation({
     mutationFn: async (data: any) => {
       const { poolId, ...rest } = data;
-      const res = await apiRequest(`/api/pools/${poolId}/log-contribution`, 'POST', rest);
+      const res = await apiRequest('POST', `/api/pools/${poolId}/log-contribution`, rest);
       return res.json();
     },
     onSuccess: () => {
