@@ -654,6 +654,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(400).json({ success: false, message: `method must be one of: ${validMethods.join(', ')}` });
       }
       
+      const { and } = await import('drizzle-orm');
+      
       // Verify requester is the pool creator
       const [pool] = await db.select()
         .from(lotteryPools)
@@ -668,14 +670,24 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(403).json({ success: false, message: 'Only the pool creator can log contributions' });
       }
       
-      // Update member payment status
+      // Fetch member and confirm they belong to THIS pool (prevents IDOR/cross-pool mutation)
+      const [member] = await db.select()
+        .from(poolMembers)
+        .where(and(eq(poolMembers.id, memberId), eq(poolMembers.poolId, poolId)))
+        .limit(1);
+      
+      if (!member) {
+        return res.status(404).json({ success: false, message: 'Member not found in this pool' });
+      }
+      
+      // Update member: paymentStatus 'logged' (off-platform), status 'active'
       await db.update(poolMembers)
         .set({
-          paymentStatus: 'paid',
+          paymentStatus: 'logged',
           paymentMethod: method,
           status: 'active'
         })
-        .where(eq(poolMembers.id, memberId));
+        .where(and(eq(poolMembers.id, memberId), eq(poolMembers.poolId, poolId)));
       
       // Record transaction with type 'logged' (no payment processor involved)
       await db.insert(poolTransactions).values({

@@ -403,7 +403,7 @@ export default function PoolsPage() {
                         <p className="font-semibold">${parseFloat(member.contributionAmount).toFixed(2)}</p>
                         <p className="text-xs text-muted-foreground">{member.sharePercentage}% share</p>
                       </div>
-                      {member.paymentStatus === 'paid' ? (
+                      {member.paymentStatus === 'logged' ? (
                         <Badge className="bg-green-500 gap-1">
                           <CheckCircle className="h-3 w-3" />
                           Received
@@ -412,7 +412,7 @@ export default function PoolsPage() {
                         <Badge variant="outline">Pending</Badge>
                       )}
                       {/* Show "Log Payment" button only for pool creator — server enforces this too */}
-                      {member.paymentStatus !== 'paid' && (
+                      {member.paymentStatus !== 'logged' && (
                         <Button
                           size="sm"
                           variant="outline"
