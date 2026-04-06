@@ -1030,13 +1030,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetAllDailyUsage(): Promise<number> {
-    const result = await db.update(userAccounts)
+    const rows = await db.update(userAccounts)
       .set({
         dailyUsageCount: 0,
         lastUsageReset: new Date(),
         updatedAt: new Date()
-      });
-    return (result as any).rowCount ?? 0;
+      })
+      .returning({ id: userAccounts.id });
+    return rows.length;
   }
 
   async getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined> {
