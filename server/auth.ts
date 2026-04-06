@@ -194,7 +194,7 @@ export async function resendVerification(req: Request, res: Response) {
       return res.json({ success: true, message: 'If an account exists, a new code has been sent.' });
     }
 
-    if ((user as any).emailVerified) {
+    if (user.emailVerified) {
       return res.status(400).json({ error: 'Email already verified' });
     }
 
@@ -554,11 +554,11 @@ export async function requireVerifiedEmail(req: Request, res: Response, next: an
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
-    if (!(user as any).emailVerified) {
+    if (!user.emailVerified) {
       return res.status(403).json({
         error: 'Email verification required',
         code: 'email_not_verified',
-        message: 'Please verify your email address before accessing this feature. Check your inbox for a 6-digit code or request a new one at /auth.'
+        message: 'Please verify your email address before accessing this feature. Check your inbox for a 6-digit code or request a new one at /auth?verify=1'
       });
     }
     req.user = user;

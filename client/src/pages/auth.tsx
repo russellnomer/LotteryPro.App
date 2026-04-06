@@ -66,9 +66,12 @@ export default function AuthPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('verify') === '1' && formData.email === '') {
-      fetch('/api/auth/user').then(r => r.json()).then((u: any) => {
-        if (u?.email) setFormData(prev => ({ ...prev, email: u.email }));
-      }).catch(() => {});
+      fetch('/api/auth/user')
+        .then(r => r.ok ? r.json() : null)
+        .then((u: { email?: string } | null) => {
+          if (u?.email) setFormData(prev => ({ ...prev, email: u.email! }));
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -212,7 +215,14 @@ export default function AuthPage() {
       throw new Error(data.error || 'Verification failed');
     }
     toast({ title: 'Email verified!', description: 'Your email has been confirmed.' });
-    setAuthStep('mfa-setup');
+    // If user arrived via ?verify=1 banner they are already logged in — go home
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verify') === '1') {
+      window.location.href = '/';
+    } else {
+      // Fresh registrant — proceed to MFA setup
+      setAuthStep('mfa-setup');
+    }
   };
 
   const handleResendCode = async () => {

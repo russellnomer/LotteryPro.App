@@ -8,7 +8,7 @@ import { Chart } from "@/components/ui/chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type AuthUser } from "@/hooks/useAuth";
 import { GAME_CONFIG, ANALYSIS_METHODS, WHEEL_SYSTEMS, MethodologyType } from "@/lib/lottery-data";
 import { formatChartData, generateWheelCombinations } from "@/lib/lottery-analysis";
 import { apiRequest } from "@/lib/queryClient";
@@ -113,8 +113,8 @@ export default function Home() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   
   // Derive tier from authenticated user - VIP tiers bypass all limits
-  const userTier = (user as any)?.subscriptionTier || 'free';
-  const userEmail = (user as any)?.email || '';
+  const userTier = user?.subscriptionTier || 'free';
+  const userEmail = user?.email || '';
   const isVip = isVipTier(userTier);
   const maxDailyGenerations = isVip ? Infinity : 1;
 
@@ -275,7 +275,7 @@ export default function Home() {
         )}
 
         {/* Email Verification Banner — shown to logged-in users who haven't verified */}
-        {isAuthenticated && (user as any)?.emailVerified === false && !emailBannerDismissed && (
+        {isAuthenticated && user?.emailVerified === false && !emailBannerDismissed && (
           <Alert className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
             <Mail className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
@@ -291,7 +291,7 @@ export default function Home() {
                         const res = await fetch('/api/auth/resend-verification', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email: (user as any)?.email })
+                          body: JSON.stringify({ email: user?.email })
                         });
                         if (res.ok) {
                           window.location.href = '/auth?verify=1';
@@ -349,8 +349,8 @@ export default function Home() {
                   ) : (
                     <><strong>VIP {userTier.charAt(0).toUpperCase() + userTier.slice(1)} Member</strong> - Unlimited generations, no ads, priority access</>
                   )}
-                  {(user as any)?.homeState && (() => {
-                    const sc = getStateConfig((user as any).homeState);
+                  {user?.homeState && (() => {
+                    const sc = getStateConfig(user.homeState!);
                     return sc ? <span className="ml-2 text-sm opacity-80">• {sc.flag} {sc.name} {sc.dataStatus === 'full' ? '(full data)' : '(national games)'}</span> : null;
                   })()}
                 </span>

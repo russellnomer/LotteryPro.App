@@ -986,7 +986,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   // ==================== REFERRAL PROGRAM ====================
   
   // Generate or get user's referral code
-  app.get("/api/referral/my-code", async (req, res) => {
+  app.get("/api/referral/my-code", requireAuth, requireVerifiedEmail, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { referralCodes } = await import('@shared/schema');
@@ -1059,7 +1059,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   });
 
   // Get referral stats for user
-  app.get("/api/referral/stats", async (req, res) => {
+  app.get("/api/referral/stats", requireAuth, requireVerifiedEmail, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { referralCodes } = await import('@shared/schema');
@@ -2554,7 +2554,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         subscriptionStatus: user.subscriptionStatus,
         mfaEnabled: user.mfaEnabled,
         homeState: (user as any).homeState || null,
-        emailVerified: (user as any).emailVerified ?? false
+        emailVerified: user.emailVerified
       });
     } catch (error) {
       console.error('Get user error:', error);
