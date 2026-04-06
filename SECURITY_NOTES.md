@@ -19,24 +19,26 @@ This document describes the environment variables and secrets required for secur
 
 ---
 
-### `ADMIN_PASSWORD` (deprecated) → migrate to `ADMIN_PASSWORD_HASH`
+### `ADMIN_PASSWORD_HASH` (required for admin login)
 
-**`ADMIN_PASSWORD`** — Plain text admin password used as a fallback for `/api/admin/login`. This is the legacy approach and will continue to work, but it is less secure than the hashed version.
+**Purpose:** bcrypt hash of the admin dashboard password. Admin login (`/api/admin/login`) will return **503 Service Unavailable** if this secret is not set — there is no plain-text fallback.
 
-**`ADMIN_PASSWORD_HASH`** — bcrypt hash of your admin password. When this secret is set, the admin login endpoint uses `bcrypt.compare()` (constant-time, brute-force resistant) instead of plain string comparison.
-
-**How to generate the hash:**
-1. Start the server with `ADMIN_PASSWORD` set but `ADMIN_PASSWORD_HASH` not set
-2. Look in the startup logs for this line:
+**How to set it up (initial setup only):**
+1. Set a temporary `ADMIN_PASSWORD` secret to your desired admin password
+2. Start the server and look in the startup logs for:
    ```
-   ⚠️  ADMIN_PASSWORD_HASH is not set. To harden admin login, add this bcrypt hash...
+   ⚠️  ADMIN_PASSWORD_HASH is not set. Admin login is DISABLED until you add this bcrypt hash...
       ADMIN_PASSWORD_HASH=$2b$12$...
    ```
 3. Copy that full hash value (starts with `$2b$12$`)
 4. Add it as the `ADMIN_PASSWORD_HASH` secret in Replit
-5. You can then remove the `ADMIN_PASSWORD` secret
+5. **Remove the `ADMIN_PASSWORD` secret** — it is no longer needed
 
-**Rotation:** Generate a new bcrypt hash using any bcrypt tool (e.g., `node -e "const b=require('bcrypt'); b.hash('newpassword',12).then(console.log)"`) and update the `ADMIN_PASSWORD_HASH` secret.
+**Rotation:** Generate a new bcrypt hash (e.g., `node -e "const b=require('bcrypt'); b.hash('newpassword',12).then(console.log)"`) and update `ADMIN_PASSWORD_HASH`. No `ADMIN_PASSWORD` needed.
+
+### `ADMIN_PASSWORD` (initial setup only — remove after migrating)
+
+Only used on first boot to auto-generate the `ADMIN_PASSWORD_HASH` helper hash. Once `ADMIN_PASSWORD_HASH` is set in secrets, delete `ADMIN_PASSWORD`.
 
 ---
 

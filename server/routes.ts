@@ -79,14 +79,19 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   });
   
   // Admin authentication routes - server-side security
-  // On startup: if ADMIN_PASSWORD_HASH is missing but ADMIN_PASSWORD is set, log a bcrypt hash
-  // so the operator can copy it into the ADMIN_PASSWORD_HASH secret and remove ADMIN_PASSWORD.
+  // On startup: if ADMIN_PASSWORD_HASH is missing, generate a helper hash from ADMIN_PASSWORD
+  // (if present) so the operator can copy it into ADMIN_PASSWORD_HASH during initial setup.
+  // After ADMIN_PASSWORD_HASH is set, remove ADMIN_PASSWORD entirely.
   (async () => {
-    if (!process.env.ADMIN_PASSWORD_HASH && process.env.ADMIN_PASSWORD) {
-      const autoHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
-      console.warn('⚠️  ADMIN_PASSWORD_HASH is not set. To harden admin login, add this bcrypt hash as the ADMIN_PASSWORD_HASH secret and remove ADMIN_PASSWORD:');
-      console.warn(`   ADMIN_PASSWORD_HASH=${autoHash}`);
-      console.warn('   See SECURITY_NOTES.md for instructions.');
+    if (!process.env.ADMIN_PASSWORD_HASH) {
+      if (process.env.ADMIN_PASSWORD) {
+        const autoHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+        console.warn('⚠️  ADMIN_PASSWORD_HASH is not set. Admin login is DISABLED until you add this bcrypt hash as the ADMIN_PASSWORD_HASH secret:');
+        console.warn(`   ADMIN_PASSWORD_HASH=${autoHash}`);
+        console.warn('   Then remove ADMIN_PASSWORD. See SECURITY_NOTES.md for instructions.');
+      } else {
+        console.warn('⚠️  ADMIN_PASSWORD_HASH is not set and ADMIN_PASSWORD is missing. Admin login is DISABLED. See SECURITY_NOTES.md.');
+      }
     }
   })();
 
@@ -94,17 +99,12 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     const { password } = req.body;
 
     const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-    const adminPasswordPlain = process.env.ADMIN_PASSWORD;
 
-    let authenticated = false;
-
-    if (adminPasswordHash) {
-      // Preferred: bcrypt hash comparison
-      authenticated = await bcrypt.compare(password, adminPasswordHash);
-    } else if (adminPasswordPlain) {
-      // Fallback: plain comparison (deprecated — see startup warning above)
-      authenticated = password === adminPasswordPlain;
+    if (!adminPasswordHash) {
+      return res.status(503).json({ success: false, error: 'Admin login not configured. Set ADMIN_PASSWORD_HASH secret. See SECURITY_NOTES.md.' });
     }
+
+    const authenticated = await bcrypt.compare(password, adminPasswordHash);
 
     if (authenticated) {
       req.session.isAdmin = true;
