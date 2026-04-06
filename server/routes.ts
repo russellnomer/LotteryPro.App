@@ -685,6 +685,11 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(404).json({ success: false, message: 'Member not found in this pool' });
       }
       
+      // Idempotency guard: reject if contribution already logged
+      if (member.paymentStatus === 'logged') {
+        return res.status(409).json({ success: false, message: 'Contribution already logged for this member' });
+      }
+      
       // Update member: paymentStatus 'logged' (off-platform), status 'active'
       await db.update(poolMembers)
         .set({

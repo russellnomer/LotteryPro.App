@@ -121,7 +121,7 @@ export default function PoolsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/pools', detailPoolId] });
       setLogContribDialogOpen(false);
-      setSelectedMemberId(null);
+      setSelectedMemberUserId(null);
       toast({ title: "Contribution Logged!", description: "Member's contribution has been marked as received." });
     },
     onError: (error: any) => {
