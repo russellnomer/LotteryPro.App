@@ -6,11 +6,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2, Crown, Sparkles, CreditCard, Clock, Package } from "lucide-react";
 import BiometricSetup from "@/components/BiometricSetup";
+import IAPPlaceholder from "@/components/IAPPlaceholder";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import SEOHead from "@/components/SEOHead";
 import { analytics } from '@/lib/analytics';
+import { usePlatform } from "@/hooks/usePlatform";
+import { shouldShowWebPayments, shouldShowIAP } from "@/lib/compliance";
 
 const VIP_TIERS = ['premium', 'founder', 'lifetime'] as const;
 type VipTier = typeof VIP_TIERS[number];
@@ -253,6 +256,9 @@ export default function SubscriptionPage() {
   
   const { user, isLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const platform = usePlatform();
+  const showWebPayments = shouldShowWebPayments(platform);
+  const showIAP = shouldShowIAP(platform);
   const userTier = (user as any)?.subscriptionTier;
   const isVipUser = isAuthenticated && isVipTier(userTier);
 
@@ -612,7 +618,7 @@ export default function SubscriptionPage() {
                     >
                       Start Free
                     </Button>
-                  ) : (
+                  ) : showWebPayments ? (
                     <>
                       {STRIPE_PAYMENT_LINKS[plan.id] && (
                         <Button
@@ -638,15 +644,17 @@ export default function SubscriptionPage() {
                         </div>
                       )}
                     </>
-                  )}
+                  ) : showIAP ? (
+                    <IAPPlaceholder />
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* One-Time Purchase Packs */}
-        <div className="mb-12">
+        {/* One-Time Purchase Packs — web only */}
+        {showWebPayments && <div className="mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Quick Access Packs
@@ -717,9 +725,10 @@ export default function SubscriptionPage() {
               );
             })}
           </div>
-        </div>
+        </div>}
 
-        {/* Jackpocket Referral - Premium Partner CTA */}
+        {/* Jackpocket Referral - Premium Partner CTA — web only */}
+        {showWebPayments && (
         <div className="mb-12 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 rounded-xl p-8 text-white shadow-xl">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1 text-center md:text-left">
@@ -754,6 +763,7 @@ export default function SubscriptionPage() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Features highlight section */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">

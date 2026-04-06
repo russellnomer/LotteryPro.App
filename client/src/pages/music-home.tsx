@@ -16,10 +16,13 @@ import AstrologicalFeatures from "@/components/AstrologicalFeatures";
 import AdSpace from "@/components/AdSpace";
 import SEOHead from "@/components/SEOHead";
 import { Music, Heart, Star, Crown, DollarSign, Youtube, ExternalLink } from "lucide-react";
+import { usePlatform } from "@/hooks/usePlatform";
+import { openExternal } from "@/lib/openExternal";
 
 export default function MusicHome() {
   const { user } = useAuth();
   const authUser = user as UserAccount | undefined;
+  const platform = usePlatform();
   const userTier = authUser?.subscriptionTier ?? 'free';
   const userEmail = authUser?.email ?? '';
 
@@ -358,7 +361,7 @@ export default function MusicHome() {
                   <Button 
                     size="sm" 
                     className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-md"
-                    onClick={() => window.open('https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0', '_blank')}
+                    onClick={() => openExternal('https://youtube.com/@russellnomermusic?si=NdRd1TDGJfhSN1o0', platform)}
                   >
                     <Youtube className="h-4 w-4 mr-2" />
                     🔔 SUBSCRIBE NOW - FREE!
@@ -367,7 +370,7 @@ export default function MusicHome() {
                     size="sm" 
                     variant="outline" 
                     className="w-full border-orange-600 text-orange-600"
-                    onClick={() => window.open('https://open.spotify.com/artist/russell-nomer', '_blank')}
+                    onClick={() => openExternal('https://open.spotify.com/artist/russell-nomer', platform)}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Follow on Spotify

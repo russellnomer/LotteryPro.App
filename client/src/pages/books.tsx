@@ -7,9 +7,12 @@ import { Separator } from "@/components/ui/separator";
 import { BookOpenIcon, ExternalLinkIcon, ShoppingCartIcon, ArrowLeft, Heart, Star, Target } from "lucide-react";
 import AdSpace from "@/components/AdSpace";
 import type { BookRecommendation } from "@shared/schema";
+import { usePlatform } from "@/hooks/usePlatform";
+import { openExternal } from "@/lib/openExternal";
 
 export default function Books() {
   const [userTier, setUserTier] = useState<'free' | 'basic' | 'pro' | 'premium'>('free');
+  const platform = usePlatform();
 
   const { data: books, isLoading, error } = useQuery({
     queryKey: ['/api/books'],
@@ -128,7 +131,7 @@ export default function Books() {
               <Button
                 size="lg"
                 className="bg-white text-orange-600 hover:bg-gray-100 font-bold"
-                onClick={() => window.open('https://amzn.to/4m6r2mS', '_blank')}
+                onClick={() => openExternal('https://amzn.to/4m6r2mS', platform)}
               >
                 <ExternalLinkIcon className="h-4 w-4 mr-2" />
                 View All 35 Books on Amazon
@@ -207,7 +210,7 @@ export default function Books() {
                           <div className="space-y-3">
                             <Button
                               className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg py-3"
-                              onClick={() => window.open(book.amazonUrl, '_blank')}
+                              onClick={() => openExternal(book.amazonUrl, platform)}
                             >
                               <ShoppingCartIcon className="h-5 w-5 mr-2" />
                               🎯 GET STRATEGY GUIDE
@@ -264,7 +267,7 @@ export default function Books() {
                               <Button
                                 size="sm"
                                 className={`w-full bg-${categoryInfo?.color}-500 hover:bg-${categoryInfo?.color}-600 text-white`}
-                                onClick={() => window.open(book.amazonUrl, '_blank')}
+                                onClick={() => openExternal(book.amazonUrl, platform)}
                               >
                                 <ShoppingCartIcon className="h-3 w-3 mr-1" />
                                 Buy on Amazon

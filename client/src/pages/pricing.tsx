@@ -9,6 +9,9 @@ import {
   Check, X, Zap, Bell, Music, Star, Crown, Shield, Loader2, Lock
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import IAPPlaceholder from "@/components/IAPPlaceholder";
+import { usePlatform } from "@/hooks/usePlatform";
+import { shouldShowWebPayments, shouldShowIAP } from "@/lib/compliance";
 
 const FREE_INCLUDED = [
   "Full scratch-off rankings (110+ NY games)",
@@ -36,6 +39,9 @@ export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const platform = usePlatform();
+  const showWebPayments = shouldShowWebPayments(platform);
+  const showIAP = shouldShowIAP(platform);
 
   const { data: subStatus } = useQuery<{ isPremium: boolean; tier: string }>({
     queryKey: ['/api/subscription/status'],
@@ -200,22 +206,26 @@ export default function Pricing() {
                   <p className="text-emerald-300 font-semibold">You're already Premium!</p>
                   <p className="text-sm text-emerald-400 mt-1">All features unlocked.</p>
                 </div>
-              ) : (
-                <Button
-                  onClick={() => checkoutMutation.mutate(billingCycle)}
-                  disabled={checkoutMutation.isPending}
-                  className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-base py-6 shadow-lg shadow-yellow-500/20"
-                  size="lg"
-                >
-                  {checkoutMutation.isPending
-                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</>
-                    : `Subscribe Now — ${billingCycle === 'annual' ? '$69/year' : '$7.99/month'}`
-                  }
-                </Button>
-              )}
-              <p className="text-center text-xs text-gray-500 mt-3">
-                Secure checkout via Stripe • Cancel anytime
-              </p>
+              ) : showWebPayments ? (
+                <>
+                  <Button
+                    onClick={() => checkoutMutation.mutate(billingCycle)}
+                    disabled={checkoutMutation.isPending}
+                    className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-base py-6 shadow-lg shadow-yellow-500/20"
+                    size="lg"
+                  >
+                    {checkoutMutation.isPending
+                      ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</>
+                      : `Subscribe Now — ${billingCycle === 'annual' ? '$69/year' : '$7.99/month'}`
+                    }
+                  </Button>
+                  <p className="text-center text-xs text-gray-500 mt-3">
+                    Secure checkout via Stripe • Cancel anytime
+                  </p>
+                </>
+              ) : showIAP ? (
+                <IAPPlaceholder />
+              ) : null}
             </div>
           </div>
         </div>
