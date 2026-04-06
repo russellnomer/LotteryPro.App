@@ -107,6 +107,7 @@ export default function Home() {
   const [showFloatingJackpocket, setShowFloatingJackpocket] = useState(false);
   const [showPostGenModal, setShowPostGenModal] = useState(false);
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
+  const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
   
   // Get authenticated user info
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -274,14 +275,44 @@ export default function Home() {
         )}
 
         {/* Email Verification Banner — shown to logged-in users who haven't verified */}
-        {isAuthenticated && (user as any)?.emailVerified === false && (
+        {isAuthenticated && (user as any)?.emailVerified === false && !emailBannerDismissed && (
           <Alert className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
-            <Mail className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <Mail className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
-              <span className="font-medium">Please verify your email address.</span>{' '}
-              Check your inbox for a 6-digit code, or{' '}
-              <a href="/auth" className="underline hover:no-underline">click here to verify</a>.
-              Some features (like joining pools) require a verified email.
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="font-medium">Please verify your email address.</span>{' '}
+                  Check your inbox for a 6-digit code.{' '}
+                  <button
+                    type="button"
+                    className="underline hover:no-underline font-medium"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/auth/resend-verification', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: (user as any)?.email })
+                        });
+                        if (res.ok) {
+                          window.location.href = '/auth';
+                        }
+                      } catch {
+                        window.location.href = '/auth';
+                      }
+                    }}
+                  >
+                    Resend code →
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEmailBannerDismissed(true)}
+                  className="flex-shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+                  aria-label="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </AlertDescription>
           </Alert>
         )}

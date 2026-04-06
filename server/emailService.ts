@@ -90,7 +90,7 @@ async function sendMail(data: EmailData): Promise<{ success: boolean; message: s
   return { success: true, message: `Email sent to ${data.to}` };
 }
 
-// Send email verification OTP
+// Send email verification OTP — logs delivery status to email_send_log
 export async function sendVerificationEmail(
   recipientEmail: string,
   code: string
@@ -116,7 +116,27 @@ export async function sendVerificationEmail(
     </div>
   `;
   const text = `Your LotteryPro verification code is: ${code}\n\nThis code expires in 15 minutes.\n\nIf you did not sign up, ignore this email.`;
-  return sendMail({ to: recipientEmail, subject: '🔐 Your LotteryPro verification code', text, html });
+
+  // Log the send attempt before sending
+  const [logEntry] = await db.insert(emailSendLog).values({
+    email: recipientEmail,
+    emailType: 'email_verification',
+    status: 'pending',
+  }).returning({ id: emailSendLog.id });
+
+  try {
+    const result = await sendMail({ to: recipientEmail, subject: '🔐 Your LotteryPro verification code', text, html });
+    await db.update(emailSendLog)
+      .set({ status: 'sent', sentAt: new Date() })
+      .where(eq(emailSendLog.id, logEntry.id));
+    return result;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    await db.update(emailSendLog)
+      .set({ status: 'failed', errorMessage: message })
+      .where(eq(emailSendLog.id, logEntry.id));
+    throw err;
+  }
 }
 
 export async function sendVipCodeEmail(

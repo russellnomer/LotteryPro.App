@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { sendPasswordResetEmail, sendVerificationEmail } from './emailService';
 import { db } from './db';
-import { passwordResetTokens as passwordResetTokensTable, emailVerificationCodes, userAccounts } from '@shared/schema';
-import { eq, and, isNull, gt } from 'drizzle-orm';
+import { passwordResetTokens as passwordResetTokensTable, emailVerificationCodes, userAccounts, emailPreferences } from '@shared/schema';
+import { eq, and, isNull, gt, gte } from 'drizzle-orm';
 
 // Extend Express Request interface
 declare global {
@@ -65,7 +65,8 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   subscriptionTier: z.enum(['basic', 'pro', 'premium']),
-  homeState: z.string().length(2).toUpperCase().optional()
+  homeState: z.string().length(2).toUpperCase().optional(),
+  marketingConsent: z.boolean().optional().default(false)
 });
 
 const loginSchema = z.object({
@@ -81,7 +82,7 @@ const mfaSetupSchema = z.object({
 // Auth routes
 export async function register(req: Request, res: Response) {
   try {
-    const { email, password, subscriptionTier, homeState } = registerSchema.parse(req.body);
+    const { email, password, subscriptionTier, homeState, marketingConsent } = registerSchema.parse(req.body);
     
     // Check if user already exists
     const existingUser = await storage.getUserByEmail(email);
@@ -101,6 +102,16 @@ export async function register(req: Request, res: Response) {
       mfaEnabled: 0, // MFA setup required after registration
       ...(homeState ? { homeState } : {})
     });
+
+    // Persist marketing consent to email_preferences (GDPR/CCPA)
+    await db.insert(emailPreferences).values({
+      userId: user.id,
+      email,
+      promotionalEmails: marketingConsent ? 1 : 0,
+      powerballReminders: 1,
+      megamillionsReminders: 1,
+      weeklyDigest: 1,
+    }).onConflictDoNothing();
 
     // Generate 6-digit OTP for email verification (15-min TTL)
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -194,14 +205,16 @@ export async function resendVerification(req: Request, res: Response) {
       .where(
         and(
           eq(emailVerificationCodes.email, email),
-          gt(emailVerificationCodes.createdAt as any, sixtySecondsAgo)
+          gte(emailVerificationCodes.expiresAt, new Date(Date.now() + (15 * 60 - 60) * 1000))
         )
       )
       .limit(1);
 
     if (recentCodes.length > 0) {
-      const elapsed = Math.floor((Date.now() - new Date(recentCodes[0].createdAt!).getTime()) / 1000);
-      const wait = 60 - elapsed;
+      // expiresAt is createdAt + 15 min; so time-since-send = 15*60 - (expiresAt - now)/1000
+      const msTillExpiry = recentCodes[0].expiresAt.getTime() - Date.now();
+      const secondsSinceSend = Math.floor((15 * 60 * 1000 - msTillExpiry) / 1000);
+      const wait = Math.max(1, 60 - secondsSinceSend);
       return res.status(429).json({ error: `Please wait ${wait} seconds before requesting a new code`, waitSeconds: wait });
     }
 
