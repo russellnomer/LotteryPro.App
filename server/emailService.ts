@@ -1,7 +1,24 @@
 // Email service for VIP codes and draw day reminders
+import nodemailer from 'nodemailer';
 import { db } from './db';
 import { emailPreferences, emailSendLog } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+
+const FROM_ADDRESS = '"Russell Nomer \u2013 LotteryPro" <russell@lotterypro.app>';
+
+function getTransporter(): nodemailer.Transporter | null {
+  const pass = process.env.LotteryPro_Email;
+  if (!pass) return null;
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: 'russell@russellnomer.com',
+      pass,
+    },
+  });
+}
 
 interface EmailData {
   to: string;
@@ -10,16 +27,32 @@ interface EmailData {
   html?: string;
 }
 
+async function sendMail(data: EmailData): Promise<{ success: boolean; message: string }> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log(`📧 EMAIL (no LotteryPro_Email secret) → To: ${data.to} | Subject: ${data.subject}`);
+    return { success: false, message: 'Email service not configured — check server logs' };
+  }
+  await transporter.sendMail({
+    from: FROM_ADDRESS,
+    to: data.to,
+    subject: data.subject,
+    text: data.text,
+    html: data.html,
+  });
+  console.log(`✅ Email sent to ${data.to} — ${data.subject}`);
+  return { success: true, message: `Email sent to ${data.to}` };
+}
+
 export async function sendVipCodeEmail(
-  recipientEmail: string, 
-  vipCode: string, 
+  recipientEmail: string,
+  vipCode: string,
   targetTier: string,
   expiresAt: Date
 ): Promise<{ success: boolean; message: string }> {
-  
-  const emailData: EmailData = {
+  return sendMail({
     to: recipientEmail,
-    subject: "🎰 Your LotteryPro VIP Code - Russell Nomer Platform",
+    subject: '🎰 Your LotteryPro VIP Code - Russell Nomer Platform',
     text: `
 🎰 LotteryPro VIP Account Upgrade
 
@@ -111,29 +144,10 @@ Russell Nomer Platform
         </p>
       </div>
     </div>
-    `
-  };
-
-  // For development, just log the email content
-  console.log('\n🔥 VIP CODE EMAIL SENT 🔥');
-  console.log('=================================');
-  console.log(`To: ${emailData.to}`);
-  console.log(`Subject: ${emailData.subject}`);
-  console.log('\nVIP CODE CONTENT:');
-  console.log('=================================');
-  console.log(emailData.text);
-  console.log('=================================\n');
-
-  // In production, integrate with SendGrid:
-  // const sgMail = require('@sendgrid/mail');
-  // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  // await sgMail.send(emailData);
-
-  return {
-    success: true,
-    message: `VIP code email sent to ${recipientEmail} (logged to console in development)`
-  };
+    `,
+  });
 }
+
 /**
  * Send welcome email to new user with VIP code and tier information
  */
@@ -144,19 +158,50 @@ export async function sendWelcomeEmailWithVipCode(
   userName: string = 'New User'
 ): Promise<boolean> {
   try {
-    console.log(`📧 Sending welcome email with VIP code to ${userEmail}`);
+    const result = await sendMail({
+      to: userEmail,
+      subject: "Welcome to Russell Nomer's LotteryPro Platform!",
+      text: `
+Welcome to LotteryPro, ${userName}!
 
-    // In development, log the email content instead of sending
-    console.log('\n🎉 NEW USER WELCOME EMAIL 🎉');
-    console.log('=====================================');
-    console.log(`To: ${userEmail}`);
-    console.log(`Subject: Welcome to Russell Nomer's LotteryPro Platform!`);
-    console.log(`User: ${userName}`);
-    console.log(`Tier: ${tierLevel.toUpperCase()}`);
-    console.log(`VIP Code: ${vipCode}`);
-    console.log('=====================================\n');
+Russell Nomer has set up a ${tierLevel.toUpperCase()} tier account for you.
 
-    return true;
+Your VIP Code: ${vipCode}
+
+Use this code at https://lotterypro.app/admin to activate your account upgrade.
+
+Welcome aboard!
+The LotteryPro Team
+      `,
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 28px;">🎉 Welcome to LotteryPro!</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Russell Nomer Platform</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 10px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #333;">Hi ${userName}! 👋</h2>
+          <p style="color: #555; font-size: 16px; line-height: 1.6;">
+            Russell Nomer has set up a <strong>${tierLevel.toUpperCase()} tier</strong> account for you on LotteryPro.
+          </p>
+          <div style="background: #f8f9fa; border: 2px dashed #6c757d; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <p style="color: #555; margin: 0 0 8px 0; font-size: 14px;">Your VIP Code:</p>
+            <h2 style="color: #495057; margin: 0; font-family: monospace; font-size: 24px; letter-spacing: 2px;">${vipCode}</h2>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://lotterypro.app" 
+               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+              🎰 Get Started on LotteryPro
+            </a>
+          </div>
+          <p style="font-size: 14px; color: #6c757d; text-align: center;">
+            <strong>The LotteryPro Team • Russell Nomer Platform</strong>
+          </p>
+        </div>
+      </div>
+      `,
+    });
+    return result.success;
   } catch (error) {
     console.error('Error sending welcome email:', error);
     return false;
@@ -271,36 +316,26 @@ export async function sendDrawReminderEmail(data: DrawReminderData): Promise<boo
       status: 'pending',
     });
 
-    // Check if SendGrid is configured
-    const apiKey = process.env.SENDGRID_API_KEY;
-    
-    if (!apiKey) {
-      console.log('📧 EMAIL SIMULATION (SendGrid not configured):', {
+    const transporter = getTransporter();
+    if (!transporter) {
+      console.log('📧 EMAIL SIMULATION (LotteryPro_Email secret not set):', {
         to: data.to,
         subject,
         game: data.game,
       });
-      
       await db.update(emailSendLog)
-        .set({ status: 'failed', errorMessage: 'SendGrid API key not configured' })
+        .set({ status: 'failed', errorMessage: 'LotteryPro_Email secret not configured' })
         .where(eq(emailSendLog.email, data.to));
-      
       return false;
     }
 
-    // Send via SendGrid (will activate when API key is added)
-    const sgMailModule = await import('@sendgrid/mail');
-    const sgMail = sgMailModule.default;
-    sgMail.setApiKey(apiKey);
-
-    await sgMail.send({
+    await transporter.sendMail({
+      from: FROM_ADDRESS,
       to: data.to,
-      from: { email: 'notifications@lotterypro.com', name: 'Russell Nomer - LotteryPro' },
       subject,
       html: htmlContent,
     });
 
-    // Mark as sent
     await db.update(emailSendLog)
       .set({ status: 'sent', sentAt: new Date() })
       .where(eq(emailSendLog.email, data.to));
@@ -310,11 +345,9 @@ export async function sendDrawReminderEmail(data: DrawReminderData): Promise<boo
 
   } catch (error: any) {
     console.error('❌ Email send failed:', error);
-    
     await db.update(emailSendLog)
       .set({ status: 'failed', errorMessage: error.message })
       .where(eq(emailSendLog.email, data.to));
-    
     return false;
   }
 }
@@ -402,25 +435,20 @@ export async function sendPasswordResetEmail(
 
   const text = `LotteryPro Password Reset\n\nClick the link below to reset your password (expires in 30 minutes):\n\n${resetUrl}\n\nIf you didn't request this, ignore this email.`;
 
-  const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey) {
-    console.log(`📧 PASSWORD RESET EMAIL (SendGrid not configured). Reset URL: ${resetUrl}`);
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log(`📧 PASSWORD RESET EMAIL (LotteryPro_Email secret not set). Reset URL: ${resetUrl}`);
     return { success: false, message: 'Email service not configured — check server logs for reset link' };
   }
 
   try {
-    const sgMailModule = await import('@sendgrid/mail');
-    const sgMail = sgMailModule.default;
-    sgMail.setApiKey(apiKey);
-
-    await sgMail.send({
+    await transporter.sendMail({
+      from: FROM_ADDRESS,
       to: recipientEmail,
-      from: { email: 'notifications@lotterypro.com', name: 'Russell Nomer - LotteryPro' },
       subject: '🔐 LotteryPro Password Reset',
       html,
       text,
     });
-
     console.log(`✅ Password reset email sent to ${recipientEmail}`);
     return { success: true, message: 'Reset email sent' };
   } catch (error: any) {
