@@ -1,0 +1,45 @@
+As an AI with a PhD in Computer Science and an extensive background in full-stack architecture, security, and machine learning, I have reviewed the LotteryPro specification. This is a highly ambitious, feature-rich application. You have done an excellent job laying out a complex, multi-tiered architecture that balances utility, monetization, and brand promotion.
+
+However, to scale this successfully, drive revenue, and protect yourself from severe regulatory exposure, we need to address a few critical areas immediately. Operating as a money transmitter for community pools without strict KYC/AML compliance is a massive legal risk. Furthermore, the dual-storage pattern and Gmail SMTP limitations will break down under load.
+
+Below is a curated series of highly actionable prompts you can copy and paste directly to the Replit agent to systematically upgrade LotteryPro.
+
+---
+
+## Prompt 1: Security Hardening & Identity Verification
+**Purpose:** Eliminates known security gaps, securing the administration layer and establishing user accountability.
+
+**Copy/Paste to Replit Agent:**
+> As an expert full-stack developer, I need you to resolve critical security gaps in our authentication flow within `auth.ts` and `server/routes.ts`. First, completely remove the in-memory `Map` used for password reset tokens; the application must rely exclusively on the `password_reset_tokens` PostgreSQL table. Second, update the admin login mechanism. It currently uses a simple string comparison; please refactor this to use bcrypt-hashed session comparisons for the admin layer. Finally, implement the backend API endpoints for email verification during the registration flow using the existing `email_verification_codes` schema. Ensure unverified users have a restricted state until the OTP is validated.
+
+---
+
+## Prompt 2: Compliance Pivot & De-risking "Pools"
+**Purpose:** Handling money for lottery pools (taking a 5-10% cut) legally classifies you as a Money Services Business (MSB) and requires gambling compliance. This pivot changes the feature to a "Utility Tracker," removing liability while keeping the social engagement.
+
+**Copy/Paste to Replit Agent:**
+> We need to pivot the "Community Pools" feature to avoid severe regulatory risk. Please refactor all pool-related frontend components and backend routes (`/api/pools/*`) to function solely as a "Syndicate Tracker." Remove the PayPal payment creation, capture logic, and the 7.5% admin fee calculations. Replace this with a ledger system where the pool administrator manually logs off-platform contributions (e.g., Venmo, CashApp) and the app purely calculates the ticket generation and fair-share prize distributions. Ensure the `pool_transactions` and `pool_members` tables are updated to reflect manual status toggles rather than API-verified payment statuses.
+
+---
+
+## Prompt 3: Infrastructure Scaling & Automation
+**Purpose:** Replaces the unsustainable Gmail SMTP approach and establishes the required background automation for a data-driven app.
+
+**Copy/Paste to Replit Agent:**
+> Our current email infrastructure and data ingestion pipelines will not scale. First, replace the Nodemailer Gmail SMTP setup in `emailService.ts` with the official Resend or SendGrid Node.js SDK, utilizing a new API key environment variable. Implement error catching for bounce rates. Second, we need to automate our background tasks. Please set up a `node-cron` scheduler within `server/index.ts` to automate two daily jobs: 1) Executing the draw reminder email loop, and 2) Triggering the `dailyPickGenerationService.ts` to populate the `prediction_results` table for performance tracking.
+
+---
+
+## Prompt 4: UX, Revenue, and Cross-Promotion Integration
+**Purpose:** Promotes your music and Amazon books (Craps & Slots) organically without causing user friction or banner blindness.
+
+**Copy/Paste to Replit Agent:**
+> We need to optimize our cross-promotion funnel to increase conversions without degrading the core user experience. Please redesign the `PostGenerationModal` and `PostPickMusicBar` components. Make the music player a persistent, minimized, floating widget in the bottom corner of the UI rather than interrupting the generation flow. Next, create a new prominent component called `StrategyLibrary` on the dashboard. This component should feature high-converting UI cards linking directly to Russell Nomer's Amazon hosted books on Craps and Finding Winning Slot Machines. Log clicks on these book links to Google Tag Manager via the existing `client/src/lib/analytics.ts` file. 
+
+---
+
+## Prompt 5: Tech Debt Eradication
+**Purpose:** Cleans up legacy code that slows down the AI agent's context window and causes production bugs.
+
+**Copy/Paste to Replit Agent:**
+> Let's pay down our architectural debt to improve maintainability. First, completely deprecate and remove `MemStorage` from `storage.ts`. The application should strictly use `DatabaseStorage` with the Neon PostgreSQL DB for both development and production to ensure environment parity. Second, thoroughly scrub the codebase of the deprecated `daily_spins` feature. Remove the associated routes, backend logic, and frontend components, leaving only the database table schema intact for historical data preservation. Finally, update the hardcoded PayPal subscription plan IDs to accept dynamic environment variables for Basic, Pro, and Premium tiers.
