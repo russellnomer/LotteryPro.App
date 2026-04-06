@@ -686,7 +686,7 @@ export const lotteryPools = pgTable("lottery_pools", {
   maxMembers: integer("max_members").notNull().default(10),
   currentMembers: integer("current_members").notNull().default(0),
   totalContributions: decimal("total_contributions", { precision: 10, scale: 2 }).default("0.00"),
-  adminFeePercent: decimal("admin_fee_percent", { precision: 5, scale: 2 }).notNull().default("7.50"), // 5-10%
+  adminFeePercent: decimal("admin_fee_percent", { precision: 5, scale: 2 }).notNull().default("0.00"), // No admin fee in Syndicate Tracker model
   adminFeeCollected: decimal("admin_fee_collected", { precision: 10, scale: 2 }).default("0.00"),
   netPoolAmount: decimal("net_pool_amount", { precision: 10, scale: 2 }).default("0.00"),
   

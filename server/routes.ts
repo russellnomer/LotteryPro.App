@@ -642,11 +642,11 @@ Canonical: https://lotterypro.app/.well-known/security.txt
       const { eq } = await import('drizzle-orm');
       
       const poolId = req.params.poolId;
-      const userId = req.user?.id;
-      const { memberId, amount, method, note } = req.body;
+      const callerUserId = req.user?.id;
+      const { userId: targetUserId, amount, method, note } = req.body;
       
-      if (!memberId || !amount || !method) {
-        return res.status(400).json({ success: false, message: 'memberId, amount, and method are required' });
+      if (!targetUserId || !amount || !method) {
+        return res.status(400).json({ success: false, message: 'userId, amount, and method are required' });
       }
       
       const parsedAmount = parseFloat(amount);
@@ -671,14 +671,14 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(404).json({ success: false, message: 'Pool not found' });
       }
       
-      if (pool.createdBy !== userId) {
+      if (pool.createdBy !== callerUserId) {
         return res.status(403).json({ success: false, message: 'Only the pool creator can log contributions' });
       }
       
-      // Fetch member and confirm they belong to THIS pool (prevents IDOR/cross-pool mutation)
+      // Fetch member by userId AND poolId to prevent cross-pool IDOR mutation
       const [member] = await db.select()
         .from(poolMembers)
-        .where(and(eq(poolMembers.id, memberId), eq(poolMembers.poolId, poolId)))
+        .where(and(eq(poolMembers.userId, targetUserId), eq(poolMembers.poolId, poolId)))
         .limit(1);
       
       if (!member) {
@@ -692,12 +692,12 @@ Canonical: https://lotterypro.app/.well-known/security.txt
           paymentMethod: method,
           status: 'active'
         })
-        .where(and(eq(poolMembers.id, memberId), eq(poolMembers.poolId, poolId)));
+        .where(and(eq(poolMembers.userId, targetUserId), eq(poolMembers.poolId, poolId)));
       
       // Record transaction with type 'logged' (no payment processor involved)
       await db.insert(poolTransactions).values({
         poolId,
-        memberId,
+        memberId: member.id,
         type: 'logged',
         amount: parsedAmount.toFixed(2),
         currency: 'USD',

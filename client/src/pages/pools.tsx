@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Users, DollarSign, Calendar, Trophy, Plus, TrendingUp, CheckCircle, AlertTriangle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import SEOHead from "@/components/SEOHead";
 
@@ -57,11 +58,12 @@ interface PoolDetail {
 
 export default function PoolsPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [detailPoolId, setDetailPoolId] = useState<string | null>(null);
   const [logContribDialogOpen, setLogContribDialogOpen] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedMemberUserId, setSelectedMemberUserId] = useState<string | null>(null);
   const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
 
   const { data: poolsData, isLoading } = useQuery<{ pools: Pool[] }>({
@@ -156,10 +158,10 @@ export default function PoolsPage() {
   const handleLogContrib = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    if (!detailPoolId || !selectedMemberId) return;
+    if (!detailPoolId || !selectedMemberUserId) return;
     logContribMutation.mutate({
       poolId: detailPoolId,
-      memberId: selectedMemberId,
+      userId: selectedMemberUserId,
       amount: formData.get('amount'),
       method: formData.get('method'),
       note: formData.get('note'),
@@ -411,13 +413,13 @@ export default function PoolsPage() {
                       ) : (
                         <Badge variant="outline">Pending</Badge>
                       )}
-                      {/* Show "Log Payment" button only for pool creator — server enforces this too */}
-                      {member.paymentStatus !== 'logged' && (
+                      {/* Only the pool creator can log contributions — server enforces this with 403 too */}
+                      {member.paymentStatus !== 'logged' && poolDetail && user?.id === poolDetail.pool.createdBy && member.userId && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setSelectedMemberId(member.id);
+                            setSelectedMemberUserId(member.userId!);
                             setLogContribDialogOpen(true);
                           }}
                         >
@@ -492,7 +494,7 @@ export default function PoolsPage() {
                 step="0.01"
                 min="0.01"
                 defaultValue={
-                  poolDetail?.members.find(m => m.id === selectedMemberId)?.contributionAmount || ''
+                  poolDetail?.members.find(m => m.userId === selectedMemberUserId)?.contributionAmount || ''
                 }
                 required
               />
