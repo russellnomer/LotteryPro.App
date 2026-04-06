@@ -66,7 +66,10 @@ export default function AuthPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('verify') === '1' && formData.email === '') {
-      fetch('/api/auth/user')
+      const token = localStorage.getItem('sessionToken');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      fetch('/api/auth/user', { headers })
         .then(r => r.ok ? r.json() : null)
         .then((u: { email?: string } | null) => {
           if (u?.email) setFormData(prev => ({ ...prev, email: u.email! }));

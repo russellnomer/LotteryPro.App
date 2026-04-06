@@ -108,6 +108,7 @@ export default function Home() {
   const [showPostGenModal, setShowPostGenModal] = useState(false);
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
+  const [bannerResendCooldown, setBannerResendCooldown] = useState(0);
   
   // Get authenticated user info
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -285,15 +286,31 @@ export default function Home() {
                   Check your inbox for a 6-digit code.{' '}
                   <button
                     type="button"
-                    className="underline hover:no-underline font-medium"
+                    disabled={bannerResendCooldown > 0}
+                    className="underline hover:no-underline font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                     onClick={async () => {
+                      if (bannerResendCooldown > 0) return;
                       try {
                         const res = await fetch('/api/auth/resend-verification', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ email: user?.email })
                         });
+                        const data = res.ok ? await res.json() : await res.json();
+                        if (res.status === 429 && data.waitSeconds) {
+                          setBannerResendCooldown(data.waitSeconds);
+                          const t = setInterval(() => setBannerResendCooldown(prev => {
+                            if (prev <= 1) { clearInterval(t); return 0; }
+                            return prev - 1;
+                          }), 1000);
+                          return;
+                        }
                         if (res.ok) {
+                          setBannerResendCooldown(60);
+                          const t = setInterval(() => setBannerResendCooldown(prev => {
+                            if (prev <= 1) { clearInterval(t); return 0; }
+                            return prev - 1;
+                          }), 1000);
                           window.location.href = '/auth?verify=1';
                         }
                       } catch {
@@ -301,7 +318,7 @@ export default function Home() {
                       }
                     }}
                   >
-                    Resend code →
+                    {bannerResendCooldown > 0 ? `Wait ${bannerResendCooldown}s` : 'Resend code →'}
                   </button>
                 </div>
                 <button
