@@ -6,10 +6,16 @@ import { eq } from 'drizzle-orm';
 
 const FROM_ADDRESS = '"Russell Nomer \u2013 LotteryPro" <russell@lotterypro.app>';
 
+let _transporter: nodemailer.Transporter | null | undefined;
+
 function getTransporter(): nodemailer.Transporter | null {
+  if (_transporter !== undefined) return _transporter;
   const pass = process.env.LotteryPro_Email;
-  if (!pass) return null;
-  return nodemailer.createTransport({
+  if (!pass) {
+    _transporter = null;
+    return null;
+  }
+  _transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
@@ -18,6 +24,7 @@ function getTransporter(): nodemailer.Transporter | null {
       pass,
     },
   });
+  return _transporter;
 }
 
 interface EmailData {
@@ -30,7 +37,10 @@ interface EmailData {
 async function sendMail(data: EmailData): Promise<{ success: boolean; message: string }> {
   const transporter = getTransporter();
   if (!transporter) {
-    console.log(`📧 EMAIL (no LotteryPro_Email secret) → To: ${data.to} | Subject: ${data.subject}`);
+    console.log('\n📧 EMAIL (LotteryPro_Email secret not set — would have sent):');
+    console.log(`   To:      ${data.to}`);
+    console.log(`   Subject: ${data.subject}`);
+    console.log(`   Body:\n${data.text}`);
     return { success: false, message: 'Email service not configured — check server logs' };
   }
   await transporter.sendMail({
