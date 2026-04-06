@@ -50,7 +50,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, count, gt } from "drizzle-orm";
 
 // In-memory guest usage tracking (resets on server restart)
 interface GuestUsage {
@@ -1030,14 +1030,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetAllDailyUsage(): Promise<number> {
-    const rows = await db.update(userAccounts)
+    // Count users with non-zero usage before resetting so we return meaningful number
+    const [{ total }] = await db.select({ total: count() }).from(userAccounts).where(gt(userAccounts.dailyUsageCount, 0));
+    await db.update(userAccounts)
       .set({
         dailyUsageCount: 0,
         lastUsageReset: new Date(),
         updatedAt: new Date()
-      })
-      .returning({ id: userAccounts.id });
-    return rows.length;
+      });
+    return total;
   }
 
   async getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined> {

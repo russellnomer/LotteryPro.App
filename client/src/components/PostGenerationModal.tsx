@@ -37,10 +37,12 @@ export default function PostGenerationModal({
 
   const registerMutation = useMutation({
     mutationFn: async (data: { email: string; marketingConsent: boolean }) => {
-      const response = await apiRequest('POST', '/api/spin/register', {
-        name: 'Guest',
+      const response = await apiRequest('POST', '/api/email/subscribe', {
         email: data.email,
-        marketingConsent: data.marketingConsent
+        powerballReminders: data.marketingConsent,
+        megamillionsReminders: data.marketingConsent,
+        weeklyDigest: data.marketingConsent,
+        promotionalEmails: data.marketingConsent,
       });
       return response.json();
     },
