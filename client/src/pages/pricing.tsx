@@ -259,7 +259,7 @@ export default function Pricing() {
           {[
             { q: "Can I cancel anytime?", a: "Yes — cancel from your Stripe customer portal any time. No questions, no penalties. You keep premium access until the billing period ends." },
             { q: "Do I need to create an account?", a: "Yes, a free account is required to activate premium so we can send your alerts and remember your watchlist." },
-            { q: "Is the free tier fully functional?", a: "Absolutely. All 110+ NY scratch-off rankings, the lottery number generator, daily spin, and the full music catalog are always 100% free." },
+            { q: "Is the free tier fully functional?", a: "Absolutely. All 110+ NY scratch-off rankings, the lottery number generator, and the full music catalog are always 100% free." },
             { q: "When are alerts sent?", a: "Within the hour after our hourly NY State data pull detects a new Top Pick or a Value Score crossing 50+ on a game you're watching." },
             { q: "What states are supported?", a: "Currently New York (110+ scratch-off games). Premium subscribers get early access as we add NJ, PA, and more." },
           ].map(({ q, a }, i) => (

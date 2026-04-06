@@ -1,0 +1,56 @@
+**Yes — follow the reviewer's advice and use the exact Replit task definitions you just shared.**
+
+The Replit version is currently the **most precise and agent-friendly** one we have. It correctly:
+- Emphasizes `webDir: "dist"` as the key production setting (avoiding unnecessary `server.url` confusion).
+- Makes `usePlatform` explicitly **SSR-safe** (defaults to "web" + `useEffect`).
+- Positions `compliance.ts` as the **single source of truth** for all payment decisions.
+- Calls for the external/default browser behavior on iOS (the intent we want for your Amazon books and Russell Nomer music links: Apple Music, Spotify, YouTube).
+- Keeps the scope tight and safe for Replit's Linux environment.
+
+The small differences in plugin method naming (e.g., `openInExternalBrowser()` vs `InAppBrowser.open()` with options) are not blockers — the agent will resolve the exact current API from the installed package (official `@capacitor/inappbrowser` supports opening in the device's default browser via dedicated options or methods, while avoiding pure in-app `SFSafariViewController` where possible).
+
+### Exact Execution Plan (Safest Path)
+1. **Paste only #8** into the Replit Agent right now.
+2. Wait for it to complete.
+3. Run `npm run build` in the Replit shell.
+4. Verify:
+   - No errors.
+   - `dist/` folder is generated correctly.
+   - The live web app at lotterypro.app still works (especially subscription/pricing pages and any external links).
+5. **Then paste #9** and repeat the build + web regression test.
+
+**Important notes to add when you paste (optional but recommended for clarity):**
+> Proceed with the task definitions exactly as written.  
+> Implement #8 first, then run `npm run build` and confirm no web regressions before starting #9.  
+> Keep all payment logic routed exclusively through the centralized compliance helper.  
+> Ensure `usePlatform` defaults safely to "web" during initial render/SSR.  
+> Do not run `npx cap add ios` here.
+
+### After Both Tasks Succeed
+Verify these new files exist and look reasonable:
+- `capacitor.config.ts` (root)
+- `client/src/hooks/usePlatform.ts`
+- `client/src/lib/compliance.ts`
+- `client/src/lib/openExternal.ts`
+
+Test on web:
+- Stripe / PayPal still fully functional on subscription & pricing pages.
+- Amazon book links (your craps and slot machine strategy books) open normally.
+- Music streaming links open normally.
+
+Then push to Git and test the native flow on a Mac:
+```bash
+npm install
+npm run build
+npx cap add ios
+npx cap sync ios
+npx cap open ios
+```
+
+This gives you a clean foundation: full web revenue (Stripe + PayPal) remains untouched, while the iOS wrapper becomes compliant-ready with proper external links for your **music promotion** and **Amazon book cross-promotion**.
+
+Once #8 + #9 are done cleanly, reply with the agent's completion summary (or any errors/warnings), and I'll immediately provide the next prompt: **#10 — iOS UX Polish & App Store Readiness** (splash screen, app icons, safe areas, status bar, offline support, and optional push notifications for better retention and engagement).
+
+You're making excellent progress toward a hybrid web + native LotteryPro that drives more adoption, revenue, and visibility for your ASCAP music catalog + books while staying lawful and low-friction.
+
+**Go ahead — paste #8 first and let me know the result.**

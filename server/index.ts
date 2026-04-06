@@ -3,6 +3,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import cron from "node-cron";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { injectAdSenseId } from "./middleware/adsense";
@@ -18,6 +19,8 @@ import {
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync, isStripeIntegrationAvailable } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
+import { sendAllDrawReminders } from './emailService';
+import { storage } from './storage';
 
 declare module 'express-session' {
   interface SessionData {
@@ -223,4 +226,39 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // ==================== PRODUCTION SCHEDULER ====================
+  // All cron expressions use America/New_York timezone.
+
+  // (a) Daily usage count reset — every day at 12:01 AM ET
+  cron.schedule('1 0 * * *', async () => {
+    try {
+      const count = await storage.resetAllDailyUsage();
+      console.log(`🔄 [Scheduler] Daily usage reset complete — ${count} users reset`);
+    } catch (err) {
+      console.error('❌ [Scheduler] Daily usage reset failed:', err);
+    }
+  }, { timezone: 'America/New_York' });
+
+  // (b) Powerball draw reminder — Mon, Wed, Sat at 8:00 PM ET
+  cron.schedule('0 20 * * 1,3,6', async () => {
+    try {
+      const count = await sendAllDrawReminders('powerball');
+      console.log(`📧 [Scheduler] Powerball reminders sent — ${count} emails`);
+    } catch (err) {
+      console.error('❌ [Scheduler] Powerball reminder send failed:', err);
+    }
+  }, { timezone: 'America/New_York' });
+
+  // (c) MegaMillions draw reminder — Tue, Fri at 8:00 PM ET
+  cron.schedule('0 20 * * 2,5', async () => {
+    try {
+      const count = await sendAllDrawReminders('megamillions');
+      console.log(`📧 [Scheduler] MegaMillions reminders sent — ${count} emails`);
+    } catch (err) {
+      console.error('❌ [Scheduler] MegaMillions reminder send failed:', err);
+    }
+  }, { timezone: 'America/New_York' });
+
+  console.log('✅ Production scheduler active — usage reset + draw reminders scheduled');
 })();

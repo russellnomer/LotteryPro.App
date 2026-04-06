@@ -111,6 +111,7 @@ export interface IStorage {
   checkUserUsageLimit(userId: string): Promise<{ canUse: boolean; count: number; limit: number }>;
   incrementUserDailyUsage(userId: string): Promise<void>;
   resetUserDailyUsage(userId: string): Promise<void>;
+  resetAllDailyUsage(): Promise<number>;
   getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined>;
   
   // Music content management
@@ -391,6 +392,11 @@ export class MemStorage implements IStorage {
 
   async resetUserDailyUsage(userId: string): Promise<void> {
     // No-op for memory storage
+  }
+
+  async resetAllDailyUsage(): Promise<number> {
+    // No-op for memory storage
+    return 0;
   }
 
   async getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined> {
@@ -1021,6 +1027,16 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(userAccounts.id, userId));
+  }
+
+  async resetAllDailyUsage(): Promise<number> {
+    const result = await db.update(userAccounts)
+      .set({
+        dailyUsageCount: 0,
+        lastUsageReset: new Date(),
+        updatedAt: new Date()
+      });
+    return (result as any).rowCount ?? 0;
   }
 
   async getUserSubscriptionInfo(userId: string): Promise<{ tier: string; status: string; usageCount: number; usageLimit: number } | undefined> {

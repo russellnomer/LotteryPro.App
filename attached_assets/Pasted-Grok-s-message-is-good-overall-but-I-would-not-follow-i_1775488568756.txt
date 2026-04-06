@@ -1,0 +1,51 @@
+Grok’s message is good overall, but I would **not** follow it verbatim over the Replit version you already have.
+
+The one place I’d push back is this part:
+
+> “Use `InAppBrowser.open({ url })` with appropriate options…”
+
+That is looser than the Replit wording you have now. Your current Replit prompt is stronger because it names the intended behavior more explicitly: use `openInExternalBrowser()` when the goal is the device’s default browser. That reduces agent guesswork.
+
+So my recommendation is:
+
+**Use the Replit version, not Grok’s replacement.**
+
+What Grok got right:
+
+* it correctly says the tasks are ready to execute,
+* it correctly emphasizes testing `npm run build`,
+* it correctly calls out the new helper files to verify,
+* it correctly suggests validating web flows after changes.
+
+What I would *not* adopt from Grok:
+
+* the fallback from `openInExternalBrowser()` back to vague `InAppBrowser.open({ url })` guidance,
+* the suggestion to paste both tasks together unless the agent prefers it.
+
+Better execution plan:
+
+1. Paste **#8 first**.
+2. Let the agent finish.
+3. Run/build/test.
+4. Then paste **#9**.
+
+That sequencing is safer because #9 depends on the Capacitor foundation from #8.
+
+Here’s the exact short guidance I’d use now:
+
+```text
+Proceed with the Replit task definitions as written, but implement #8 first and complete verification before starting #9.
+
+Execution order:
+1. Complete #8 (Capacitor iOS setup/config)
+2. Run npm run build and confirm dist output and no web regressions
+3. Then complete #9 (platform detection/compliance)
+
+Important implementation notes:
+- Prefer the explicit external-browser method in the current task wording (`openInExternalBrowser()` on iOS) rather than improvising with a generic `InAppBrowser.open({ url })` flow.
+- Keep all payment gating decisions inside the centralized compliance helper only.
+- Ensure `usePlatform` defaults to "web" when Capacitor is unavailable or during initial render.
+- Do not run `npx cap add ios` in this environment.
+```
+
+So: **Grok is directionally right, but your current Replit prompt is better and more precise.**
