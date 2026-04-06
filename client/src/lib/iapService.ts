@@ -1,20 +1,63 @@
 /**
- * iOS In-App Purchase service — StoreKit 2 via Capacitor native bridge.
+ * iOS In-App Purchase service — StoreKit 2 via a custom Capacitor plugin.
  *
- * This file is safe to import on web — no native plugin is imported statically.
- * On iOS, @capawesome-team/capacitor-purchases registers itself on the global
- * window.Capacitor.Plugins object after `npx cap sync`.
+ * Architecture:
+ * - JavaScript side: uses registerPlugin() from @capacitor/core to call the
+ *   native Swift plugin (LotteryProIAPPlugin) which is registered in the iOS
+ *   Xcode project under ios/App/App/Plugins/LotteryProIAP/.
+ * - On web, registerPlugin() returns a no-op implementation so all calls
+ *   gracefully return empty results.
+ * - The signed JWS transaction token from StoreKit 2 is sent to the server
+ *   at /api/apple/verify-iap for verification and tier upgrade.
  *
- * Product IDs must match App Store Connect exactly:
+ * Product IDs (must match App Store Connect exactly):
  *   com.lotterypro.app.premium.monthly  — $7.99/month
  *   com.lotterypro.app.premium.annual   — $69/year
- *
- * Flow:
- *   1. initIAP()          → registers product IDs with StoreKit (iOS startup)
- *   2. getIAPProducts()   → fetches live titles + prices from App Store
- *   3. purchaseProduct()  → shows Apple payment sheet → verifies with server
- *   4. restorePurchases() → re-verifies active entitlements with server
  */
+
+import { registerPlugin } from "@capacitor/core";
+
+// ── Typed interface for the native Swift plugin ──
+export interface LotteryProIAPPlugin {
+  /** Register product IDs with StoreKit. Call once at startup. */
+  setup(options: { productIds: string[] }): Promise<void>;
+
+  /** Fetch live product info from the App Store. */
+  getProducts(options: {
+    productIds: string[];
+  }): Promise<{ products: NativeProduct[] }>;
+
+  /** Show the Apple payment sheet for a given product. */
+  purchaseProduct(options: {
+    productId: string;
+  }): Promise<{ transaction: NativeTransaction }>;
+
+  /** Re-verify all active entitlements for the signed-in Apple ID. */
+  restorePurchases(): Promise<{ transactions: NativeTransaction[] }>;
+}
+
+/** Shape of a product returned by the native StoreKit plugin. */
+export interface NativeProduct {
+  productId: string;
+  title: string;
+  description: string;
+  price: string;
+  priceAmount: number;
+  currency: string;
+}
+
+/** Shape of a transaction returned by the native StoreKit plugin. */
+export interface NativeTransaction {
+  productId: string;
+  transactionId: string;
+  /** StoreKit 2 signed JWS token for server-side verification. */
+  jwsRepresentation: string;
+}
+
+/** Plugin name must match the class name registered in Swift. */
+const LotteryProIAP = registerPlugin<LotteryProIAPPlugin>("LotteryProIAP");
+
+// ── Public types ──
 
 export const IAP_PRODUCT_IDS = {
   monthly: "com.lotterypro.app.premium.monthly",
@@ -48,113 +91,96 @@ export interface IAPRestoreResult {
   error?: string;
 }
 
-// ── Access the native plugin via the Capacitor global (never statically import) ──
-// The plugin name "CapawesomePurchases" is set by @capawesome-team/capacitor-purchases
-// and registered on the native iOS bridge via `npx cap sync`.
-function getNativePlugin(): any | null {
-  try {
-    const cap = (window as any).Capacitor;
-    if (!cap?.isNativePlatform?.()) return null;
-    return cap?.Plugins?.CapawesomePurchases ?? null;
-  } catch {
-    return null;
-  }
-}
+// ── Service functions ──
 
-// ── Init ──
-// Call once at app startup on iOS. Registers the product IDs with StoreKit.
+/** Call once at app startup (iOS only) to register products with StoreKit. */
 export async function initIAP(): Promise<void> {
-  const plugin = getNativePlugin();
-  if (!plugin) return;
   try {
-    await plugin.setup({ productIds: Object.values(IAP_PRODUCT_IDS) });
-    console.log("[IAP] Initialized with products:", Object.values(IAP_PRODUCT_IDS));
-  } catch (err: any) {
-    console.warn("[IAP] init failed:", err?.message);
+    await LotteryProIAP.setup({
+      productIds: Object.values(IAP_PRODUCT_IDS),
+    });
+    console.log("[IAP] Initialized products:", Object.values(IAP_PRODUCT_IDS));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[IAP] init failed:", msg);
   }
 }
 
-// ── Get live product info from the App Store ──
+/** Fetch live product titles and prices from the App Store. */
 export async function getIAPProducts(): Promise<IAPProduct[]> {
-  const plugin = getNativePlugin();
-
-  // Web / simulator without plugin: return hardcoded fallback
-  if (!plugin) {
-    return [
-      {
-        productId: IAP_PRODUCT_IDS.monthly,
-        title: "Premium Monthly",
-        description: "Full premium access, billed monthly",
-        price: "$7.99",
-        priceAmount: 7.99,
-        currency: "USD",
-      },
-      {
-        productId: IAP_PRODUCT_IDS.annual,
-        title: "Premium Annual",
-        description: "Best value — save 27% vs monthly",
-        price: "$69.00",
-        priceAmount: 69.0,
-        currency: "USD",
-      },
-    ];
-  }
-
   try {
-    const { products } = await plugin.getProducts({
+    const { products } = await LotteryProIAP.getProducts({
       productIds: Object.values(IAP_PRODUCT_IDS),
     });
 
-    return (products ?? []).map((p: any) => ({
-      productId: p.productId,
-      title: p.title,
-      description: p.description,
-      price: p.price,
-      priceAmount: typeof p.priceAmount === "number" ? p.priceAmount : 0,
-      currency: p.currency || "USD",
-    }));
-  } catch (err: any) {
-    console.warn("[IAP] getProducts failed:", err?.message);
-    return [];
+    if (products && products.length > 0) {
+      return products.map((p) => ({
+        productId: p.productId,
+        title: p.title,
+        description: p.description,
+        price: p.price,
+        priceAmount: p.priceAmount,
+        currency: p.currency,
+      }));
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[IAP] getProducts failed (using fallback):", msg);
   }
+
+  // Web or plugin not available: return hardcoded fallback matching App Store Connect
+  return [
+    {
+      productId: IAP_PRODUCT_IDS.monthly,
+      title: "Premium Monthly",
+      description: "Full premium access, billed monthly",
+      price: "$7.99",
+      priceAmount: 7.99,
+      currency: "USD",
+    },
+    {
+      productId: IAP_PRODUCT_IDS.annual,
+      title: "Premium Annual",
+      description: "Best value — save 27% vs monthly",
+      price: "$69.00",
+      priceAmount: 69.0,
+      currency: "USD",
+    },
+  ];
 }
 
-// ── Purchase a product ──
+/** Show the Apple payment sheet and verify with the server on success. */
 export async function purchaseProduct(productId: string): Promise<IAPPurchaseResult> {
-  const plugin = getNativePlugin();
-  if (!plugin) {
-    return { success: false, error: "IAP not available on this platform" };
-  }
-
   try {
-    const result = await plugin.purchaseProduct({ productId });
-    const transaction = result?.transaction;
+    const { transaction } = await LotteryProIAP.purchaseProduct({ productId });
 
-    if (!transaction) {
-      return { success: false, error: "No transaction returned from StoreKit" };
-    }
-
-    const signedTransactionInfo =
-      transaction.jwsRepresentation ?? transaction.signedTransactionInfo;
-
-    if (!signedTransactionInfo) {
+    if (!transaction?.jwsRepresentation) {
       return {
         success: false,
-        error: "No signed transaction info — cannot verify with server",
+        error: "No signed transaction received from StoreKit",
       };
     }
 
-    return verifyWithServer(signedTransactionInfo);
-  } catch (err: any) {
-    const msg: string = err?.message ?? "";
+    return verifyWithServer(transaction.jwsRepresentation);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
 
+    // Detect user-cancelled — not a real error
     if (
       msg.includes("cancelled") ||
       msg.includes("cancel") ||
       msg.includes("SKErrorPaymentCancelled") ||
-      err?.code === "PAYMENT_CANCELLED"
+      msg.includes("PAYMENT_CANCELLED")
     ) {
       return { success: false, cancelled: true };
+    }
+
+    // Plugin not available on web
+    if (
+      msg.includes("not implemented") ||
+      msg.includes("unimplemented")
+    ) {
+      return { success: false, error: "IAP is only available in the iOS app" };
     }
 
     console.error("[IAP] purchaseProduct error:", msg);
@@ -162,35 +188,32 @@ export async function purchaseProduct(productId: string): Promise<IAPPurchaseRes
   }
 }
 
-// ── Restore purchases ──
+/** Re-validate all active entitlements and restore premium access. */
 export async function restorePurchases(): Promise<IAPRestoreResult> {
-  const plugin = getNativePlugin();
-  if (!plugin) {
-    return { success: false, error: "IAP not available on this platform" };
-  }
-
   try {
-    const result = await plugin.restorePurchases();
-    const transactions: any[] = result?.transactions ?? [];
+    const { transactions } = await LotteryProIAP.restorePurchases();
     let restoredCount = 0;
 
     for (const tx of transactions) {
-      const signedTransactionInfo =
-        tx.jwsRepresentation ?? tx.signedTransactionInfo;
-      if (!signedTransactionInfo) continue;
-
-      const r = await verifyWithServer(signedTransactionInfo);
-      if (r.success) restoredCount++;
+      if (!tx.jwsRepresentation) continue;
+      const result = await verifyWithServer(tx.jwsRepresentation);
+      if (result.success) restoredCount++;
     }
 
     return { success: true, restored: restoredCount };
-  } catch (err: any) {
-    console.error("[IAP] restorePurchases error:", err?.message);
-    return { success: false, error: err?.message || "Restore failed" };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+
+    if (msg.includes("not implemented") || msg.includes("unimplemented")) {
+      return { success: false, error: "IAP is only available in the iOS app" };
+    }
+
+    console.error("[IAP] restorePurchases error:", msg);
+    return { success: false, error: msg || "Restore failed" };
   }
 }
 
-// ── Internal: verify signed JWS token with our server ──
+// ── Internal: verify a StoreKit 2 JWS token with our server ──
 async function verifyWithServer(signedTransactionInfo: string): Promise<IAPPurchaseResult> {
   try {
     const resp = await fetch("/api/apple/verify-iap", {
@@ -200,11 +223,26 @@ async function verifyWithServer(signedTransactionInfo: string): Promise<IAPPurch
       body: JSON.stringify({ signedTransactionInfo }),
     });
 
-    const data = await resp.json();
+    if (!resp.ok) {
+      const errorData = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+      console.warn("[IAP] server verification failed:", errorData.error);
+      return {
+        success: false,
+        error: (errorData as { error?: string }).error || "Server verification failed",
+      };
+    }
 
-    if (!resp.ok || !data.success) {
-      console.warn("[IAP] server verification failed:", data.error);
-      return { success: false, error: data.error || "Server verification failed" };
+    const data = await resp.json() as {
+      success: boolean;
+      error?: string;
+      productId?: string;
+      transactionId?: string;
+      subscriptionTier?: string;
+      expiresAt?: string;
+    };
+
+    if (!data.success) {
+      return { success: false, error: data.error || "Verification rejected by server" };
     }
 
     return {
@@ -214,12 +252,12 @@ async function verifyWithServer(signedTransactionInfo: string): Promise<IAPPurch
       subscriptionTier: data.subscriptionTier,
       expiresAt: data.expiresAt,
     };
-  } catch (err: any) {
-    console.error("[IAP] verifyWithServer network error:", err?.message);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Network error";
+    console.error("[IAP] verifyWithServer network error:", msg);
     return {
       success: false,
-      error:
-        "Network error — Apple recorded the purchase. Use Restore Purchases to activate your subscription.",
+      error: "Network error — Apple recorded your purchase. Use Restore Purchases to activate.",
     };
   }
 }
