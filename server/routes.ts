@@ -47,12 +47,16 @@ import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
-  // ── Health check endpoint (used by Replit deploy health checks) ──
+  // ── Health check endpoint ──
+  // GET /api/health — Replit's deploy system pings this to confirm the app started.
+  // Returns 200 with basic status. Must NOT require authentication.
   app.get('/api/health', (_req, res) => {
-    res.json({
+    res.status(200).json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      version: '1.0.0',
+      version: process.env.npm_package_version || '1.0.0',
+      env: process.env.NODE_ENV || 'development',
+      uptime: Math.floor(process.uptime()),
     });
   });
 

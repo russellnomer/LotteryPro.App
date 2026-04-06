@@ -34,10 +34,15 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ── Production HTTPS redirect ──
-// Replit's proxy sets x-forwarded-proto. Redirect http → https in production only.
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && req.get('x-forwarded-proto') === 'http') {
-    return res.redirect(301, `https://lotterypro.app${req.originalUrl}`);
+// Replit's reverse proxy sets x-forwarded-proto. In production, redirect any
+// plain-HTTP request to HTTPS. No redirect in development (avoids localhost loops).
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    req.get('x-forwarded-proto') === 'http'
+  ) {
+    const host = req.get('host') || 'lotterypro.app';
+    return res.redirect(301, `https://${host}${req.originalUrl}`);
   }
   next();
 });
@@ -237,26 +242,53 @@ app.use((req, res, next) => {
 
     if (process.env.NODE_ENV === 'production') {
       // ── Production startup diagnostics ──
+      // These log lines confirm every required secret is set before traffic arrives.
+      // Russell: check the deploy console for any ⚠️ lines and resolve them.
       const stripeKey = process.env.STRIPE_SECRET_KEY || '';
-      const stripeMode = stripeKey.startsWith('sk_live_') ? 'LIVE' : stripeKey ? 'TEST' : 'NOT SET';
+      const stripeMode = stripeKey.startsWith('sk_live_')
+        ? '✅ LIVE'
+        : stripeKey.startsWith('sk_test_')
+        ? '⚠️  TEST (switch to sk_live_ before launch)'
+        : '❌ NOT SET';
 
       const paypalClientId = process.env.PAYPAL_CLIENT_ID || '';
-      const paypalMode = paypalClientId ? (process.env.PAYPAL_ENVIRONMENT === 'production' ? 'LIVE' : 'SANDBOX') : 'NOT SET';
+      const paypalMode = paypalClientId
+        ? process.env.PAYPAL_ENVIRONMENT === 'production' ? '✅ LIVE' : '⚠️  SANDBOX'
+        : '❌ NOT SET';
 
       const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'lotterypro.app';
-      const webhookUrl = `https://${domain}/api/stripe/webhook/<uuid>`;
+      // The real webhook URL (with UUID) is logged separately by initStripe() above.
+      // This placeholder reminds operators where to look.
+      const webhookBase = `https://${domain}/api/stripe/webhook/<uuid — see log above>`;
+
+      const appleEnv = process.env.APPLE_ENVIRONMENT || 'Sandbox';
+      const appleMode = appleEnv === 'Production' ? '✅ Production' : '⚠️  Sandbox (switch before App Store submission)';
+
+      const emailOk = !!(process.env.LotteryPro_Email || process.env.GMAIL_APP_PASSWORD || process.env.SENDGRID_API_KEY);
 
       console.log('');
-      console.log('══════════════════════════════════════════════');
+      console.log('══════════════════════════════════════════════════');
       console.log('  LotteryPro — Production Startup Diagnostics');
-      console.log('══════════════════════════════════════════════');
+      console.log('══════════════════════════════════════════════════');
       console.log(`  Stripe mode:    ${stripeMode}`);
       console.log(`  PayPal mode:    ${paypalMode}`);
-      console.log(`  DB connected:   ${process.env.DATABASE_URL ? 'YES' : 'NOT SET'}`);
-      console.log(`  Stripe webhook: ${webhookUrl}`);
+      console.log(`  Apple IAP env:  ${appleMode}`);
+      console.log(`  Email (SMTP):   ${emailOk ? '✅ SET' : '❌ NOT SET — set LotteryPro_Email secret'}`);
+      console.log(`  DB connected:   ${process.env.DATABASE_URL ? '✅ YES' : '❌ NOT SET'}`);
+      console.log(`  Session secret: ${process.env.SESSION_SECRET ? '✅ SET' : '⚠️  using insecure default'}`);
+      console.log(`  Stripe webhook: ${webhookBase}`);
       console.log(`  Domain:         https://${domain}`);
-      console.log('══════════════════════════════════════════════');
+      console.log(`  Health check:   https://${domain}/api/health`);
+      console.log('══════════════════════════════════════════════════');
       console.log('');
+
+      // Warn loudly if critical secrets are missing
+      if (!process.env.DATABASE_URL) {
+        console.error('❌ FATAL: DATABASE_URL is not set. The app will fail on any DB operation.');
+      }
+      if (!emailOk) {
+        console.warn('⚠️  Email not configured. Draw reminders and verification emails will not send.');
+      }
     }
   });
 
