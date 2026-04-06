@@ -21,4 +21,8 @@ import("@capacitor/core").then(async ({ Capacitor }) => {
       CapApp.exitApp();
     }
   });
+
+  // Initialize Apple IAP product registration (iOS only)
+  const { initIAP } = await import("./lib/iapService");
+  initIAP().catch(() => {});
 }).catch(() => {});

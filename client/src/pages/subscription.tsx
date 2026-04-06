@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle, Star, Zap, Users, TrendingUp, AlertTriangle, ExternalLink, Gift, Loader2, Crown, Sparkles, CreditCard, Clock, Package } from "lucide-react";
 import BiometricSetup from "@/components/BiometricSetup";
-import IAPPlaceholder from "@/components/IAPPlaceholder";
+import IAPSubscription from "@/components/IAPSubscription";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -645,7 +645,7 @@ export default function SubscriptionPage() {
                       )}
                     </>
                   ) : showIAP ? (
-                    <IAPPlaceholder />
+                    <IAPSubscription />
                   ) : null}
                 </div>
               </CardContent>

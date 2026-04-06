@@ -7,14 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 
 const IAP_PRODUCTS = [
   {
-    id: "com.lotterypro.premium.monthly",
+    id: "com.lotterypro.app.premium.monthly",
     name: "Premium Monthly",
     price: "$7.99",
     period: "/ month",
     description: "Full premium access, billed monthly",
   },
   {
-    id: "com.lotterypro.premium.annual",
+    id: "com.lotterypro.app.premium.annual",
     name: "Premium Annual",
     price: "$69.00",
     period: "/ year",

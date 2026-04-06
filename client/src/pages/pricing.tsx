@@ -9,7 +9,7 @@ import {
   Check, X, Zap, Bell, Music, Star, Crown, Shield, Loader2, Lock
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
-import IAPPlaceholder from "@/components/IAPPlaceholder";
+import IAPSubscription from "@/components/IAPSubscription";
 import { usePlatform } from "@/hooks/usePlatform";
 import { shouldShowWebPayments, shouldShowIAP } from "@/lib/compliance";
 
@@ -224,7 +224,7 @@ export default function Pricing() {
                   </p>
                 </>
               ) : showIAP ? (
-                <IAPPlaceholder />
+                <IAPSubscription />
               ) : null}
             </div>
           </div>
