@@ -1,0 +1,83 @@
+These tasks are very close to the finish line, but there is a **critical, app-breaking flaw in Task #11** and a **major workflow trap in Task #10** that we need to fix before you feed these back to Replit. 
+
+Task #12 is excellent, though you should ensure the `DEPLOY_CHECKLIST.md` references the actual email provider you settled on in earlier steps (SendGrid, Resend, etc.) instead of mixing them up.
+
+Here is exactly why we need to rewrite #10 and #11, along with the corrected prompts:
+
+### The Problem with Task #11: The StoreKit 1 Trap
+The Replit agent specified using Apple's `/verifyReceipt` endpoint. **Apple has officially deprecated this endpoint.** If you build a new app relying on StoreKit 1 and `/verifyReceipt` today, you are building on a dying foundation, and it will eventually break (or trigger review flags). All modern iOS apps must use **StoreKit 2 and the App Store Server API**. 
+
+Instead of writing raw fetch requests, your Node backend needs to use Apple's official `@apple/app-store-server-library` to securely decode the transaction using a `.p8` private key.
+
+### The Problem with Task #10: The Asset Generation Trap
+The Replit agent suggested using `sharp` or `canvas` to manually resize images and write the `Contents.json` file for Xcode on a Linux file system. This is incredibly error-prone and a fast track to a corrupted iOS build. The Capacitor ecosystem has an official tool for this called `@capacitor/assets`. You provide one master icon, and the library automatically handles all the complex Xcode directory mapping.
+
+---
+
+### Copy/Paste These Corrected Prompts to Replit:
+
+**#10 - iOS App Icons & Splash Screen (Corrected)**
+```text
+#10 - iOS App Icons & Splash Screen
+
+What & Why
+Generate and configure all required visual assets for the LotteryPro iOS app. App Store submission requires correctly sized icons and launch screens. We will use the official @capacitor/assets tool to automate this safely rather than manually manipulating Xcode files on Linux.
+
+Done looks like
+- @capacitor/assets is installed as a dev dependency.
+- A master `icon.png` (1024x1024, no transparency) and `splash.png` (2732x2732) exist in a root `assets/` folder.
+- The `npx capacitor-assets generate --ios` command has successfully run and populated `ios/App/App/Assets.xcassets/`.
+- The Capacitor config references the splash screen correctly so it replaces the default white screen.
+
+Out of scope
+- Google Play icon sizes (Android — future).
+- App Store screenshot generation.
+- Xcode build or TestFlight submission.
+
+Tasks
+1. Install @capacitor/assets — Add it as a dev dependency using the package manager.
+2. Generate base assets — Create an `assets/` folder at the root. Generate a placeholder `icon.png` (1024x1024, deep indigo background with text "LP") and `splash.png` (2732x2732, matching background). 
+3. Run asset generator — Execute `npx capacitor-assets generate --ios` to safely build the Xcode asset catalog.
+4. Verify config — Ensure capacitor.config.ts has the necessary Splash Screen plugin configuration to display the new assets.
+
+Relevant files
+- capacitor.config.ts
+- package.json
+```
+
+**#11 - Apple In-App Purchase Integration (Corrected)**
+```text
+#11 - Apple In-App Purchase Integration (StoreKit 2)
+
+What & Why
+Wire up real Apple In-App Purchase for the iOS app. Apple requires all digital subscriptions from iOS apps to go through IAP. We must use modern StoreKit 2 and the App Store Server API, as the old /verifyReceipt endpoint is officially deprecated.
+
+Done looks like
+- On iOS, the pricing page displays live product titles and prices fetched from the App Store via @capawesome-team/capacitor-purchases.
+- Users can tap to subscribe; the app completes the payment and receives a StoreKit 2 transaction ID.
+- Backend validation uses the official @apple/app-store-server-library to verify the transaction ID.
+- Upon verified backend success, `user_accounts.subscription_tier` is updated to 'premium'.
+- Restore Purchases button functions correctly.
+- Web payment flows (Stripe) remain entirely unaffected.
+
+Out of scope
+- Google Play / Android IAP.
+- Free trial configuration.
+- Rolling custom StoreKit 1 /verifyReceipt logic (strictly forbidden).
+
+Tasks
+1. Install dependencies — Install @apple/app-store-server-library for the Node backend, and ensure @capawesome-team/capacitor-purchases is ready on the frontend.
+2. Backend validation endpoint — Add `POST /api/iap/verify-transaction`. This endpoint must take a `transactionId`, use the Apple Server Library (configured with placeholder env vars: APPLE_ISSUER_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, APPLE_BUNDLE_ID, APPLE_ENVIRONMENT="Sandbox"), verify the transaction, and upgrade the user tier in the DB.
+3. iOS IAP service — Write client/src/lib/iapService.ts wrapping @capawesome-team/capacitor-purchases to initialize with placeholder Product IDs (com.lotterypro.app.premium.monthly), fetch products, trigger the purchase, and pass the resulting transaction ID to our backend endpoint.
+4. iOS subscription UI — Update the iOS branch of the pricing page to wire the Subscribe and Restore buttons to the new iapService, complete with loading states and error handling.
+
+Relevant files
+- client/src/pages/pricing.tsx
+- client/src/lib/iapService.ts
+- server/routes.ts
+- shared/schema.ts
+```
+
+***
+
+Now that we are locking in the final deployment architecture, do you already have your App Store Connect account configured so you can generate the required Private Key (`.p8` file) and Product IDs for the StoreKit 2 integration?

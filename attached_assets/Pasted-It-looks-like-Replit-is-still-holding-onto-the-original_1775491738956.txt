@@ -1,0 +1,51 @@
+It looks like Replit is still holding onto the original, flawed versions of those tasks! Do not approve them as written. 
+
+If you let the Replit agent execute those specific prompts, it will fall into the traps we just discussed: building a deprecated StoreKit 1 integration (`/verifyReceipt`), trying to manually compile iOS assets on a Linux server using `sharp`, and referencing `SENDGRID_API_KEY` (which your architecture spec explicitly noted as a legacy, unused feature).
+
+You need to override the agent. **Copy and paste the text below directly into Replit to correct its course and lock in the final, safe instructions for #10, #11, and #12.**
+
+***
+
+**Copy/Paste this to Replit:**
+
+> Please update Tasks #10, #11, and #12 with the following corrected specifications. Do not use the deprecated `/verifyReceipt` endpoint, do not use `sharp` for assets, and remove references to SendGrid. 
+>
+> **#10 - iOS App Icons & Splash Screen (Corrected)**
+> What & Why: Generate and configure all required visual assets for the iOS app. We will use the official @capacitor/assets tool to automate this safely rather than manually manipulating Xcode files on Linux.
+> Done looks like:
+> - `@capacitor/assets` is installed as a dev dependency.
+> - A master `icon.png` (1024x1024) and `splash.png` (2732x2732) exist in a root `assets/` folder.
+> - The `npx capacitor-assets generate --ios` command has successfully run and populated `ios/App/App/Assets.xcassets/`.
+> - The Capacitor config references the splash screen correctly.
+> Tasks:
+> 1. Install `@capacitor/assets` as a dev dependency.
+> 2. Create an `assets/` folder at the root. Generate a placeholder `icon.png` (deep indigo background with text "LP") and `splash.png`. 
+> 3. Execute `npx capacitor-assets generate --ios` to build the Xcode asset catalog.
+> 4. Ensure `capacitor.config.ts` has the Splash Screen plugin configured.
+> 
+> **#11 - Apple In-App Purchase Integration (StoreKit 2)**
+> What & Why: Wire up real Apple IAP. We must use modern StoreKit 2 and the App Store Server API. The old `/verifyReceipt` endpoint is officially deprecated and will cause App Store rejection.
+> Done looks like:
+> - On iOS, the pricing page displays live product titles and prices fetched via `@capawesome-team/capacitor-purchases`.
+> - Users can tap to subscribe; the app receives a StoreKit 2 transaction ID.
+> - Backend validation uses the official `@apple/app-store-server-library` to verify the transaction ID.
+> - Upon verified backend success, `user_accounts.subscription_tier` is updated to 'premium'.
+> Tasks:
+> 1. Install `@apple/app-store-server-library` for the Node backend.
+> 2. Backend validation: Add `POST /api/iap/verify-transaction`. This must take a `transactionId`, use the Apple Server Library (with env vars: APPLE_ISSUER_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, APPLE_BUNDLE_ID), verify the transaction, and upgrade the user tier in the DB.
+> 3. iOS IAP service: Write `client/src/lib/iapService.ts` wrapping `@capawesome-team/capacitor-purchases` to fetch products, trigger purchases, and pass the transaction ID to our backend.
+> 4. Update the iOS pricing page UI to wire the Subscribe/Restore buttons to the new `iapService`.
+> 
+> **#12 - Web Production Deployment Configuration (Corrected)**
+> What & Why: Configure the web app for a production Replit deployment.
+> Tasks:
+> 1. Add `GET /api/health` to the Express server returning `{ status: "ok" }`.
+> 2. Add middleware that redirects `http://` to `https://` when `NODE_ENV === 'production'` and the `x-forwarded-proto` header is `http`. No redirect in dev.
+> 3. Update the Stripe webhook setup in `server/index.ts` to log the active webhook URL at startup.
+> 4. Write `DEPLOY_CHECKLIST.md` at the repo root covering: domain DNS, Stripe live keys, active Email SMTP credentials (NOT SendGrid), register production Stripe webhook, and Apple Small Business Program application.
+
+***
+
+Once the Replit agent accepts those and finishes building out the backend validation and Capacitor setup, your codebase will be officially ready to leave the container. 
+
+To actually compile this code into the `.ipa` file that Apple requires, how do you want to handle the CI/CD pipeline: are you leaning towards setting up GitHub Actions with custom macOS runner configurations, or would you prefer to use a dedicated mobile CI/CD tool like Bitrise or Ionic Appflow?

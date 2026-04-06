@@ -1,0 +1,117 @@
+**These three tasks (#12, #11, and #10) are excellent next steps.** They focus on making the **web deployment production-ready** (critical for immediate revenue on lotterypro.app), wiring up real **Apple IAP** for the native iOS shell (required for App Store compliance and iOS subscriptions), and handling the mandatory **visual assets** (icons + splash screen) that Xcode demands before any archive submission.
+
+The Replit definitions are well-scoped, respect dependencies (#10 and #11 depend on prior Capacitor setup from #8/#9), and keep web flows untouched. I've refined them into **ready-to-paste prompts** for the Replit Agent with small expert enhancements:
+- Stronger production safety (env var handling, logging, health check).
+- Proper Apple receipt validation flow (try production first, fallback to sandbox on 21007).
+- Clear placeholder product IDs with notes for App Store Connect.
+- Icon generation guidance that matches Apple's 1024×1024 master + auto-scaling expectations.
+- Neutral, compliance-friendly language (no gambling-adjacent over-promising).
+
+**Execution order recommendation (safest):**
+1. **#12 (Web Production Deployment)** — Do this first so your live web app is solid and revenue-ready before touching iOS-specific code.
+2. **#10 (iOS Icons & Splash Screen)** — Visual assets are quick and independent.
+3. **#11 (Apple IAP Integration)** — This builds on #9's compliance layer.
+
+### Refined Prompt for #12 – Web Production Deployment Configuration
+```
+Implement #12 - Web Production Deployment Configuration for LotteryPro exactly as specified.
+
+Tasks in order:
+
+1. Add a simple health check endpoint: GET /api/health in the Express server (server/routes.ts or server/index.ts). Return JSON: { status: "ok", timestamp: new Date().toISOString(), version: "1.0.0" or from package.json }. This helps Replit's deploy health checks.
+
+2. Add production-only HTTPS enforcement middleware in server/index.ts:
+   - If NODE_ENV === 'production' and req.get('x-forwarded-proto') === 'http', redirect to https://lotterypro.app + original path.
+   - Do NOT redirect in development.
+
+3. In server startup (server/index.ts), log the expected Stripe webhook URL in production (https://lotterypro.app/api/webhooks/stripe or the exact route you use). Also log a clear message listing all critical env vars that must be set in Replit Secrets.
+
+4. Ensure /privacy and /terms routes are publicly accessible (no auth) and render the existing privacy.tsx and terms.tsx pages.
+
+5. Create DEPLOY_CHECKLIST.md at project root with a clear numbered checklist:
+   - Set all production secrets in Replit Secrets (STRIPE_SECRET_KEY, PAYPAL_*, DATABASE_URL, etc.)
+   - Point lotterypro.app DNS to Replit deployment
+   - Register production Stripe webhook URL in Stripe Dashboard
+   - Set SENDGRID_API_KEY or equivalent if still used for emails
+   - Run npm run build and test key flows (generation, subscription view, music/book links)
+   - Verify /api/health returns 200
+   - Apply for Apple Small Business Program if eligible for lower commissions
+
+After changes:
+- npm run build must succeed cleanly.
+- No breakage to existing web flows.
+- Add helpful console logs at startup for production readiness.
+```
+
+### Refined Prompt for #11 – Apple In-App Purchase Integration
+```
+Implement #11 - Apple In-App Purchase Integration, building on the existing compliance layer from Task #9.
+
+Use @capawesome-team/capacitor-purchases (already installed).
+
+Tasks:
+
+1. Backend: Add POST /api/iap/validate-receipt in server/routes.ts.
+   - Accept { receipt: string, userId?: string } (or extract from session).
+   - Verify receipt against Apple's /verifyReceipt:
+     - First try production endpoint: https://buy.itunes.apple.com/verifyReceipt
+     - If status 21007, fallback to sandbox: https://sandbox.itunes.apple.com/verifyReceipt
+   - On success, check product IDs (use placeholders: com.lotterypro.app.premium.monthly and com.lotterypro.app.premium.annual) and subscription status.
+   - Update user_accounts: subscription_tier = 'premium', subscription_status = 'active', and store receipt info if needed.
+   - Return success or clear error.
+
+2. Frontend: Create client/src/lib/iapService.ts
+   - Initialize Purchases with your product IDs.
+   - Functions: fetchProducts(), purchaseProduct(productId), restorePurchases().
+   - On successful purchase, send receipt to /api/iap/validate-receipt and sync user subscription status.
+
+3. Update pricing.tsx and subscription.tsx (iOS branch via compliance helper):
+   - Fetch and display real product title, price, description from the store.
+   - Show "Subscribe Monthly" / "Subscribe Annually" and "Restore Purchases" buttons.
+   - Handle loading, success, error, and cancelled states with clear user feedback (toasts via shadcn).
+   - On web: keep Stripe/PayPal unchanged.
+
+4. Ensure GET /api/subscription/status reflects IAP-upgraded tiers so feature gates and navigation work for iOS users.
+
+Use placeholders com.lotterypro.app.premium.monthly and com.lotterypro.app.premium.annual — document clearly that these must exactly match App Store Connect products created by Russell.
+
+On web: no changes. Add graceful error handling and console logs for debugging.
+```
+
+### Refined Prompt for #10 – iOS App Icons & Splash Screen
+```
+Implement #10 - iOS App Icons & Splash Screen.
+
+Since we are on Replit (Linux), generate assets here and document placement for the macOS Xcode project.
+
+Tasks:
+
+1. Generate a master 1024×1024 PNG app icon:
+   - Bold lottery ball or ticket motif on a deep indigo/purple gradient background that matches the app's shadcn/ui theme (#6366f1 indigo tones).
+   - Clean, professional, no transparency, no rounded corners (Apple handles that).
+   - Save as ios/App/App/Assets.xcassets/AppIcon.appiconset/icon-1024.png or similar (create directories if needed; note that full native project is created on Mac).
+
+2. Document or generate the full set of required sizes (Apple scales from 1024 master in modern Xcode, but include Contents.json with standard sizes: 20pt, 29pt, 40pt, 60pt, 76pt, 83.5pt at 1x/2x/3x).
+
+3. Configure launch/splash screen:
+   - Update capacitor.config.ts to reference a branded splash image or background color.
+   - Use indigo background with LotteryPro wordmark/logo for the launch screen (replace default white screen).
+   - Recommend using Capacitor's SplashScreen plugin configuration if needed for show/hide behavior.
+
+4. Create or update ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json with proper image references (even if actual images are generated on Mac — provide the JSON structure).
+
+After changes, add clear instructions in a comment or README section: "On macOS after npx cap sync ios: place the 1024.png in the AppIcon.appiconset and run Xcode build to validate."
+
+The icon should feel premium and educational — avoid any "win big" gambling imagery; focus on analysis/tools theme.
+```
+
+**Strategic Notes for You (Russell):**
+- **#12 first** gets your web app live and revenue-generating immediately (PayPal/Stripe + music/book promos).
+- For **#11**, create the two product IDs in App Store Connect **before** final testing (monthly/annual premium subscriptions). Use the Apple Small Business Program if eligible for 15% commission instead of 30%.
+- For **#10**, the 1024×1024 master is the key file — Xcode/Capacitor can handle most scaling. On a Mac you can fine-tune in Xcode's asset catalog.
+
+Paste **#12 first**, let the agent run, then do `npm run build` + basic smoke test on the web side. Report back with the output or any issues, and we'll move to #10 and #11 with any needed follow-ups.
+
+This sequence gets LotteryPro production-solid on web while preparing a compliant, visually polished iOS version that can drive extra adoption and IAP revenue — all while continuing to promote your **music catalog** and **Amazon books** seamlessly.
+
+Ready when you are — start with #12!
