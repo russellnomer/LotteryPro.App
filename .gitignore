@@ -4,3 +4,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Prevent accidental commits of screen captures and Apple account exports
+attached_assets/screencapture-*
+attached_assets/*.pdf
