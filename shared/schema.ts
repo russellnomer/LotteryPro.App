@@ -77,6 +77,7 @@ export const userAccounts = pgTable("user_accounts", {
   spinStreak: integer("spin_streak").notNull().default(0), // Consecutive daily spins
   lastSpinDate: date("last_spin_date"), // Last spin date for streak tracking
   homeState: varchar("home_state", { length: 2 }), // 2-letter US state code, e.g. 'NY'
+  emailVerified: boolean("email_verified").notNull().default(false),
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),

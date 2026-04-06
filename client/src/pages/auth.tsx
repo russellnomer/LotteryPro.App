@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Smartphone, Lock, Eye, EyeOff, AlertTriangle, CheckCircle, Fingerprint, Clock } from "lucide-react";
+import { Shield, Smartphone, Lock, Eye, EyeOff, AlertTriangle, CheckCircle, Fingerprint, Clock, Mail } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -20,16 +20,18 @@ const PROHIBITED_STATES = PROHIBITED_STATE_CODES;
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [authStep, setAuthStep] = useState<'login' | 'register' | 'mfa-setup' | 'mfa-verify' | 'forgot-password' | 'reset-password'>('login');
+  const [authStep, setAuthStep] = useState<'login' | 'register' | 'mfa-setup' | 'mfa-verify' | 'forgot-password' | 'reset-password' | 'email-verify'>('login');
   const [resetToken, setResetToken] = useState('');
   const [ageVerified, setAgeVerified] = useState(false);
   const [stateConfirmed, setStateConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     subscriptionTier: 'basic',
     mfaCode: '',
+    otpCode: '',
     userId: '',
     homeState: ''
   });
@@ -38,6 +40,8 @@ export default function AuthPage() {
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   const [lockoutMinutes, setLockoutMinutes] = useState(0);
   const [biometricSupported, setBiometricSupported] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
   // Handle URL query parameters for auth flow
@@ -108,6 +112,8 @@ export default function AuthPage() {
     try {
       if (authStep === 'register') {
         await handleRegister();
+      } else if (authStep === 'email-verify') {
+        await handleVerifyEmail();
       } else if (authStep === 'login') {
         await handleLogin();
       } else if (authStep === 'mfa-setup') {
@@ -143,16 +149,71 @@ export default function AuthPage() {
         email: formData.email,
         password: formData.password,
         subscriptionTier: formData.subscriptionTier,
-        homeState: formData.homeState || undefined
+        homeState: formData.homeState || undefined,
+        marketingConsent
       })
     });
 
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
 
-    if (data.requiresMFA) {
+    if (data.requiresEmailVerification) {
+      setFormData(prev => ({ ...prev, userId: data.userId }));
+      setAuthStep('email-verify');
+      startResendCooldown(60);
+    } else if (data.requiresMFA) {
       setFormData(prev => ({ ...prev, userId: data.userId }));
       setAuthStep('mfa-setup');
+    }
+  };
+
+  const startResendCooldown = (seconds: number) => {
+    setResendCooldown(seconds);
+    if (resendTimerRef.current) clearInterval(resendTimerRef.current);
+    resendTimerRef.current = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(resendTimerRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleVerifyEmail = async () => {
+    const response = await fetch('/api/auth/verify-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: formData.email, code: formData.otpCode })
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      if (data.code === 'invalid_code') throw new Error('That code is incorrect or has expired. Check your inbox or request a new one.');
+      throw new Error(data.error || 'Verification failed');
+    }
+    toast({ title: 'Email verified!', description: 'Your email has been confirmed.' });
+    setAuthStep('mfa-setup');
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email })
+      });
+      const data = await response.json();
+      if (response.status === 429) {
+        startResendCooldown(data.waitSeconds || 60);
+        return;
+      }
+      if (!response.ok) throw new Error(data.error);
+      toast({ title: 'Code sent!', description: 'Check your inbox for a new 6-digit code.' });
+      startResendCooldown(60);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -657,6 +718,17 @@ export default function AuthPage() {
                 I agree to the <Link href="/terms"><span className="text-primary hover:underline">Terms of Service</span></Link> and <Link href="/privacy"><span className="text-primary hover:underline">Privacy Policy</span></Link>
               </label>
             </div>
+
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="marketingConsent"
+                checked={marketingConsent}
+                onCheckedChange={(checked) => setMarketingConsent(checked === true)}
+              />
+              <label htmlFor="marketingConsent" className="text-sm text-gray-600 dark:text-gray-400 leading-tight cursor-pointer">
+                <span className="font-medium">Optional:</span> Send me draw day reminders and occasional updates about new features. You can unsubscribe at any time.
+              </label>
+            </div>
           </div>
 
           <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800">
@@ -681,6 +753,56 @@ export default function AuthPage() {
           >
             {isLoading ? 'Creating account...' : 'Create Account'}
           </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+
+  const renderEmailVerifyStep = () => (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center">
+        <div className="mx-auto w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mb-2">
+          <Mail className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <CardTitle>Check your inbox</CardTitle>
+        <CardDescription>
+          We sent a 6-digit code to <strong>{formData.email}</strong>. Enter it below to confirm your address.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="otpCode">Verification code</Label>
+            <Input
+              id="otpCode"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              placeholder="123456"
+              required
+              autoFocus
+              value={formData.otpCode}
+              onChange={(e) => setFormData(prev => ({ ...prev, otpCode: e.target.value.replace(/\D/g, '') }))}
+              className="text-center text-2xl tracking-widest font-mono"
+            />
+            <p className="text-xs text-gray-500">Code expires in 15 minutes. Check your spam folder if you don't see it.</p>
+          </div>
+
+          <Button type="submit" disabled={isLoading || formData.otpCode.length !== 6} className="w-full">
+            {isLoading ? 'Verifying...' : 'Verify Email'}
+          </Button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              disabled={resendCooldown > 0}
+              onClick={handleResendCode}
+              className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+            </button>
+          </div>
         </form>
       </CardContent>
     </Card>
@@ -735,7 +857,9 @@ export default function AuthPage() {
           </Alert>
         )}
 
-        {authStep === 'mfa-setup' ? (
+        {authStep === 'email-verify' ? (
+          renderEmailVerifyStep()
+        ) : authStep === 'mfa-setup' ? (
           renderMFASetup()
         ) : authStep === 'forgot-password' ? (
           renderForgotPasswordForm()

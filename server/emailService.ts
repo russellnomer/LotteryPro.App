@@ -1,11 +1,28 @@
-// Email service for VIP codes and draw day reminders
+// Email service for VIP codes, draw day reminders, and verification
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { db } from './db';
 import { emailPreferences, emailSendLog } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 const FROM_ADDRESS = '"Russell Nomer \u2013 LotteryPro" <russell@lotterypro.app>';
+const FROM_ADDRESS_RESEND = 'russell@lotterypro.app';
 
+// Resend client — lazy initialized
+let _resendClient: Resend | null | undefined;
+
+function getResendClient(): Resend | null {
+  if (_resendClient !== undefined) return _resendClient;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    _resendClient = null;
+    return null;
+  }
+  _resendClient = new Resend(apiKey);
+  return _resendClient;
+}
+
+// Gmail SMTP transporter — fallback when RESEND_API_KEY is absent
 let _transporter: nodemailer.Transporter | null | undefined;
 
 function getTransporter(): nodemailer.Transporter | null {
@@ -35,9 +52,28 @@ interface EmailData {
 }
 
 async function sendMail(data: EmailData): Promise<{ success: boolean; message: string }> {
+  // Try Resend first (production-grade, high deliverability)
+  const resend = getResendClient();
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: FROM_ADDRESS_RESEND,
+        to: data.to,
+        subject: data.subject,
+        text: data.text,
+        html: data.html,
+      });
+      console.log(`✅ Email sent via Resend to ${data.to} — ${data.subject}`);
+      return { success: true, message: `Email sent to ${data.to}` };
+    } catch (err: any) {
+      console.warn(`⚠️  Resend failed (${err?.message}), falling back to Gmail SMTP`);
+    }
+  }
+
+  // Fallback: Gmail SMTP (dev behaviour from Task #3)
   const transporter = getTransporter();
   if (!transporter) {
-    console.log('\n📧 EMAIL (LotteryPro_Email secret not set — would have sent):');
+    console.log('\n📧 EMAIL (no transport configured — would have sent):');
     console.log(`   To:      ${data.to}`);
     console.log(`   Subject: ${data.subject}`);
     console.log(`   Body:\n${data.text}`);
@@ -50,8 +86,37 @@ async function sendMail(data: EmailData): Promise<{ success: boolean; message: s
     text: data.text,
     html: data.html,
   });
-  console.log(`✅ Email sent to ${data.to} — ${data.subject}`);
+  console.log(`✅ Email sent via Gmail to ${data.to} — ${data.subject}`);
   return { success: true, message: `Email sent to ${data.to}` };
+}
+
+// Send email verification OTP
+export async function sendVerificationEmail(
+  recipientEmail: string,
+  code: string
+): Promise<{ success: boolean; message: string }> {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 28px;">🎰 Verify Your Email</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9;">LotteryPro by Russell Nomer</p>
+      </div>
+      <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; margin-top: 2px;">
+        <h2 style="color: #333;">Your verification code</h2>
+        <p style="color: #555;">Enter this 6-digit code to verify your email address. It expires in <strong>15 minutes</strong>.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="display: inline-block; background: #f4f4f8; border: 2px solid #667eea; border-radius: 12px; padding: 20px 40px;">
+            <span style="font-size: 40px; font-weight: bold; letter-spacing: 10px; color: #667eea; font-family: monospace;">${code}</span>
+          </div>
+        </div>
+        <p style="color: #888; font-size: 14px;">If you did not create a LotteryPro account, you can safely ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">LotteryPro · Educational lottery analysis · <a href="https://lotterypro.app" style="color: #667eea;">lotterypro.app</a></p>
+      </div>
+    </div>
+  `;
+  const text = `Your LotteryPro verification code is: ${code}\n\nThis code expires in 15 minutes.\n\nIf you did not sign up, ignore this email.`;
+  return sendMail({ to: recipientEmail, subject: '🔐 Your LotteryPro verification code', text, html });
 }
 
 export async function sendVipCodeEmail(

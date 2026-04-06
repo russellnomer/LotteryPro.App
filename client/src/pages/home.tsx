@@ -34,7 +34,7 @@ const ProfileSetup = lazy(() => import("@/components/ProfileSetup"));
 const PostGenerationModal = lazy(() => import("@/components/PostGenerationModal"));
 import SystemStatusIndicator from "@/components/SystemStatusIndicator";
 import SEOHead from "@/components/SEOHead";
-import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign, X } from "lucide-react";
+import { Crown, Lock, UserPlus, Music, Star, Target, TrendingUp, Calendar, DollarSign, X, Mail } from "lucide-react";
 import { SiApplemusic, SiSpotify, SiYoutube } from 'react-icons/si';
 
 const MUSIC_DISMISSED_KEY = 'music_bar_dismissed';
@@ -271,6 +271,19 @@ export default function Home() {
           <div className="mb-6 flex justify-center">
             <AdSpace size="leaderboard" position="Header" className="max-w-full" />
           </div>
+        )}
+
+        {/* Email Verification Banner — shown to logged-in users who haven't verified */}
+        {isAuthenticated && (user as any)?.emailVerified === false && (
+          <Alert className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
+            <Mail className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              <span className="font-medium">Please verify your email address.</span>{' '}
+              Check your inbox for a 6-digit code, or{' '}
+              <a href="/auth" className="underline hover:no-underline">click here to verify</a>.
+              Some features (like joining pools) require a verified email.
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Login Prompt for Non-Authenticated Users */}

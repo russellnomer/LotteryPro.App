@@ -8,7 +8,7 @@ import { seedHistoricalData } from "./seedData";
 import bcrypt from "bcrypt";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
-import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, optionalAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword } from "./auth";
+import { register, login, logout, setupMFA, verifyMFASetup, requireAuth, optionalAuth, requireAdmin, requireBasic, requirePro, requirePremium, forgotPassword, resetPassword, verifyEmail, resendVerification, requireVerifiedEmail } from "./auth";
 import { webauthnRegisterOptions, webauthnRegisterVerify, webauthnLoginOptions, webauthnLoginVerify, webauthnListCredentials, webauthnDeleteCredential } from "./webauthnRoutes";
 import { 
   createPayPalSubscription, 
@@ -617,8 +617,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
-  // Create a new pool (requires authentication for accountability)
-  app.post("/api/pools/create", requireAuth, async (req, res) => {
+  // Create a new pool (requires authentication + verified email)
+  app.post("/api/pools/create", requireAuth, requireVerifiedEmail, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { lotteryPools } = await import('@shared/schema');
@@ -691,8 +691,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
-  // Join a pool (requires authentication)
-  app.post("/api/pools/:poolId/join", requireAuth, async (req, res) => {
+  // Join a pool (requires authentication + verified email)
+  app.post("/api/pools/:poolId/join", requireAuth, requireVerifiedEmail, async (req, res) => {
     try {
       const { db } = await import('./db');
       const { lotteryPools, poolMembers } = await import('@shared/schema');
@@ -2512,6 +2512,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   app.post("/api/auth/mfa/verify", authRateLimit, verifyMFASetup);
   app.post("/api/auth/forgot-password", authRateLimit, forgotPassword);
   app.post("/api/auth/reset-password", authRateLimit, resetPassword);
+  app.post("/api/auth/verify-email", authRateLimit, verifyEmail);
+  app.post("/api/auth/resend-verification", authRateLimit, resendVerification);
 
   // WebAuthn / Biometric login routes
   app.post("/api/auth/webauthn/register-options", requireAuth, webauthnRegisterOptions);
@@ -2551,7 +2553,8 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
         mfaEnabled: user.mfaEnabled,
-        homeState: (user as any).homeState || null
+        homeState: (user as any).homeState || null,
+        emailVerified: (user as any).emailVerified ?? false
       });
     } catch (error) {
       console.error('Get user error:', error);

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { sendPasswordResetEmail } from './emailService';
+import { sendPasswordResetEmail, sendVerificationEmail } from './emailService';
 import { db } from './db';
-import { passwordResetTokens as passwordResetTokensTable } from '@shared/schema';
+import { passwordResetTokens as passwordResetTokensTable, emailVerificationCodes, userAccounts } from '@shared/schema';
 import { eq, and, isNull, gt } from 'drizzle-orm';
 
 // Extend Express Request interface
@@ -102,14 +102,125 @@ export async function register(req: Request, res: Response) {
       ...(homeState ? { homeState } : {})
     });
 
+    // Generate 6-digit OTP for email verification (15-min TTL)
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const emailHash = crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
+    await db.insert(emailVerificationCodes).values({
+      email,
+      emailHash,
+      verificationCode: otpCode,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+
+    // Send verification email (non-blocking — registration succeeds regardless)
+    sendVerificationEmail(email, otpCode).catch(err =>
+      console.error('Failed to send verification email:', err)
+    );
+
     res.json({ 
       success: true, 
       userId: user.id,
-      message: 'Account created successfully. Please set up MFA to secure your account.',
+      message: 'Account created. Please verify your email address.',
+      requiresEmailVerification: true,
       requiresMFA: true
     });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
+  }
+}
+
+// Verify email OTP — atomically consumes the code
+export async function verifyEmail(req: Request, res: Response) {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' });
+    }
+
+    const now = new Date();
+    // Atomically mark the code as used only if valid and unexpired
+    const [record] = await db
+      .update(emailVerificationCodes)
+      .set({ isUsed: true })
+      .where(
+        and(
+          eq(emailVerificationCodes.email, email),
+          eq(emailVerificationCodes.verificationCode, code.trim()),
+          eq(emailVerificationCodes.isUsed, false),
+          gt(emailVerificationCodes.expiresAt, now)
+        )
+      )
+      .returning();
+
+    if (!record) {
+      return res.status(400).json({ error: 'Invalid or expired code', code: 'invalid_code' });
+    }
+
+    // Mark user as verified
+    await db.update(userAccounts)
+      .set({ emailVerified: true })
+      .where(eq(userAccounts.email, email));
+
+    res.json({ success: true, message: 'Email verified successfully' });
+  } catch (error: any) {
+    console.error('Verify email error:', error);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+}
+
+// Resend verification email — 60-second cooldown enforced via DB
+export async function resendVerification(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check user exists
+    const user = await storage.getUserByEmail(email);
+    if (!user) {
+      // Don't reveal existence
+      return res.json({ success: true, message: 'If an account exists, a new code has been sent.' });
+    }
+
+    if ((user as any).emailVerified) {
+      return res.status(400).json({ error: 'Email already verified' });
+    }
+
+    // Rate limit: check most recent code sent in last 60 seconds
+    const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
+    const recentCodes = await db.select()
+      .from(emailVerificationCodes)
+      .where(
+        and(
+          eq(emailVerificationCodes.email, email),
+          gt(emailVerificationCodes.createdAt as any, sixtySecondsAgo)
+        )
+      )
+      .limit(1);
+
+    if (recentCodes.length > 0) {
+      const elapsed = Math.floor((Date.now() - new Date(recentCodes[0].createdAt!).getTime()) / 1000);
+      const wait = 60 - elapsed;
+      return res.status(429).json({ error: `Please wait ${wait} seconds before requesting a new code`, waitSeconds: wait });
+    }
+
+    // Generate and store new OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const emailHash = crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
+    await db.insert(emailVerificationCodes).values({
+      email,
+      emailHash,
+      verificationCode: otpCode,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+
+    await sendVerificationEmail(email, otpCode);
+
+    res.json({ success: true, message: 'Verification code sent' });
+  } catch (error: any) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ error: 'Failed to send verification code' });
   }
 }
 
@@ -414,6 +525,35 @@ export function requireTier(minTier: 'basic' | 'pro' | 'premium') {
 export const requireBasic = requireTier('basic');
 export const requirePro = requireTier('pro');
 export const requirePremium = requireTier('premium');
+
+// Middleware: requires email to be verified (for high-trust endpoints like pool create/join)
+export async function requireVerifiedEmail(req: Request, res: Response, next: any) {
+  try {
+    const sessionToken = getSessionToken(req);
+    if (!sessionToken) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    const session = await storage.getUserSession(sessionToken);
+    if (!session || session.expiresAt < new Date()) {
+      return res.status(401).json({ error: 'Session expired' });
+    }
+    const user = await storage.getUserById(session.userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+    if (!(user as any).emailVerified) {
+      return res.status(403).json({
+        error: 'Email verification required',
+        code: 'email_not_verified',
+        message: 'Please verify your email address before accessing this feature. Check your inbox for a 6-digit code or request a new one at /auth.'
+      });
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Authorization error' });
+  }
+}
 
 // Password Reset Functions — DB-backed (SHA-256 hashed, single-use, 30-min TTL)
 export async function forgotPassword(req: Request, res: Response) {
