@@ -199,7 +199,7 @@ export async function resendVerification(req: Request, res: Response) {
     }
 
     // Rate limit: check most recent code sent in last 60 seconds
-    const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
+    // A code sent within 60s will have expiresAt > now + 14 minutes
     const recentCodes = await db.select()
       .from(emailVerificationCodes)
       .where(

@@ -126,9 +126,15 @@ export async function sendVerificationEmail(
 
   try {
     const result = await sendMail({ to: recipientEmail, subject: '🔐 Your LotteryPro verification code', text, html });
-    await db.update(emailSendLog)
-      .set({ status: 'sent', sentAt: new Date() })
-      .where(eq(emailSendLog.id, logEntry.id));
+    if (result.success) {
+      await db.update(emailSendLog)
+        .set({ status: 'sent', sentAt: new Date() })
+        .where(eq(emailSendLog.id, logEntry.id));
+    } else {
+      await db.update(emailSendLog)
+        .set({ status: 'failed', errorMessage: result.message })
+        .where(eq(emailSendLog.id, logEntry.id));
+    }
     return result;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
