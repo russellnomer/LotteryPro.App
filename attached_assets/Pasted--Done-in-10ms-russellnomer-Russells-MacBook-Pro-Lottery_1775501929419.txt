@@ -1,0 +1,24 @@
+⚡ Done in 10ms
+russellnomer@Russells-MacBook-Pro LotteryPro % npx cap sync ios
+[error] CocoaPods is not installed.
+        See this install guide: https://capacitorjs.com/docs/getting-started/environment-setup#homebrew
+russellnomer@Russells-MacBook-Pro LotteryPro % npx cap sync ios
+[error] CocoaPods is not installed.
+        See this install guide: https://capacitorjs.com/docs/getting-started/environment-setup#homebrew
+russellnomer@Russells-MacBook-Pro LotteryPro % brew install cocoapods
+✔︎ JSON API formula.jws.json                                                                                                                                                                                                                       Downloaded   32.0MB/ 32.0MB
+✔︎ JSON API cask.jws.json                                                                                                                                                                                                                          Downloaded   15.4MB/ 15.4MB
+==> Fetching downloads for: cocoapods
+✔︎ Bottle Manifest cocoapods (1.16.2_2)                                                                                                                                                                                                            Downloaded   14.2KB/ 14.2KB
+✔︎ Bottle Manifest ruby (4.0.2)                                                                                                                                                                                                                    Downloaded   19.1KB/ 19.1KB
+✔︎ Bottle cocoapods (1.16.2_2)                                                                                                                                                                                                                     Downloaded   10.1MB/ 10.1MB
+✔︎ Bottle ruby (4.0.2)                                                                                                                                                                                                                             Downloaded   17.1MB/ 17.1MB
+==> Installing cocoapods dependency: ruby
+==> Pouring ruby--4.0.2.arm64_tahoe.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/ruby/4.0.2: 19,305 files, 61MB
+==> Pouring cocoapods--1.16.2_2.arm64_tahoe.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/cocoapods/1.16.2_2: 13,729 files, 30.3MB
+==> Running `brew cleanup cocoapods`...
+Disable this behaviour by setting `HOMEBREW_NO_INSTALL_CLEANUP=1`.
+Hide these hints with `HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).
+russellnomer@Russells-MacBook-Pro LotteryPro % 
