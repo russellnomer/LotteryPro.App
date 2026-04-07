@@ -156,6 +156,18 @@ uri = "file://client/public/icons/icon-20.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "CvZBhZux6eRPhtRwwiKQA"
+uri = "file://client/public/icons/icon-v1.png"
+type = "image"
+title = "lottery ball icon v1"
+
+[[generated]]
+id = "cQXoZ1Pulb8Venn_FV2_p"
+uri = "file://client/public/icons/icon-v2.png"
+type = "image"
+title = "lottery ball icon v2"
+
 [[outputs]]
 id = "QoVNxB4WeHIf7o1u138gH"
 uri = "file://ARCHITECTURE_SPEC.md"
