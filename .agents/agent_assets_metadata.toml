@@ -18,6 +18,144 @@ uri = "file://attached_assets/iap-review-screenshot.png"
 type = "image"
 title = "LotteryPro paywall v5"
 
+[[generated]]
+id = "HpD_lCugOI557w6Cjm4kL"
+uri = "file://client/public/screenshots/ipad/ipad-home-generator.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ij5aMeOHp4SjGeG8fM0uV"
+uri = "file://client/public/screenshots/ipad/ipad-scratchoff.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "TkENId2dGK-0eadNTaJZ-"
+uri = "file://client/public/screenshots/ipad/ipad-toppicks.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "xWFttdcxd9UrTN2booecH"
+uri = "file://client/public/screenshots/ipad/ipad-community.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "rBA6QUVf8XfCNVoGSQWA_"
+uri = "file://client/public/marketing/google-play-feature-graphic.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "4G6xfhi0VMeVAj4EvYbIS"
+uri = "file://client/public/screenshots/final/screenshot1-home.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "4k6-c0qFO4Dzy_PFPBWfu"
+uri = "file://client/public/screenshots/final/screenshot2-generator.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "YDNfdj-tS96hSQ1Kp0kIr"
+uri = "file://client/public/screenshots/final/screenshot3-scratchoff.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "gR7kiGa5d-7JpZiZUHCg-"
+uri = "file://client/public/screenshots/final/screenshot4-toppicks.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "1wM94amfVklL1z1L86pbq"
+uri = "file://client/public/marketing/social-ai-numbers.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "3kRc3z1BgLsVgYDC6DrR7"
+uri = "file://client/public/marketing/social-scratchoff.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "CD8zk8ACbkaIbHptF7JxF"
+uri = "file://client/public/marketing/social-community.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "p9lbXgm1eDBfnENWj0j_h"
+uri = "file://client/public/marketing/social-free-vs-premium.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "siRs0DsDs29jeMWdObyIa"
+uri = "file://client/public/icons/icon-1024.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "gjWrOUUM-juKxkTnZn0fF"
+uri = "file://client/public/icons/icon-512.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "zdeFhRx2FJbBVstaqnrjE"
+uri = "file://client/public/icons/icon-192.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "OjoVYtjFnOgP4X05eqU-0"
+uri = "file://client/public/icons/icon-180.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "WDr2VIbMK-iqU550ZhSvY"
+uri = "file://client/public/icons/icon-120.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "t48ruOuk2s5d2yXJBDGQb"
+uri = "file://client/public/icons/icon-76.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ipQD8J6Bc2NfayO-fZbFy"
+uri = "file://client/public/icons/icon-60.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "QsTDkOVNXc25eCLRm_uCt"
+uri = "file://client/public/icons/icon-40.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "BXGlJEYjgO_OSnUhfvNOq"
+uri = "file://client/public/icons/icon-29.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "wMe0zeihIfGEer0-LmMnu"
+uri = "file://client/public/icons/icon-20.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "QoVNxB4WeHIf7o1u138gH"
 uri = "file://ARCHITECTURE_SPEC.md"
