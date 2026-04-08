@@ -236,6 +236,27 @@ export default function AdminDashboard() {
     },
   });
 
+  // Update lottery data mutation
+  const updateLotteryMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/admin/update-lottery-data', {});
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Lottery Data Updated!",
+        description: data.message || `Fetched live results. ${data.added} new draws added.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to fetch lottery data from external APIs",
+        variant: "destructive",
+      });
+    },
+  });
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -697,6 +718,51 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "generate" && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Download className="h-5 w-5 mr-2 text-teal-600" />
+                Update Lottery Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Fetch the latest draw results from the NY State Open Data API and PA Lottery scraper for all supported games (Powerball, Mega Millions, NY Lotto, Take 5, Pick 10, Numbers, Win 4, Millionaire for Life). Falls back to realistic generated data if the external API is unavailable.
+              </p>
+              <Button
+                onClick={() => updateLotteryMutation.mutate()}
+                disabled={updateLotteryMutation.isPending}
+                className="bg-teal-600 hover:bg-teal-700 text-white"
+                data-testid="button-update-lottery"
+              >
+                {updateLotteryMutation.isPending ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {updateLotteryMutation.isPending ? "Fetching Live Data..." : "Update All Game Results"}
+              </Button>
+              {updateLotteryMutation.isSuccess && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    {updateLotteryMutation.data?.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+              {updateLotteryMutation.isError && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {(updateLotteryMutation.error as any)?.message || "Failed to update lottery data"}
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         )}
