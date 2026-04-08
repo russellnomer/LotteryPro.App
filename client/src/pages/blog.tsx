@@ -75,7 +75,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         heading: "Drawing Schedules and Availability",
-        body: "Powerball draws three times per week (Monday, Wednesday, Saturday), while Mega Millions draws twice per week (Tuesday, Friday). This means Powerball offers 50% more opportunities to play each week, which also means jackpots can grow faster due to more frequent rollovers.\n\nBoth games are available in 45 states, plus Washington D.C. and the U.S. Virgin Islands. Mega Millions is also available in American Samoa, while Powerball is available in Puerto Rico. The ticket price for both games is $2 per play.\n\nLotteryPro supports both Powerball and Mega Millions with full historical data analysis. You can switch between games to compare frequency patterns, generate numbers for either game, and track results all in one place.",
+        body: "Powerball draws three times per week (Monday, Wednesday, Saturday), while Mega Millions draws twice per week (Tuesday, Friday). This means Powerball offers 50% more opportunities to play each week, which also means jackpots can grow faster due to more frequent rollovers.\n\nBoth games are available in 45 states, plus Washington D.C. and the U.S. Virgin Islands. Mega Millions is also available in American Samoa, while Powerball is available in Puerto Rico. Powerball tickets are $2 per play, while Mega Millions tickets are $5 per play.\n\nLotteryPro supports both Powerball and Mega Millions with full historical data analysis. You can switch between games to compare frequency patterns, generate numbers for either game, and track results all in one place.",
         cta: { text: "Analyze both games on LotteryPro", href: "/" }
       },
       {

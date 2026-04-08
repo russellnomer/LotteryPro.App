@@ -19,7 +19,7 @@ export const GAME_CONFIG = {
     odds: '1 in 302,575,350',
     icon: 'fas fa-gem',
     drawDays: ['Tue', 'Fri'],
-    price: 2
+    price: 5
   },
   nylotto: {
     name: 'NY Lotto',
