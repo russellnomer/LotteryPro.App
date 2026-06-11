@@ -92,7 +92,11 @@ async function initStripe() {
     const stripeSync = await getStripeSync();
 
     console.log('🔧 Setting up managed webhook...');
-    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+    const allDomains = (process.env.REPLIT_DOMAINS || '').split(',').map(d => d.trim()).filter(Boolean);
+    const preferredDomain = allDomains.find(d => !d.includes('replit.app') && !d.includes('replit.dev'))
+      || allDomains[0]
+      || 'lotterypro.app';
+    const webhookBaseUrl = `https://${preferredDomain}`;
     const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
       `${webhookBaseUrl}/api/stripe/webhook`,
       {
