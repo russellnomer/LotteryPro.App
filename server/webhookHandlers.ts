@@ -38,7 +38,17 @@ export class WebhookHandlers {
     const sync = await getStripeSync();
     
     // Process webhook through stripe-replit-sync (handles signature verification and DB storage)
-    await sync.processWebhook(payload, signature, uuid);
+    // The sync library throws "Unhandled webhook event" for event types it doesn't store —
+    // we catch that specifically so we can still run our own business logic and return 200
+    try {
+      await sync.processWebhook(payload, signature, uuid);
+    } catch (syncErr: any) {
+      if (syncErr?.message?.toLowerCase().includes('unhandled webhook event')) {
+        console.log(`ℹ️ stripe-replit-sync did not handle this event type (will process business logic anyway)`);
+      } else {
+        throw syncErr;
+      }
+    }
     
     // Parse the event to trigger custom business logic
     const stripe = await getUncachableStripeClient();
