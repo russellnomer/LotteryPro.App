@@ -225,7 +225,7 @@ export class LotteryDataService {
     if (game === 'powerball') {
       return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 69).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 26) + 1, jackpot: this.generateJackpotAmount() };
     } else if (game === 'megamillions') {
-      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 70).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 25) + 1, jackpot: this.generateJackpotAmount() };
+      return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 70).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 24) + 1, jackpot: this.generateJackpotAmount() };
     } else if (game === 'millionaireforlife') {
       return { game, drawDate: date, mainNumbers: this.generateRandomNumbers(5, 1, 58).sort((a, b) => a - b), bonusNumber: Math.floor(Math.random() * 5) + 1, jackpot: '$1,000,000/yr For Life' };
     } else if (game === 'nylotto') {

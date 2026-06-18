@@ -10,7 +10,7 @@ export const GAME_CONFIG = {
   megamillions: {
     name: 'Mega Millions',
     mainNumbers: { count: 5, min: 1, max: 70 },
-    bonusNumber: { count: 1, min: 1, max: 25, name: 'Mega Ball' },
+    bonusNumber: { count: 1, min: 1, max: 24, name: 'Mega Ball' },
     drawDays: ['Tue', 'Fri'],
     price: 5,
     digitGame: false

@@ -14,7 +14,7 @@ export const GAME_CONFIG = {
   megamillions: {
     name: 'Mega Millions',
     mainNumbers: { min: 1, max: 70, count: 5 },
-    bonusNumber: { min: 1, max: 25, name: 'Mega Ball' },
+    bonusNumber: { min: 1, max: 24, name: 'Mega Ball' },
     color: 'blue',
     odds: '1 in 302,575,350',
     icon: 'fas fa-gem',
