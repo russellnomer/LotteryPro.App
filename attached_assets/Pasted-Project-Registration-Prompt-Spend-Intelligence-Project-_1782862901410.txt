@@ -1,0 +1,53 @@
+Project Registration Prompt
+
+
+# Spend Intelligence — Project Registration
+This prompt registers this project with the Spend Intelligence cost tracker
+so that invoice charges can be attributed to it automatically.
+It will:
+ 1. Read this project's name and Repl ID from the environment
+ 2. POST that identity to the registration endpoint (idempotent — safe to re-run)
+ 3. Store the returned tracking token as a Replit secret
+It does NOT modify any server code or inject any runtime dependencies.
+---
+## Step 1 — Discover this project's identity
+Determine the project name and Repl ID:
+- Project name: check `package.json` (the "name" field), `pyproject.toml`,
+ or `replit.md` for a declared name. Fall back to the top-level directory name.
+- Repl ID: read the environment variable `REPL_ID`. This is set automatically
+ by Replit in every repl — you do not need to find or create it.
+- Custom domain: read `REPLIT_DOMAINS` if set; use null if not present.
+---
+## Step 2 — Register this project
+Make the following HTTP POST request, substituting the values from Step 1:
+POST https://acab3904-d07b-4c35-ab72-de3a880a6934-00-27s5fsp72uf02.picard.replit.dev/api/projects/self-register
+Content-Type: application/json
+X-Register-Key: a00dd82ff52fee4fc8644dc696ee2bafa6962601c4e52cd8
+{
+ "name": "<project name from Step 1>",
+ "replId": "<REPL_ID value>",
+ "customDomain": "<REPLIT_DOMAINS value, or null>",
+ "startDate": "<today's date in YYYY-MM-DD format>"
+}
+The response will be:
+{
+ "projectId": "...",
+ "trackingToken": "<48-char hex token>",
+ "eventsUrl": "https://acab3904-d07b-4c35-ab72-de3a880a6934-00-27s5fsp72uf02.picard.replit.dev/api/events",
+ "isNew": true
+}
+Note: this endpoint is idempotent. If this project is already registered,
+it returns the existing token rather than creating a duplicate.
+Save the `trackingToken` value for Step 3.
+---
+## Step 3 — Store the tracking token as a Replit secret
+Use the Replit secrets tool to set:
+ Key:   SPEND_INTELLIGENCE_TOKEN
+ Value: <trackingToken from Step 2>
+This is the only file-system or environment change this prompt makes.
+---
+Registration is complete. This project's Repl ID is now linked to its
+invoice line items in the Spend Intelligence cost tracker. No server code
+was modified.
+
+
