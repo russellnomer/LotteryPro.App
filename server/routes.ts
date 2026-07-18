@@ -60,11 +60,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Redirect legacy /subscription page → canonical /pricing (301 permanent)
-  app.get('/subscription', (_req, res) => {
-    res.redirect(301, '/pricing');
-  });
-
   // Serve static files from public directory (robots.txt, security.txt, og images)
   const publicPath = path.resolve(process.cwd(), "public");
   if (fs.existsSync(publicPath)) {
@@ -83,40 +78,9 @@ Sitemap: https://lotterypro.app/sitemap.xml
 `);
   });
 
-  // Sitemap — lists all public routes for Google indexing
-  app.get('/sitemap.xml', (_req, res) => {
-    const today = new Date().toISOString().split('T')[0];
-    const baseUrl = 'https://lotterypro.app';
-    const urls = [
-      { loc: '/', priority: '1.0', changefreq: 'daily' },
-      { loc: '/pricing', priority: '0.9', changefreq: 'weekly' },
-      { loc: '/scratch-offs', priority: '0.8', changefreq: 'daily' },
-      { loc: '/blog', priority: '0.8', changefreq: 'weekly' },
-      { loc: '/music', priority: '0.7', changefreq: 'monthly' },
-      { loc: '/books', priority: '0.7', changefreq: 'monthly' },
-      { loc: '/performance', priority: '0.7', changefreq: 'weekly' },
-      { loc: '/pools', priority: '0.6', changefreq: 'weekly' },
-      { loc: '/support', priority: '0.5', changefreq: 'monthly' },
-      { loc: '/privacy', priority: '0.4', changefreq: 'yearly' },
-      { loc: '/terms', priority: '0.4', changefreq: 'yearly' },
-      { loc: '/accessibility', priority: '0.3', changefreq: 'yearly' },
-    ];
+  // Note: /subscription redirect and /sitemap.xml are registered in server/index.ts
+  // before registerRoutes() so they run before Vite's dev middleware.
 
-    const xmlUrls = urls.map(({ loc, priority, changefreq }) => `
-  <url>
-    <loc>${baseUrl}${loc}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>
-  </url>`).join('');
-
-    res.set('Content-Type', 'application/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${xmlUrls}
-</urlset>`);
-  });
-  
   app.get('/security.txt', (req, res) => {
     res.redirect('/.well-known/security.txt');
   });

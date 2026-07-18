@@ -233,7 +233,44 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <SEOHead title="AI-Powered Lottery Analysis & Smart Picks" description="Analyze Powerball & Mega Millions with 2,020+ real winning numbers. Generate smart picks with statistical algorithms. Free tier available." path="/" />
+      <SEOHead
+        title="AI-Powered Lottery Analysis & Smart Picks"
+        description="Analyze Powerball & Mega Millions with 2,020+ real winning numbers. Generate smart picks with statistical algorithms. Free tier available."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "name": "LotteryPro",
+              "url": "https://lotterypro.app",
+              "logo": "https://lotterypro.app/og-default.png",
+              "founder": {
+                "@type": "Person",
+                "name": "Russell Nomer",
+                "url": "https://russellnomermusic.com"
+              },
+              "sameAs": [
+                "https://russellnomermusic.com",
+                "https://www.amazon.com/stores/Russell-Nomer/author/B00KQYGLDY"
+              ]
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "LotteryPro",
+              "description": "Educational lottery number analysis for Powerball and Mega Millions. Study historical frequency patterns, hot/cold numbers, and scratch-off prize data.",
+              "applicationCategory": "EntertainmentApplication",
+              "operatingSystem": "Web, iOS",
+              "url": "https://lotterypro.app",
+              "offers": {
+                "@type": "Offer",
+                "price": "7.99",
+                "priceCurrency": "USD"
+              }
+            }
+          ]
+        }}
+      />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -392,7 +429,7 @@ export default function Home() {
                     <span className="text-orange-600 ml-2">• Daily limit reached</span>
                   )}
                 </span>
-                <Button size="sm" variant="outline" className="min-h-[44px]" onClick={() => window.location.href = '/subscription'}>
+                <Button size="sm" variant="outline" className="min-h-[44px]" onClick={() => window.location.href = '/pricing'}>
                   <Crown className="h-4 w-4 mr-1" />
                   Upgrade
                 </Button>
@@ -505,7 +542,7 @@ export default function Home() {
                        'Daily Limit Reached' : 'Generate 6 Numbers'}
                     </Button>
                     {userTier === 'free' && dailyGenerationsUsed >= maxDailyGenerations && (
-                      <Button variant="outline" onClick={() => window.location.href = '/subscription'}>
+                      <Button variant="outline" onClick={() => window.location.href = '/pricing'}>
                         <Lock className="h-4 w-4 mr-2" />
                         Upgrade
                       </Button>
