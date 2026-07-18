@@ -56,9 +56,16 @@ export default function Pricing() {
 
   const checkoutMutation = useMutation({
     mutationFn: async (plan: 'monthly' | 'annual') => {
+      // Client-side guard: never even make the request for an active subscriber
+      if (subStatus?.isPremium) {
+        const err = new Error("You're already subscribed to LotteryPro Premium.");
+        (err as any).code = 'already_subscribed';
+        throw err;
+      }
+      // apiRequest throws on non-2xx (including 409), so the raw error message
+      // contains the JSON body — we detect already_subscribed in onError below
       const res = await apiRequest('POST', '/api/subscription/checkout', { plan });
-      const data = await res.json();
-      return data as { url: string };
+      return await res.json() as { url: string };
     },
     onSuccess: (data) => {
       if (data?.url) {
@@ -68,6 +75,19 @@ export default function Pricing() {
       }
     },
     onError: (err: any) => {
+      // Catches both the client-side guard (err.code) and the backend 409
+      // (whose error message includes the 'already_subscribed' JSON payload)
+      const isAlreadySubscribed =
+        err?.code === 'already_subscribed' ||
+        (typeof err?.message === 'string' && err.message.includes('already_subscribed'));
+      if (isAlreadySubscribed) {
+        toast({
+          title: "You're already subscribed",
+          description: "Manage your plan from this page.",
+        });
+        setLocation('/pricing');
+        return;
+      }
       toast({
         title: "Checkout Error",
         description: err.message || "Could not start checkout. Please try again.",

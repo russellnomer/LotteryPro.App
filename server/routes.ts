@@ -2827,6 +2827,23 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         return res.status(400).json({ error: 'Invalid plan. Use monthly or annual.' });
       }
 
+      // Guard: prevent duplicate checkout for already-subscribed users
+      // Matches the same tier list used by /api/subscription/status
+      const premiumTiers = ['premium', 'pro', 'founder', 'lifetime', 'unlimited'];
+      if (req.user) {
+        const existingUser = await storage.getUserById(req.user.id);
+        if (
+          existingUser &&
+          premiumTiers.includes(existingUser.subscriptionTier || '') &&
+          existingUser.subscriptionStatus === 'active'
+        ) {
+          return res.status(409).json({
+            error: 'already_subscribed',
+            message: "You're already subscribed to LotteryPro Premium.",
+          });
+        }
+      }
+
       const { getUncachableStripeClient } = await import('./stripeClient');
       const stripe = await getUncachableStripeClient();
 
