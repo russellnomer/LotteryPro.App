@@ -138,16 +138,21 @@ export default function Navigation() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path;
-              
+              const isPricing = item.path === "/pricing";
+
               return (
                 <Link href={item.path} key={item.path}>
                   <Button
-                    variant={isActive ? "secondary" : "ghost"}
+                    variant={isActive && !isPricing ? "secondary" : "ghost"}
                     size="sm"
                     className={`flex items-center space-x-2 ${
-                      isActive 
-                        ? "bg-white/20 text-white" 
-                        : "text-blue-100 hover:text-white hover:bg-white/10"
+                      isPricing
+                        ? isActive
+                          ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border border-yellow-400 shadow-md shadow-yellow-900/30"
+                          : "bg-gradient-to-r from-yellow-500/90 to-orange-500/90 text-white border border-yellow-400/70 hover:from-yellow-400 hover:to-orange-400 shadow-sm shadow-yellow-900/20"
+                        : isActive
+                          ? "bg-white/20 text-white"
+                          : "text-blue-100 hover:text-white hover:bg-white/10"
                     }`}
                   >
                     <Icon size={16} />
