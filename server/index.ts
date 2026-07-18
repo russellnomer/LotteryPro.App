@@ -273,8 +273,9 @@ app.use((req, res, next) => {
         changefreq: 'monthly',
         lastmod: p.publishedAt ? new Date(p.publishedAt).toISOString().split('T')[0] : today,
       }));
-    } catch (_e) {
-      // DB not ready — skip dynamic blog URLs
+    } catch (e: any) {
+      // DB query failed — log a warning so it's visible in server logs
+      console.warn('[sitemap] WARNING: DB query for blog posts failed — published posts may be missing from sitemap.', e?.message ?? e);
     }
 
     const allUrls = [...staticUrls, ...blogUrls];

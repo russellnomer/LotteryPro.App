@@ -3214,6 +3214,73 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // GET /api/admin/sitemap-stats — returns total URL count in the sitemap (static + published blog posts)
+  app.get("/api/admin/sitemap-stats", requireAdmin, async (_req, res) => {
+    const STATIC_URL_COUNT = 14; // mirrors the staticUrls array in server/index.ts
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq, sql } = await import("drizzle-orm");
+      const [{ count }] = await db
+        .select({ count: sql<number>`cast(count(*) as int)` })
+        .from(blogPosts)
+        .where(eq(blogPosts.published, true));
+      res.json({ totalUrls: STATIC_URL_COUNT + count, publishedBlogPosts: count, staticUrls: STATIC_URL_COUNT });
+    } catch (error: any) {
+      console.warn('[sitemap-stats] WARNING: DB query failed.', error?.message ?? error);
+      // Return 200 so the UI can display the degraded-state warning instead of throwing
+      res.json({ totalUrls: STATIC_URL_COUNT, publishedBlogPosts: 0, staticUrls: STATIC_URL_COUNT, error: 'DB unavailable' });
+    }
+  });
+
+  // GET /api/admin/sitemap-verify — checks that all published blog slugs actually appear in /sitemap.xml
+  app.get("/api/admin/sitemap-verify", requireAdmin, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+
+      // Fetch published slugs from DB
+      const rows = await db
+        .select({ slug: blogPosts.slug })
+        .from(blogPosts)
+        .where(eq(blogPosts.published, true));
+
+      if (rows.length === 0) {
+        return res.json({ ok: true, message: 'No published posts — nothing to verify.', checked: 0, missing: [] });
+      }
+
+      // Fetch the live sitemap from ourselves
+      const host = `http://localhost:${process.env.PORT || 5000}`;
+      const sitemapRes = await fetch(`${host}/sitemap.xml`);
+      if (!sitemapRes.ok) {
+        return res.json({ ok: false, message: `Could not fetch /sitemap.xml (HTTP ${sitemapRes.status})`, checked: 0, missing: [] });
+      }
+      const xml = await sitemapRes.text();
+
+      // Check each published slug appears in the sitemap XML
+      const missing: string[] = [];
+      for (const { slug } of rows) {
+        if (!xml.includes(`/blog/${slug}`)) {
+          missing.push(slug);
+        }
+      }
+
+      const ok = missing.length === 0;
+      res.json({
+        ok,
+        message: ok
+          ? `All ${rows.length} published post${rows.length === 1 ? '' : 's'} found in sitemap.`
+          : `${missing.length} of ${rows.length} published post${rows.length === 1 ? '' : 's'} missing from sitemap.`,
+        checked: rows.length,
+        missing,
+      });
+    } catch (error: any) {
+      console.warn('[sitemap-verify] ERROR:', error?.message ?? error);
+      res.status(500).json({ ok: false, message: `Verification error: ${error?.message ?? error}`, checked: 0, missing: [] });
+    }
+  });
+
   // GET /api/blog-slugs — returns published slugs and publishedAt for sitemap
   app.get("/api/blog-slugs", async (_req, res) => {
     try {

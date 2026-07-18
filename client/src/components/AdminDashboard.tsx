@@ -1122,6 +1122,21 @@ function BlogEditorTab() {
     queryKey: ["/api/blog/all"],
   });
 
+  const { data: sitemapStats } = useQuery<{ totalUrls: number; publishedBlogPosts: number; staticUrls: number; error?: string }>({
+    queryKey: ["/api/admin/sitemap-stats"],
+    refetchInterval: 30000,
+  });
+
+  const [verifyResult, setVerifyResult] = useState<{ ok: boolean; message: string; checked: number; missing: string[] } | null>(null);
+  const verifyMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/sitemap-verify");
+      return res.json() as Promise<{ ok: boolean; message: string; checked: number; missing: string[] }>;
+    },
+    onSuccess: (data) => { setVerifyResult(data); },
+    onError: (err: any) => { setVerifyResult({ ok: false, message: err.message, checked: 0, missing: [] }); },
+  });
+
   const posts = data?.posts ?? [];
 
   const saveMutation = useMutation({
@@ -1141,6 +1156,7 @@ function BlogEditorTab() {
         setForm({ ...EMPTY_FORM });
         queryClient.invalidateQueries({ queryKey: ["/api/blog/all"] });
         queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/sitemap-stats"] });
       } else {
         toast({ title: "Save failed", description: data.message, variant: "destructive" });
       }
@@ -1160,6 +1176,7 @@ function BlogEditorTab() {
         toast({ title: data.post.published ? "Published!" : "Unpublished", description: data.post.title });
         queryClient.invalidateQueries({ queryKey: ["/api/blog/all"] });
         queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/sitemap-stats"] });
       }
     },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
@@ -1174,6 +1191,7 @@ function BlogEditorTab() {
       toast({ title: "Post deleted" });
       queryClient.invalidateQueries({ queryKey: ["/api/blog/all"] });
       queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sitemap-stats"] });
     },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -1228,6 +1246,76 @@ function BlogEditorTab() {
           </Button>
         )}
       </div>
+
+      {/* Sitemap URL count + verification */}
+      <Card className="border border-blue-100 bg-blue-50">
+        <CardContent className="py-3 px-4 space-y-3">
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Globe size={16} className="text-blue-600" />
+              <span className="text-sm font-medium text-blue-900">Sitemap URLs</span>
+            </div>
+            {sitemapStats ? (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-2xl font-bold text-blue-700">{sitemapStats.totalUrls}</span>
+                  <span className="text-xs text-blue-500">total</span>
+                </div>
+                <div className="text-xs text-blue-600 flex gap-4">
+                  <span>{sitemapStats.staticUrls} static pages</span>
+                  <span>+</span>
+                  <span className="font-semibold">{sitemapStats.publishedBlogPosts} published posts</span>
+                </div>
+                {sitemapStats.error && (
+                  <span className="text-xs text-amber-600 flex items-center gap-1">
+                    <AlertTriangle size={12} /> DB unavailable — count may be incomplete
+                  </span>
+                )}
+                <a
+                  href="/sitemap.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-500 underline ml-auto"
+                >
+                  View sitemap.xml ↗
+                </a>
+              </>
+            ) : (
+              <span className="text-xs text-blue-400 animate-pulse">Loading...</span>
+            )}
+          </div>
+
+          {/* Sitemap verification check */}
+          <div className="flex items-center gap-3 pt-1 border-t border-blue-100 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100"
+              onClick={() => { setVerifyResult(null); verifyMutation.mutate(); }}
+              disabled={verifyMutation.isPending}
+            >
+              {verifyMutation.isPending ? (
+                <><RefreshCw size={12} className="mr-1 animate-spin" /> Checking...</>
+              ) : (
+                <><CheckCircle size={12} className="mr-1" /> Verify Sitemap</>
+              )}
+            </Button>
+            {verifyResult && (
+              <div className={`flex-1 flex items-start gap-2 text-xs rounded px-2 py-1 ${verifyResult.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                {verifyResult.ok
+                  ? <CheckCircle size={12} className="mt-0.5 shrink-0 text-green-600" />
+                  : <AlertTriangle size={12} className="mt-0.5 shrink-0 text-red-600" />}
+                <span>
+                  {verifyResult.message}
+                  {verifyResult.missing.length > 0 && (
+                    <span className="block font-mono mt-0.5">{verifyResult.missing.map(s => `/blog/${s}`).join(', ')}</span>
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Create / Edit Form */}
       {showForm && (
