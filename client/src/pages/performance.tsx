@@ -110,17 +110,20 @@ export default function Performance() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SEOHead title="Performance Analytics & Historical Tracking" description="Track lottery number generation performance with real draw results. Comprehensive win/loss analysis across multiple spending levels." path="/performance" />
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <BarChart3 className="w-6 h-6 text-primary mr-2" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="page-title">
-                Analysis History (Performance)
-              </h1>
-            </div>
+      {/* Dark hero header — matches design system */}
+      <header className="relative overflow-hidden bg-[#0a0f1e] text-white">
+        <div className="lp-hero-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-amber-500/8 rounded-full blur-[140px] pointer-events-none" aria-hidden="true" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <BarChart3 className="w-8 h-8 text-amber-400" />
+            <h1 className="text-4xl font-bold text-white" data-testid="page-title">
+              Analysis <span className="text-amber-400">History</span>
+            </h1>
           </div>
+          <p className="text-gray-300 text-lg max-w-xl mx-auto">
+            Track lottery number generation performance with real draw results
+          </p>
         </div>
       </header>
 

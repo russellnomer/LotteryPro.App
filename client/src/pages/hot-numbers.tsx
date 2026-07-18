@@ -93,24 +93,28 @@ function HotNumbersPage({ game }: HotNumbersPageProps) {
         jsonLd={jsonLd}
       />
 
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Flame className="text-red-500" size={28} />
-            <h1 className="text-4xl font-bold text-gray-900">{h1}</h1>
-            <Flame className="text-red-500" size={28} />
+      {/* Dark hero header — matches design system */}
+      <div className="relative overflow-hidden bg-[#0a0f1e] text-white">
+        <div className="lp-hero-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-amber-500/8 rounded-full blur-[140px] pointer-events-none" aria-hidden="true" />
+        <div className="relative max-w-5xl mx-auto px-4 py-14 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Flame className="text-amber-400" size={28} />
+            <h1 className="text-4xl font-bold text-white">{h1}</h1>
+            <Flame className="text-amber-400" size={28} />
           </div>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             {pageDesc}
           </p>
           {data && (
-            <p className="text-sm text-gray-400 mt-2">
-              Based on <strong className="text-gray-700">{data.stats.totalDraws.toLocaleString()}</strong> official draws · {data.stats.dataFreshness}
+            <p className="text-sm text-gray-400 mt-3">
+              Based on <strong className="text-amber-400">{data.stats.totalDraws.toLocaleString()}</strong> official draws · {data.stats.dataFreshness}
             </p>
           )}
         </div>
+      </div>
 
+      <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Stats bar */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
