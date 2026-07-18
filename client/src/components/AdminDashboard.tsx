@@ -41,6 +41,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import AdManagementDashboard from "./AdManagementDashboard";
+import BlogMarkdownContent from "./BlogMarkdownContent";
 
 interface VipCodeGeneration {
   targetEmail: string;
@@ -1120,12 +1121,14 @@ const EMPTY_FORM = {
   ogImageUrl: CATEGORY_OG_IMAGES["Analysis"],
 };
 
+
 function BlogEditorTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<BlogPostAdmin | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<typeof EMPTY_FORM>({ ...EMPTY_FORM });
+  const [contentTab, setContentTab] = useState<"edit" | "preview">("edit");
 
   const { data, isLoading, refetch } = useQuery<{ success: boolean; posts: BlogPostAdmin[] }>({
     queryKey: ["/api/blog/all"],
@@ -1208,6 +1211,7 @@ function BlogEditorTab() {
   function startEdit(post: BlogPostAdmin) {
     setEditing(post);
     setCreating(false);
+    setContentTab("edit");
     setForm({
       slug: post.slug,
       title: post.title,
@@ -1224,12 +1228,14 @@ function BlogEditorTab() {
   function startCreate() {
     setCreating(true);
     setEditing(null);
+    setContentTab("edit");
     setForm({ ...EMPTY_FORM });
   }
 
   function cancelEdit() {
     setEditing(null);
     setCreating(false);
+    setContentTab("edit");
     setForm({ ...EMPTY_FORM });
   }
 
@@ -1410,14 +1416,49 @@ function BlogEditorTab() {
               </div>
             </div>
             <div>
-              <Label className="text-sm font-medium">Content * (Markdown supported)</Label>
-              <Textarea
-                value={form.content}
-                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                placeholder="## Introduction&#10;&#10;Write your article content here in Markdown format...&#10;&#10;## Section Heading&#10;&#10;Paragraph text..."
-                className="mt-1 font-mono text-sm min-h-[400px]"
-              />
-              <p className="text-xs text-gray-400 mt-1">Use ## for headings, **bold**, and &gt; for blockquotes</p>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-sm font-medium">Content * (Markdown supported)</Label>
+                <div className="flex rounded-md border border-gray-200 overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setContentTab("edit")}
+                    className={`px-3 py-1 flex items-center gap-1 transition-colors ${contentTab === "edit" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                  >
+                    <Edit size={12} /> Write
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setContentTab("preview")}
+                    className={`px-3 py-1 flex items-center gap-1 transition-colors border-l border-gray-200 ${contentTab === "preview" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                  >
+                    <Eye size={12} /> Preview
+                  </button>
+                </div>
+              </div>
+              {contentTab === "edit" ? (
+                <>
+                  <Textarea
+                    value={form.content}
+                    onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                    placeholder="## Introduction&#10;&#10;Write your article content here in Markdown format...&#10;&#10;## Section Heading&#10;&#10;Paragraph text..."
+                    className="font-mono text-sm min-h-[400px]"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Use ## for headings, **bold**, and &gt; for blockquotes</p>
+                </>
+              ) : (
+                <div className="min-h-[400px] border border-gray-200 rounded-md bg-white p-5 overflow-auto">
+                  {form.content.trim() ? (
+                    <div>
+                      {form.title && (
+                        <h1 className="text-3xl font-bold text-gray-900 mb-4">{form.title}</h1>
+                      )}
+                      <BlogMarkdownContent content={form.content} />
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 italic text-sm">Nothing to preview yet — start writing in the Write tab.</p>
+                  )}
+                </div>
+              )}
             </div>
             {/* OG Image URL field with live preview */}
             <div>
