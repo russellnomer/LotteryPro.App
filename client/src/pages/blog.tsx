@@ -1,11 +1,11 @@
 import { Link, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import SEOHead from "@/components/SEOHead";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Clock, Calendar, ArrowRight, BookOpen } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, ArrowRight, BookOpen, BarChart2, Flame } from "lucide-react";
 
 interface BlogPostData {
   id: string;
@@ -19,6 +19,17 @@ interface BlogPostData {
   ogImageUrl: string | null;
   category: string;
   readTimeMinutes: number;
+}
+
+interface RelatedPostData {
+  id: string;
+  slug: string;
+  title: string;
+  metaDescription: string;
+  category: string;
+  readTimeMinutes: number;
+  publishedAt: string | null;
+  author: string;
 }
 
 const categoryColors: Record<string, string> = {
@@ -125,6 +136,54 @@ export function BlogIndex() {
           </div>
         )}
 
+        {/* Featured Stats Section — links to live stat pages for SEO depth */}
+        <div className="mb-12">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <BarChart2 size={20} className="text-blue-600" />
+            Live Frequency Data
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link href="/powerball/hot-numbers">
+              <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200 h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Flame size={16} className="text-red-500" />
+                    <Badge className="bg-red-100 text-red-800" variant="secondary">Live Data</Badge>
+                  </div>
+                  <CardTitle className="text-base leading-tight">Powerball Hot Numbers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Which Powerball numbers appear most often? See real frequency rankings across 2,000+ official draws.
+                  </p>
+                  <span className="text-blue-600 text-sm font-medium flex items-center gap-1">
+                    View frequency chart <ArrowRight size={14} />
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/megamillions/hot-numbers">
+              <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200 h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Flame size={16} className="text-orange-500" />
+                    <Badge className="bg-orange-100 text-orange-800" variant="secondary">Live Data</Badge>
+                  </div>
+                  <CardTitle className="text-base leading-tight">Mega Millions Hot Numbers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Explore Mega Millions draw frequency across 1,500+ results. Updated after every drawing.
+                  </p>
+                  <span className="text-blue-600 text-sm font-medium flex items-center gap-1">
+                    View frequency chart <ArrowRight size={14} />
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+
         <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 rounded-2xl p-8 text-center text-white">
           <h2 className="text-2xl font-bold mb-3">
             Ready to try smart picks?
@@ -147,12 +206,13 @@ export function BlogPost() {
   const [, params] = useRoute("/blog/:slug");
   const slug = params?.slug;
 
-  const { data, isLoading, isError } = useQuery<{ success: boolean; post: BlogPostData }>({
+  const { data, isLoading, isError } = useQuery<{ success: boolean; post: BlogPostData; related: RelatedPostData[] }>({
     queryKey: ["/api/blog", slug],
     enabled: !!slug,
   });
 
   const post = data?.post;
+  const related = data?.related ?? [];
 
   if (isLoading) {
     return (
@@ -309,6 +369,64 @@ export function BlogPost() {
           <p className="text-sm text-amber-800 leading-relaxed">
             <strong>Disclaimer:</strong> This article is for informational and entertainment purposes only. Lottery games are games of chance, and no analysis method, strategy, or system can guarantee winning outcomes. Past drawing results do not influence future results. Always play responsibly and within your budget. If you or someone you know has a gambling problem, call 1-800-GAMBLER for help.
           </p>
+        </div>
+
+        {/* Related Articles — same category, returned from API */}
+        {related.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <BookOpen size={20} className="text-blue-600" />
+              Related Articles
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {related.map((r) => (
+                <Link key={r.slug} href={`/blog/${r.slug}`}>
+                  <Card className="h-full hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200">
+                    <CardHeader className="pb-2">
+                      <Badge
+                        className={categoryColors[r.category] || "bg-gray-100 text-gray-800"}
+                        variant="secondary"
+                      >
+                        {r.category}
+                      </Badge>
+                      <CardTitle className="text-sm font-semibold text-gray-900 mt-2 leading-snug">
+                        {r.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-3">{r.metaDescription}</p>
+                      <span className="flex items-center gap-1 text-xs text-gray-400">
+                        <Clock size={11} />
+                        {r.readTimeMinutes} min read
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Link back to live stat pages for contextual depth */}
+        <div className="mt-8 flex flex-wrap gap-3 justify-center">
+          <Link href="/powerball/hot-numbers">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Flame size={13} className="text-red-500" />
+              Powerball Hot Numbers
+            </Button>
+          </Link>
+          <Link href="/megamillions/hot-numbers">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Flame size={13} className="text-orange-500" />
+              Mega Millions Hot Numbers
+            </Button>
+          </Link>
+          <Link href="/blog">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <BarChart2 size={13} />
+              All Articles
+            </Button>
+          </Link>
         </div>
 
         <div className="mt-10 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 rounded-2xl p-8 text-center text-white">

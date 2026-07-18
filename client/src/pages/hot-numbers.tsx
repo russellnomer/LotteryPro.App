@@ -269,18 +269,68 @@ function HotNumbersPage({ game }: HotNumbersPageProps) {
           </Link>
         </div>
 
-        {/* Blog cross-links */}
-        <div className="text-center">
-          <p className="text-gray-500 text-sm mb-3">Learn more about lottery frequency analysis</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/blog/powerball-number-frequency-analysis">
-              <Button variant="outline" size="sm">Powerball Frequency Guide</Button>
+        {/* Related blog articles — rich cards for SEO internal linking depth */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <BarChart2 size={18} className="text-blue-600" />
+            Learn More: Related Articles
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link href={isPowerball ? "/blog/powerball-number-frequency-analysis" : "/blog/mega-millions-frequency-analysis"}>
+              <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200 h-full">
+                <CardHeader className="pb-2">
+                  <Badge className="bg-blue-100 text-blue-800 w-fit" variant="secondary">Analysis</Badge>
+                  <CardTitle className="text-sm font-semibold text-gray-900 mt-2 leading-snug">
+                    {isPowerball ? "Powerball Number Frequency Analysis" : "Mega Millions Frequency Analysis"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {isPowerball
+                      ? "A deep dive into historical Powerball draw patterns and what frequency data actually tells us."
+                      : "Explore historical draw patterns for Mega Millions and what the data can and cannot reveal."}
+                  </p>
+                  <span className="text-blue-600 text-xs flex items-center gap-1 font-medium">
+                    Read article <ArrowRight size={12} />
+                  </span>
+                </CardContent>
+              </Card>
             </Link>
             <Link href="/blog/smart-number-generation-methods">
-              <Button variant="outline" size="sm">Number Generation Methods</Button>
+              <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200 h-full">
+                <CardHeader className="pb-2">
+                  <Badge className="bg-orange-100 text-orange-800 w-fit" variant="secondary">Methods</Badge>
+                  <CardTitle className="text-sm font-semibold text-gray-900 mt-2 leading-snug">
+                    Smart Number Generation Methods
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-gray-500 mb-2">
+                    How different pick strategies — hot, cold, balanced, and random — compare when applied to real draw data.
+                  </p>
+                  <span className="text-blue-600 text-xs flex items-center gap-1 font-medium">
+                    Read article <ArrowRight size={12} />
+                  </span>
+                </CardContent>
+              </Card>
             </Link>
             <Link href="/blog">
-              <Button variant="outline" size="sm">All Articles</Button>
+              <Card className="hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200 h-full">
+                <CardHeader className="pb-2">
+                  <Badge className="bg-gray-100 text-gray-700 w-fit" variant="secondary">Blog</Badge>
+                  <CardTitle className="text-sm font-semibold text-gray-900 mt-2 leading-snug">
+                    All LotteryPro Articles
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Browse all educational articles on lottery statistics, pool strategies, and analysis methods.
+                  </p>
+                  <span className="text-blue-600 text-xs flex items-center gap-1 font-medium">
+                    View all <ArrowRight size={12} />
+                  </span>
+                </CardContent>
+              </Card>
             </Link>
           </div>
         </div>

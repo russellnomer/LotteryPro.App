@@ -3095,19 +3095,67 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
-  // GET /api/blog/:slug — single published post (public)
+  // GET /api/blog/:slug — single published post (public) + up to 3 related posts
+  // Priority: same-category posts first; if fewer than 3, fills remainder with
+  // recent posts from other categories so every post always shows 2–3 related links.
   app.get("/api/blog/:slug", async (req, res) => {
     try {
       const { db } = await import("./db");
       const { blogPosts } = await import("@shared/schema");
-      const { eq, and } = await import("drizzle-orm");
+      const { eq, and, ne, notInArray, desc } = await import("drizzle-orm");
+
+      const relatedCols = {
+        id: blogPosts.id,
+        slug: blogPosts.slug,
+        title: blogPosts.title,
+        metaDescription: blogPosts.metaDescription,
+        category: blogPosts.category,
+        readTimeMinutes: blogPosts.readTimeMinutes,
+        publishedAt: blogPosts.publishedAt,
+        author: blogPosts.author,
+      };
+
       const [post] = await db
         .select()
         .from(blogPosts)
         .where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.published, true)))
         .limit(1);
       if (!post) return res.status(404).json({ success: false, message: "Post not found" });
-      res.json({ success: true, post });
+
+      // Step 1: same-category posts (up to 3)
+      const sameCategory = await db
+        .select(relatedCols)
+        .from(blogPosts)
+        .where(
+          and(
+            eq(blogPosts.published, true),
+            eq(blogPosts.category, post.category),
+            ne(blogPosts.slug, post.slug),
+          ),
+        )
+        .orderBy(desc(blogPosts.publishedAt))
+        .limit(3);
+
+      // Step 2: if fewer than 3, fill with recent posts from other categories
+      let related = sameCategory;
+      if (related.length < 3) {
+        const needed = 3 - related.length;
+        const excludeSlugs = [post.slug, ...related.map((r) => r.slug)];
+        const fallback = await db
+          .select(relatedCols)
+          .from(blogPosts)
+          .where(
+            and(
+              eq(blogPosts.published, true),
+              notInArray(blogPosts.slug, excludeSlugs),
+            ),
+          )
+          .orderBy(desc(blogPosts.publishedAt))
+          .limit(needed);
+        related = [...related, ...fallback];
+      }
+
+      res.json({ success: true, post, related });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
     }
