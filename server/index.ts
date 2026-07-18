@@ -23,6 +23,7 @@ import { sendAllDrawReminders } from './emailService';
 import { startWatchdog } from './watchdog';
 import { processDripEmails } from './dripService';
 import { storage } from './storage';
+import './scratchOffService'; // ensures gap detector starts at process boot (not on first lazy import)
 
 declare module 'express-session' {
   interface SessionData {

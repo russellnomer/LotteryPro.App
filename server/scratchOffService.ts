@@ -141,7 +141,22 @@ const PRICE_LOOKUP: Record<string, number> = {
   '1688': 10, // $3,000,000 BONUS STARS
   '1689': 5,  // BINGO TIMES 20
   '1690': 1,  // 7-11-21 TRIPLER
+  '1691': 30, // 300X THE MONEY
+  '1692': 5,  // $1,000,000 MUST LOVE DOGS
   '1693': 10, // BONUS BLACKJACK
+  '1694': 20, // $2,000,000 100X CASHWORD
+  '1695': 5,  // POT OF GOLD
+  '1696': 3,  // MATCH 7S
+  '1697': 10, // $3,000,000 MAX MULTIPLIER
+  '1698': 5,  // DOUBLE YOUR MONEY
+  '1699': 1,  // LUCKY 7S
+  '1700': 20, // MILLIONAIRE RICHES
+  '1701': 5,  // HOT DOG
+  '1702': 3,  // DIAMOND CASHWORD
+  '1703': 5,  // $1,000,000 50X CASHWORD
+  '1704': 10, // $50 OR $100 (same price tier as game #1646, identical name/series)
+  '1707': 1,  // LOOSE CHANGE (same series as games #1552 and #1618 — confirmed $1)
+  '1708': 5,  // DOUBLE TRIPLE CASHWORD (same series as game #1632 — confirmed $5)
 };
 
 // Parse prize_amount strings from the API into numeric dollar values
@@ -287,3 +302,78 @@ export async function getScratchOffGames(): Promise<ScratchOffGame[]> {
   cache = { data: games, fetchedAt: Date.now() };
   return games;
 }
+
+// ─── NY Scratch-Off Gap Detector ─────────────────────────────────────────────
+
+export interface ScratchOffGap {
+  gameNumber: string;
+  gameName: string;
+  detectedAt: string; // ISO timestamp
+}
+
+// In-memory store of games seen in the live NY API that have no price entry
+let detectedGaps: ScratchOffGap[] = [];
+let lastGapCheckAt: string | null = null;
+
+export function getDetectedGaps(): { gaps: ScratchOffGap[]; lastCheckedAt: string | null } {
+  return { gaps: detectedGaps, lastCheckedAt: lastGapCheckAt };
+}
+
+// Fetch the NY API, find all game numbers with no PRICE_LOOKUP entry, and
+// store them so the admin dashboard can surface them for manual follow-up.
+export async function detectNYScratchOffGaps(): Promise<ScratchOffGap[]> {
+  console.log('[scratchOff] Running weekly NY game-gap detection...');
+  try {
+    const url = 'https://data.ny.gov/resource/nzqa-7unk.json?%24limit=5000';
+    const rows = await fetchJson(url);
+
+    // Collect unique game numbers + names from the live API
+    const seen = new Map<string, string>(); // gameNumber → gameName
+    for (const row of rows) {
+      if (!seen.has(row.game_number)) {
+        seen.set(row.game_number, row.game_name);
+      }
+    }
+
+    // Identify games in the API that have no price entry
+    const gaps: ScratchOffGap[] = [];
+    for (const [gameNumber, gameName] of seen.entries()) {
+      if (PRICE_LOOKUP[gameNumber] === undefined) {
+        gaps.push({
+          gameNumber,
+          gameName,
+          detectedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    // Sort by game number ascending for easy reading
+    gaps.sort((a, b) => Number(a.gameNumber) - Number(b.gameNumber));
+
+    detectedGaps = gaps;
+    lastGapCheckAt = new Date().toISOString();
+
+    if (gaps.length > 0) {
+      console.warn(
+        `[scratchOff] ${gaps.length} NY game(s) missing from PRICE_LOOKUP:`,
+        gaps.map(g => `#${g.gameNumber} ${g.gameName}`).join(', ')
+      );
+    } else {
+      console.log('[scratchOff] No NY price gaps detected — all live games have prices.');
+    }
+
+    return gaps;
+  } catch (err: any) {
+    console.error('[scratchOff] Gap detection failed:', err?.message ?? err);
+    return detectedGaps; // return last known state on error
+  }
+}
+
+// Run gap detection once on startup, then weekly.
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Small delay so server is fully booted before the first network call
+setTimeout(() => {
+  detectNYScratchOffGaps();
+  setInterval(detectNYScratchOffGaps, WEEK_MS);
+}, 10_000);

@@ -1185,6 +1185,30 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // NY Scratch-Off Gap Report — returns any games in the live API without a price entry
+  app.get('/api/admin/scratch-off-gaps', requireAdmin, async (_req, res) => {
+    try {
+      const { getDetectedGaps } = await import('./scratchOffService');
+      const result = getDetectedGaps();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error fetching scratch-off gaps:', error);
+      res.status(500).json({ message: 'Failed to fetch scratch-off gaps' });
+    }
+  });
+
+  // Trigger an immediate gap re-check (admin convenience)
+  app.post('/api/admin/scratch-off-gaps/refresh', requireAdmin, async (_req, res) => {
+    try {
+      const { detectNYScratchOffGaps } = await import('./scratchOffService');
+      const gaps = await detectNYScratchOffGaps();
+      res.json({ gaps, refreshedAt: new Date().toISOString() });
+    } catch (error: any) {
+      console.error('Error refreshing scratch-off gaps:', error);
+      res.status(500).json({ message: 'Failed to refresh gaps' });
+    }
+  });
+
   // Advertisement Management Routes (Admin only)
   app.get('/api/admin/campaigns', requireAdmin, async (req, res) => {
     try {

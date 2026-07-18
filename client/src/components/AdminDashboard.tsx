@@ -111,8 +111,19 @@ const DRIP_STEP_LABELS: Record<number, string> = {
   4: 'Day 10 Sent',
 };
 
+interface ScratchOffGap {
+  gameNumber: string;
+  gameName: string;
+  detectedAt: string;
+}
+
+interface ScratchOffGapsData {
+  gaps: ScratchOffGap[];
+  lastCheckedAt: string | null;
+}
+
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs" | "blog" | "drip">("generate");
+  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs" | "blog" | "drip" | "scratchGaps">("generate");
   const [vipForm, setVipForm] = useState<VipCodeGeneration>({
     targetEmail: "",
     currentTier: "free",
@@ -271,6 +282,27 @@ export default function AdminDashboard() {
     },
   });
 
+  // Scratch-off gaps query
+  const scratchGapsQuery = useQuery<ScratchOffGapsData>({
+    queryKey: ['/api/admin/scratch-off-gaps'],
+    refetchOnWindowFocus: false,
+  });
+
+  // Trigger manual gap re-check
+  const refreshGapsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/admin/scratch-off-gaps/refresh', {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Gap check complete", description: "NY scratch-off gap list refreshed." });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scratch-off-gaps'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Refresh failed", description: error.message || "Could not refresh gaps", variant: "destructive" });
+    },
+  });
+
   // Update lottery data mutation
   const updateLotteryMutation = useMutation({
     mutationFn: async () => {
@@ -389,6 +421,7 @@ export default function AdminDashboard() {
                 { id: "drip", label: "Drip Sequences", icon: Mail },
                 { id: "ads", label: "Advertisement", icon: Monitor },
                 { id: "logs", label: "Admin Logs", icon: Activity },
+                { id: "scratchGaps", label: "Scratch-Off Gaps", icon: AlertTriangle },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1080,6 +1113,124 @@ export default function AdminDashboard() {
           <div>
             <AdManagementDashboard />
           </div>
+        )}
+
+        {/* Scratch-Off Gaps Tab */}
+        {activeTab === "scratchGaps" && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
+                    NY Scratch-Off Price Gaps
+                  </CardTitle>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Games found in the live NY API ({" "}
+                    <a
+                      href="https://data.ny.gov/resource/nzqa-7unk.json"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      data.ny.gov
+                    </a>
+                    ) that are missing from the PRICE_LOOKUP in{" "}
+                    <code className="bg-gray-100 px-1 rounded text-xs">server/scratchOffService.ts</code>.
+                    These games show &ldquo;Unknown&rdquo; price and score 0 in rankings. Look up each ticket price at{" "}
+                    <a
+                      href="https://nylottery.ny.gov/scratch-off-games"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      nylottery.ny.gov
+                    </a>{" "}
+                    and add the entry to the lookup. Checked automatically once per week.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshGapsMutation.mutate()}
+                  disabled={refreshGapsMutation.isPending}
+                  className="shrink-0"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshGapsMutation.isPending ? "animate-spin" : ""}`} />
+                  Refresh Now
+                </Button>
+              </div>
+              {scratchGapsQuery.data?.lastCheckedAt && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Last checked: {formatDate(scratchGapsQuery.data.lastCheckedAt)}
+                </p>
+              )}
+            </CardHeader>
+            <CardContent>
+              {scratchGapsQuery.isLoading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                  <p className="text-gray-500 mt-2">Loading gap report…</p>
+                </div>
+              ) : !scratchGapsQuery.data?.lastCheckedAt ? (
+                <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <RefreshCw className="h-5 w-5 text-blue-500 shrink-0" />
+                  <div>
+                    <p className="font-medium text-blue-800">First scan pending</p>
+                    <p className="text-sm text-blue-600">The gap detector runs 10 seconds after server boot. Click &ldquo;Refresh Now&rdquo; to trigger an immediate check.</p>
+                  </div>
+                </div>
+              ) : scratchGapsQuery.data?.gaps.length === 0 ? (
+                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+                  <div>
+                    <p className="font-medium text-green-800">All clear — no price gaps detected</p>
+                    <p className="text-sm text-green-600">Every game in the live NY API has a price entry. Rankings are complete.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Alert className="border-amber-300 bg-amber-50">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      <strong>{scratchGapsQuery.data?.gaps.length} game(s)</strong> in the live NY API have no price entry.
+                      They are showing &ldquo;Unknown&rdquo; price and rank 0 in the scratch-off helper.
+                      Look up each price at nylottery.ny.gov and add them to <code className="bg-amber-100 px-1 rounded text-xs">PRICE_LOOKUP</code> in <code className="bg-amber-100 px-1 rounded text-xs">server/scratchOffService.ts</code>.
+                    </AlertDescription>
+                  </Alert>
+                  <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+                    {scratchGapsQuery.data?.gaps.map((gap) => (
+                      <div key={gap.gameNumber} className="flex items-center justify-between p-3 hover:bg-gray-50">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="font-mono text-xs shrink-0">
+                            #{gap.gameNumber}
+                          </Badge>
+                          <span className="font-medium text-gray-900">{gap.gameName}</span>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-xs text-gray-400">
+                            Detected {new Date(gap.detectedAt).toLocaleDateString()}
+                          </span>
+                          <a
+                            href={`https://nylottery.ny.gov/scratch-off-games`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            <Globe className="h-3 w-3" />
+                            Look up price
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    After adding prices to PRICE_LOOKUP, redeploy the server and click &ldquo;Refresh Now&rdquo; to confirm gaps are resolved.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
