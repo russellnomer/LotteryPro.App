@@ -229,6 +229,31 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // Public stats for hero social proof — no auth required
+  app.get("/api/stats/public", async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { userAccounts } = await import('@shared/schema');
+      const { count } = await import('drizzle-orm');
+
+      // Count registered users
+      const [{ total: userTotal }] = await db
+        .select({ total: count() })
+        .from(userAccounts);
+
+      // Sum draws across all game types using the cache (fast, no extra DB hits)
+      let drawTotal = 0;
+      for (const game of ALL_GAME_TYPES) {
+        const draws = await lotteryCache.getEssentialDraws(game as GameType);
+        drawTotal += draws.length;
+      }
+
+      res.json({ draws: drawTotal, users: Number(userTotal) });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Get progressive loading status for real-time monitoring
   app.get("/api/loading/status", async (req, res) => {
     try {

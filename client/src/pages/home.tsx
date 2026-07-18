@@ -39,6 +39,25 @@ import { SiApplemusic, SiSpotify, SiYoutube } from 'react-icons/si';
 
 const MUSIC_DISMISSED_KEY = 'music_bar_dismissed';
 
+// Pulls live draw count from /api/stats/public; falls back to known baseline
+function HeroStatChip() {
+  const { data } = useQuery<{ draws: number; users: number }>({
+    queryKey: ['/api/stats/public'],
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const draws = data?.draws ?? 7614;
+  const label = draws.toLocaleString() + ' historical draws analyzed — updated daily';
+
+  return (
+    <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-8 text-sm text-amber-300 font-medium">
+      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+      {label}
+    </div>
+  );
+}
+
 function PostPickMusicBar() {
   const [dismissed, setDismissed] = useState(false);
 
@@ -110,6 +129,14 @@ export default function Home() {
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
   const [bannerResendCooldown, setBannerResendCooldown] = useState(0);
   
+  // Live public stats for hero — same cache key as HeroStatChip, no extra request
+  const { data: publicStats } = useQuery<{ draws: number; users: number }>({
+    queryKey: ['/api/stats/public'],
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const liveDraws = publicStats?.draws ?? 7614;
+
   // Get authenticated user info
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   
@@ -302,11 +329,9 @@ export default function Home() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[480px] bg-amber-500/8 rounded-full blur-[140px] pointer-events-none" aria-hidden="true" />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14 text-center">
-          {/* Social proof chip — above the fold, before the headline */}
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-8 text-sm text-amber-300 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-            7,614 historical draws analyzed — updated daily
-          </div>
+          {/* Social proof chip — live draw count from API, falls back to known baseline */}
+          <HeroStatChip />
+
 
           {/* Primary headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold leading-[1.08] tracking-tight mb-5">
@@ -340,7 +365,7 @@ export default function Home() {
           {/* Stats row — still above the fold on desktop */}
           <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 mt-14 pt-10 border-t border-white/8">
             {[
-              { value: "7,614+", label: "Historical draws" },
+              { value: liveDraws.toLocaleString() + "+", label: "Historical draws" },
               { value: "Free", label: "Always free tier" },
               { value: "110+", label: "NY scratch-offs ranked" },
             ].map(({ value, label }) => (
