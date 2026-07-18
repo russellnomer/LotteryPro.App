@@ -27,6 +27,7 @@ import ScratchOffs from "@/pages/scratch-offs";
 import Pricing from "@/pages/pricing";
 import CheckoutSuccess from "@/pages/checkout-success";
 import { BlogIndex, BlogPost } from "@/pages/blog";
+import { PowerballHotNumbers, MegaMillionsHotNumbers } from "@/pages/hot-numbers";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -54,6 +55,8 @@ function Router() {
           <Route path="/checkout-success" component={CheckoutSuccess} />
           <Route path="/blog" component={BlogIndex} />
           <Route path="/blog/:slug" component={BlogPost} />
+          <Route path="/powerball/hot-numbers" component={PowerballHotNumbers} />
+          <Route path="/megamillions/hot-numbers" component={MegaMillionsHotNumbers} />
           <Route path="/accessibility" component={Accessibility} />
           <Route component={NotFound} />
         </Switch>

@@ -5,6 +5,7 @@ import youtubeRoutes from "./routes/youtube";
 import youtubeService from "./youtubeService";
 import { insertTicketSchema, insertDrawSchema, type GameType, ALL_GAME_TYPES, GAME_CONFIG } from "@shared/schema";
 import { seedHistoricalData } from "./seedData";
+import { seedBlogData } from "./seedBlogData";
 import bcrypt from "bcrypt";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { createAdSenseConfigEndpoint } from "./middleware/adsense";
@@ -160,6 +161,7 @@ Canonical: https://lotterypro.app/.well-known/security.txt
   // Seed historical data and Russell Nomer content on startup  
   await seedHistoricalData();
   await seedRussellNomerContent();
+  await seedBlogData();
 
   // Sync founder account password from FOUNDER_PASSWORD env secret (no hardcoded credentials)
   const founderPassword = process.env.FOUNDER_PASSWORD;
@@ -3009,6 +3011,129 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     } catch (error: any) {
       console.error('[AppleIAP] subscription-status error:', error);
       return res.status(500).json({ error: 'Failed to fetch subscription status' });
+    }
+  });
+
+  // ==================== BLOG / PROGRAMMATIC SEO ====================
+
+  // GET /api/blog — list all published posts (public)
+  app.get("/api/blog", async (_req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq, desc } = await import("drizzle-orm");
+      const posts = await db
+        .select()
+        .from(blogPosts)
+        .where(eq(blogPosts.published, true))
+        .orderBy(desc(blogPosts.publishedAt));
+      res.json({ success: true, posts });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // GET /api/blog/all — list ALL posts (admin only, includes unpublished)
+  app.get("/api/blog/all", requireAdmin, async (_req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { desc } = await import("drizzle-orm");
+      const posts = await db
+        .select()
+        .from(blogPosts)
+        .orderBy(desc(blogPosts.createdAt));
+      res.json({ success: true, posts });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // GET /api/blog/:slug — single published post (public)
+  app.get("/api/blog/:slug", async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq, and } = await import("drizzle-orm");
+      const [post] = await db
+        .select()
+        .from(blogPosts)
+        .where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.published, true)))
+        .limit(1);
+      if (!post) return res.status(404).json({ success: false, message: "Post not found" });
+      res.json({ success: true, post });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // POST /api/blog — create new post (admin only)
+  app.post("/api/blog", requireAdmin, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts, insertBlogPostSchema } = await import("@shared/schema");
+      const parsed = insertBlogPostSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ success: false, errors: parsed.error.errors });
+      const data = parsed.data;
+      if (data.published && !data.publishedAt) {
+        (data as any).publishedAt = new Date();
+      }
+      const [created] = await db.insert(blogPosts).values(data).returning();
+      res.json({ success: true, post: created });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // PATCH /api/blog/:id — update post (admin only)
+  app.patch("/api/blog/:id", requireAdmin, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      const updates: Record<string, any> = { ...req.body, updatedAt: new Date() };
+      if (updates.published && !updates.publishedAt) {
+        updates.publishedAt = new Date();
+      }
+      const [updated] = await db
+        .update(blogPosts)
+        .set(updates)
+        .where(eq(blogPosts.id, req.params.id))
+        .returning();
+      if (!updated) return res.status(404).json({ success: false, message: "Post not found" });
+      res.json({ success: true, post: updated });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // DELETE /api/blog/:id — delete post (admin only)
+  app.delete("/api/blog/:id", requireAdmin, async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      await db.delete(blogPosts).where(eq(blogPosts.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // GET /api/blog-slugs — returns published slugs and publishedAt for sitemap
+  app.get("/api/blog-slugs", async (_req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { blogPosts } = await import("@shared/schema");
+      const { eq, desc } = await import("drizzle-orm");
+      const rows = await db
+        .select({ slug: blogPosts.slug, publishedAt: blogPosts.publishedAt })
+        .from(blogPosts)
+        .where(eq(blogPosts.published, true))
+        .orderBy(desc(blogPosts.publishedAt));
+      res.json(rows);
+    } catch (error: any) {
+      res.status(500).json([]);
     }
   });
 

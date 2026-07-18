@@ -234,27 +234,53 @@ app.use((req, res, next) => {
   app.get('/subscription', (_req, res) => res.redirect(301, '/pricing'));
 
   // Serve dynamic sitemap.xml for Google indexing
-  app.get('/sitemap.xml', (_req, res) => {
+  app.get('/sitemap.xml', async (_req, res) => {
     const today = new Date().toISOString().split('T')[0];
     const base = 'https://lotterypro.app';
-    const urls = [
-      { loc: '/', priority: '1.0', changefreq: 'daily' },
-      { loc: '/pricing', priority: '0.9', changefreq: 'weekly' },
-      { loc: '/scratch-offs', priority: '0.8', changefreq: 'daily' },
-      { loc: '/blog', priority: '0.8', changefreq: 'weekly' },
-      { loc: '/music', priority: '0.7', changefreq: 'monthly' },
-      { loc: '/books', priority: '0.7', changefreq: 'monthly' },
-      { loc: '/performance', priority: '0.7', changefreq: 'weekly' },
-      { loc: '/pools', priority: '0.6', changefreq: 'weekly' },
-      { loc: '/support', priority: '0.5', changefreq: 'monthly' },
-      { loc: '/privacy', priority: '0.4', changefreq: 'yearly' },
-      { loc: '/terms', priority: '0.4', changefreq: 'yearly' },
-      { loc: '/accessibility', priority: '0.3', changefreq: 'yearly' },
+
+    const staticUrls = [
+      { loc: '/', priority: '1.0', changefreq: 'daily', lastmod: today },
+      { loc: '/pricing', priority: '0.9', changefreq: 'weekly', lastmod: today },
+      { loc: '/scratch-offs', priority: '0.8', changefreq: 'daily', lastmod: today },
+      { loc: '/blog', priority: '0.8', changefreq: 'weekly', lastmod: today },
+      { loc: '/powerball/hot-numbers', priority: '0.85', changefreq: 'daily', lastmod: today },
+      { loc: '/megamillions/hot-numbers', priority: '0.85', changefreq: 'daily', lastmod: today },
+      { loc: '/music', priority: '0.7', changefreq: 'monthly', lastmod: today },
+      { loc: '/books', priority: '0.7', changefreq: 'monthly', lastmod: today },
+      { loc: '/performance', priority: '0.7', changefreq: 'weekly', lastmod: today },
+      { loc: '/pools', priority: '0.6', changefreq: 'weekly', lastmod: today },
+      { loc: '/support', priority: '0.5', changefreq: 'monthly', lastmod: today },
+      { loc: '/privacy', priority: '0.4', changefreq: 'yearly', lastmod: today },
+      { loc: '/terms', priority: '0.4', changefreq: 'yearly', lastmod: today },
+      { loc: '/accessibility', priority: '0.3', changefreq: 'yearly', lastmod: today },
     ];
-    const xmlBody = urls.map(({ loc, priority, changefreq }) => `
+
+    // Dynamically include published blog posts
+    let blogUrls: { loc: string; priority: string; changefreq: string; lastmod: string }[] = [];
+    try {
+      const { db } = await import('./db');
+      const { blogPosts } = await import('@shared/schema');
+      const { eq, desc } = await import('drizzle-orm');
+      const posts = await db
+        .select({ slug: blogPosts.slug, publishedAt: blogPosts.publishedAt })
+        .from(blogPosts)
+        .where(eq(blogPosts.published, true))
+        .orderBy(desc(blogPosts.publishedAt));
+      blogUrls = posts.map(p => ({
+        loc: `/blog/${p.slug}`,
+        priority: '0.75',
+        changefreq: 'monthly',
+        lastmod: p.publishedAt ? new Date(p.publishedAt).toISOString().split('T')[0] : today,
+      }));
+    } catch (_e) {
+      // DB not ready — skip dynamic blog URLs
+    }
+
+    const allUrls = [...staticUrls, ...blogUrls];
+    const xmlBody = allUrls.map(({ loc, priority, changefreq, lastmod }) => `
   <url>
     <loc>${base}${loc}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`).join('');

@@ -29,7 +29,13 @@ import {
   Calendar,
   Settings,
   Download,
-  Monitor
+  Monitor,
+  FileText,
+  Plus,
+  Trash2,
+  Edit,
+  Globe,
+  EyeOff as UnpublishIcon
 } from "lucide-react";
 import AdManagementDashboard from "./AdManagementDashboard";
 
@@ -82,7 +88,7 @@ interface CreateUserForm {
 }
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs">("generate");
+  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs" | "blog">("generate");
   const [vipForm, setVipForm] = useState<VipCodeGeneration>({
     targetEmail: "",
     currentTier: "free",
@@ -350,6 +356,7 @@ export default function AdminDashboard() {
                 { id: "generate", label: "Generate VIP Code", icon: Key },
                 { id: "users", label: "Manage Users", icon: Users },
                 { id: "codes", label: "VIP Codes", icon: Shield },
+                { id: "blog", label: "Blog Editor", icon: FileText },
                 { id: "ads", label: "Advertisement", icon: Monitor },
                 { id: "logs", label: "Admin Logs", icon: Activity },
               ].map((tab) => (
@@ -931,6 +938,9 @@ export default function AdminDashboard() {
           </Card>
         )}
 
+        {/* Blog Editor Tab */}
+        {activeTab === "blog" && <BlogEditorTab />}
+
         {/* Advertisement Management Tab */}
         {activeTab === "ads" && (
           <div>
@@ -938,6 +948,330 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ==================== BLOG EDITOR TAB ====================
+
+interface BlogPostAdmin {
+  id: string;
+  slug: string;
+  title: string;
+  metaDescription: string;
+  content: string;
+  published: boolean;
+  publishedAt: string | null;
+  author: string;
+  category: string;
+  readTimeMinutes: number;
+}
+
+const EMPTY_FORM = {
+  slug: "",
+  title: "",
+  metaDescription: "",
+  content: "",
+  published: false,
+  author: "LotteryPro Team",
+  category: "Analysis",
+  readTimeMinutes: 7,
+};
+
+function BlogEditorTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState<BlogPostAdmin | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState<typeof EMPTY_FORM>({ ...EMPTY_FORM });
+
+  const { data, isLoading, refetch } = useQuery<{ success: boolean; posts: BlogPostAdmin[] }>({
+    queryKey: ["/api/blog/all"],
+  });
+
+  const posts = data?.posts ?? [];
+
+  const saveMutation = useMutation({
+    mutationFn: async (payload: typeof EMPTY_FORM & { id?: string }) => {
+      if (payload.id) {
+        const res = await apiRequest("PATCH", `/api/blog/${payload.id}`, payload);
+        return res.json();
+      }
+      const res = await apiRequest("POST", "/api/blog", payload);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({ title: "Blog post saved!", description: `"${form.title}" has been saved.` });
+        setEditing(null);
+        setCreating(false);
+        setForm({ ...EMPTY_FORM });
+        queryClient.invalidateQueries({ queryKey: ["/api/blog/all"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+      } else {
+        toast({ title: "Save failed", description: data.message, variant: "destructive" });
+      }
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const togglePublishMutation = useMutation({
+    mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
+      const res = await apiRequest("PATCH", `/api/blog/${id}`, { published });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({ title: data.post.published ? "Published!" : "Unpublished", description: data.post.title });
+        queryClient.invalidateQueries({ queryKey: ["/api/blog/all"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+      }
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/blog/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Post deleted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/blog/all"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/blog"] });
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  function startEdit(post: BlogPostAdmin) {
+    setEditing(post);
+    setCreating(false);
+    setForm({
+      slug: post.slug,
+      title: post.title,
+      metaDescription: post.metaDescription,
+      content: post.content,
+      published: post.published,
+      author: post.author,
+      category: post.category,
+      readTimeMinutes: post.readTimeMinutes,
+    });
+  }
+
+  function startCreate() {
+    setCreating(true);
+    setEditing(null);
+    setForm({ ...EMPTY_FORM });
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setCreating(false);
+    setForm({ ...EMPTY_FORM });
+  }
+
+  function handleSave() {
+    if (!form.title || !form.slug || !form.content) {
+      toast({ title: "Missing fields", description: "Title, slug, and content are required.", variant: "destructive" });
+      return;
+    }
+    saveMutation.mutate(editing ? { ...form, id: editing.id } : form);
+  }
+
+  const showForm = creating || !!editing;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Blog Editor</h2>
+          <p className="text-sm text-gray-500">Publish and manage SEO articles. Changes appear in the sitemap within minutes.</p>
+        </div>
+        {!showForm && (
+          <Button onClick={startCreate} className="flex items-center gap-2">
+            <Plus size={16} /> New Article
+          </Button>
+        )}
+      </div>
+
+      {/* Create / Edit Form */}
+      {showForm && (
+        <Card className="border-2 border-blue-200">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileText size={18} />
+              {editing ? `Editing: ${editing.title}` : "New Blog Post"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Title *</Label>
+                <Input
+                  value={form.title}
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="Powerball Number Frequency Analysis..."
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">URL Slug * (no spaces)</Label>
+                <Input
+                  value={form.slug}
+                  onChange={e => setForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))}
+                  placeholder="powerball-number-frequency-analysis"
+                  className="mt-1 font-mono text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Meta Description * (150–160 chars)</Label>
+              <Input
+                value={form.metaDescription}
+                onChange={e => setForm(f => ({ ...f, metaDescription: e.target.value }))}
+                placeholder="Brief SEO description shown in Google results..."
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-400 mt-1">{form.metaDescription.length}/160 characters</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Category</Label>
+                <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Analysis">Analysis</SelectItem>
+                    <SelectItem value="Education">Education</SelectItem>
+                    <SelectItem value="Strategy">Strategy</SelectItem>
+                    <SelectItem value="Methods">Methods</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Author</Label>
+                <Input
+                  value={form.author}
+                  onChange={e => setForm(f => ({ ...f, author: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Read Time (minutes)</Label>
+                <Input
+                  type="number"
+                  value={form.readTimeMinutes}
+                  onChange={e => setForm(f => ({ ...f, readTimeMinutes: parseInt(e.target.value) || 5 }))}
+                  className="mt-1"
+                  min={1}
+                  max={30}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Content * (Markdown supported)</Label>
+              <Textarea
+                value={form.content}
+                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                placeholder="## Introduction&#10;&#10;Write your article content here in Markdown format...&#10;&#10;## Section Heading&#10;&#10;Paragraph text..."
+                className="mt-1 font-mono text-sm min-h-[400px]"
+              />
+              <p className="text-xs text-gray-400 mt-1">Use ## for headings, **bold**, and &gt; for blockquotes</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="published-toggle"
+                checked={form.published}
+                onChange={e => setForm(f => ({ ...f, published: e.target.checked }))}
+                className="w-4 h-4"
+              />
+              <label htmlFor="published-toggle" className="text-sm font-medium">
+                Publish immediately (visible on blog + sitemap)
+              </label>
+            </div>
+            <div className="flex items-center gap-3 pt-2 border-t">
+              <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : "Save Post"}
+              </Button>
+              <Button variant="outline" onClick={cancelEdit}>Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Post List */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      ) : posts.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-gray-500">
+            No blog posts yet. Click "New Article" to get started.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {posts.map(post => (
+            <Card key={post.id} className={`border ${post.published ? "border-green-200 bg-green-50" : "border-gray-200"}`}>
+              <CardContent className="py-3 px-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                        post.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      }`}>
+                        {post.published ? <><Globe size={10} /> Published</> : "Draft"}
+                      </span>
+                      <span className="text-xs text-gray-400">{post.category}</span>
+                      <span className="text-xs text-gray-400">{post.readTimeMinutes} min</span>
+                    </div>
+                    <p className="font-medium text-gray-900 text-sm mt-0.5 truncate">{post.title}</p>
+                    <p className="text-xs text-gray-400 font-mono">/blog/{post.slug}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => togglePublishMutation.mutate({ id: post.id, published: !post.published })}
+                      disabled={togglePublishMutation.isPending}
+                      className="text-xs"
+                    >
+                      {post.published ? "Unpublish" : "Publish"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => startEdit(post)}
+                    >
+                      <Edit size={14} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      onClick={() => {
+                        if (window.confirm(`Delete "${post.title}"? This cannot be undone.`)) {
+                          deleteMutation.mutate(post.id);
+                        }
+                      }}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

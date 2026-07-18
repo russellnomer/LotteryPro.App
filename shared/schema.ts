@@ -960,3 +960,29 @@ export const webauthnCredentials = pgTable("webauthn_credentials", {
 export const insertWebauthnCredentialSchema = createInsertSchema(webauthnCredentials).omit({ id: true, createdAt: true });
 export type InsertWebauthnCredential = z.infer<typeof insertWebauthnCredentialSchema>;
 export type WebauthnCredential = typeof webauthnCredentials.$inferSelect;
+
+// ==================== BLOG / PROGRAMMATIC SEO ====================
+export const blogPosts = pgTable("blog_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  metaDescription: text("meta_description").notNull(),
+  content: text("content").notNull(), // Markdown content
+  published: boolean("published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  author: text("author").notNull().default("LotteryPro Team"),
+  ogImageUrl: text("og_image_url"),
+  category: text("category").notNull().default("Analysis"),
+  readTimeMinutes: integer("read_time_minutes").notNull().default(5),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type BlogPost = typeof blogPosts.$inferSelect;
