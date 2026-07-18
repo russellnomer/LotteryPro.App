@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#064e3b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#065f46;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#022c22;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34d399;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Decorative circles (lottery balls) -->
+  <circle cx="900" cy="180" r="90" fill="#10b981" opacity="0.12"/>
+  <circle cx="900" cy="180" r="70" fill="#10b981" opacity="0.1"/>
+  <circle cx="900" cy="180" r="50" stroke="#34d399" stroke-width="2" fill="none" opacity="0.3"/>
+  <text x="900" y="195" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="#34d399" text-anchor="middle" opacity="0.6">7</text>
+
+  <circle cx="1050" cy="350" r="70" fill="#10b981" opacity="0.1"/>
+  <circle cx="1050" cy="350" r="50" stroke="#34d399" stroke-width="2" fill="none" opacity="0.3"/>
+  <text x="1050" y="365" font-family="Arial, sans-serif" font-size="40" font-weight="900" fill="#34d399" text-anchor="middle" opacity="0.6">23</text>
+
+  <circle cx="780" cy="420" r="55" fill="#10b981" opacity="0.1"/>
+  <circle cx="780" cy="420" r="38" stroke="#34d399" stroke-width="2" fill="none" opacity="0.3"/>
+  <text x="780" y="432" font-family="Arial, sans-serif" font-size="32" font-weight="900" fill="#34d399" text-anchor="middle" opacity="0.6">42</text>
+
+  <circle cx="1120" cy="160" r="48" fill="#10b981" opacity="0.1"/>
+  <circle cx="1120" cy="160" r="34" stroke="#34d399" stroke-width="2" fill="none" opacity="0.25"/>
+  <text x="1120" y="172" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#34d399" text-anchor="middle" opacity="0.5">15</text>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="8" height="630" fill="url(#accent)" />
+
+  <!-- Category pill -->
+  <rect x="72" y="160" width="160" height="36" rx="18" fill="#10b981" opacity="0.9"/>
+  <text x="152" y="184" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">EDUCATION</text>
+
+  <!-- Main headline -->
+  <text x="72" y="270" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="white" letter-spacing="-1">Learn the</text>
+  <text x="72" y="350" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="white" letter-spacing="-1">Science</text>
+  <text x="72" y="430" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="url(#accent)" letter-spacing="-1">Behind Lottery</text>
+
+  <!-- Subtitle -->
+  <text x="72" y="485" font-family="Arial, sans-serif" font-size="22" fill="#6ee7b7" opacity="0.9">Educational lottery statistics explained</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1200" height="60" fill="#022c22" opacity="0.8"/>
+  <text x="72" y="607" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#fbbf24">LotteryPro</text>
+  <text x="200" y="607" font-family="Arial, sans-serif" font-size="18" fill="#6ee7b7" opacity="0.8">· Educational Lottery Analysis Platform</text>
+  <text x="1128" y="607" font-family="Arial, sans-serif" font-size="16" fill="#6ee7b7" opacity="0.6" text-anchor="end">lotterypro.app</text>
+</svg>

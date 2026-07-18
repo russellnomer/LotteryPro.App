@@ -1098,7 +1098,15 @@ interface BlogPostAdmin {
   author: string;
   category: string;
   readTimeMinutes: number;
+  ogImageUrl: string | null;
 }
+
+const CATEGORY_OG_IMAGES: Record<string, string> = {
+  Analysis: "/og-blog-analysis.svg",
+  Education: "/og-blog-education.svg",
+  Strategy: "/og-blog-strategy.svg",
+  Methods: "/og-blog-methods.svg",
+};
 
 const EMPTY_FORM = {
   slug: "",
@@ -1109,6 +1117,7 @@ const EMPTY_FORM = {
   author: "LotteryPro Team",
   category: "Analysis",
   readTimeMinutes: 7,
+  ogImageUrl: CATEGORY_OG_IMAGES["Analysis"],
 };
 
 function BlogEditorTab() {
@@ -1208,6 +1217,7 @@ function BlogEditorTab() {
       author: post.author,
       category: post.category,
       readTimeMinutes: post.readTimeMinutes,
+      ogImageUrl: post.ogImageUrl ?? CATEGORY_OG_IMAGES[post.category] ?? CATEGORY_OG_IMAGES["Analysis"],
     });
   }
 
@@ -1360,7 +1370,14 @@ function BlogEditorTab() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label className="text-sm font-medium">Category</Label>
-                <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                <Select
+                  value={form.category}
+                  onValueChange={v => setForm(f => ({
+                    ...f,
+                    category: v,
+                    ogImageUrl: f.ogImageUrl === CATEGORY_OG_IMAGES[f.category] ? CATEGORY_OG_IMAGES[v] : f.ogImageUrl,
+                  }))}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
@@ -1402,6 +1419,52 @@ function BlogEditorTab() {
               />
               <p className="text-xs text-gray-400 mt-1">Use ## for headings, **bold**, and &gt; for blockquotes</p>
             </div>
+            {/* OG Image URL field with live preview */}
+            <div>
+              <Label className="text-sm font-medium">Social Share Image (OG Image URL)</Label>
+              <div className="mt-1 flex gap-3 items-start">
+                <div className="flex-1">
+                  <Input
+                    value={form.ogImageUrl ?? ""}
+                    onChange={e => setForm(f => ({ ...f, ogImageUrl: e.target.value || null }))}
+                    placeholder="/og-blog-analysis.svg or https://..."
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Used as the preview image when this post is shared on X/Twitter, Facebook, or LinkedIn.
+                    Category default auto-fills when you pick a category above.
+                  </p>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {Object.entries(CATEGORY_OG_IMAGES).map(([cat, url]) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, ogImageUrl: url }))}
+                        className={`text-xs px-2 py-1 rounded border transition-colors ${
+                          form.ogImageUrl === url
+                            ? "bg-blue-100 border-blue-400 text-blue-700 font-medium"
+                            : "border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {form.ogImageUrl && (
+                  <div className="shrink-0">
+                    <img
+                      src={form.ogImageUrl}
+                      alt="OG image preview"
+                      className="w-40 h-[84px] object-cover rounded border border-gray-200 bg-gray-50"
+                      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                    <p className="text-xs text-gray-400 mt-1 text-center">1200×630 preview</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"

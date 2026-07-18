@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#431407;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7c2d12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#292524;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fb923c;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Decorative flow chart / method steps -->
+  <!-- Step boxes -->
+  <rect x="740" y="100" width="160" height="60" rx="8" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="1.5"/>
+  <text x="820" y="136" font-family="Arial, sans-serif" font-size="16" fill="#fed7aa" text-anchor="middle" font-weight="600">Step 1: Data</text>
+
+  <line x1="820" y1="160" x2="820" y2="200" stroke="#f97316" stroke-width="2" opacity="0.5"/>
+  <polygon points="815,200 825,200 820,214" fill="#f97316" opacity="0.5"/>
+
+  <rect x="740" y="214" width="160" height="60" rx="8" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="1.5"/>
+  <text x="820" y="250" font-family="Arial, sans-serif" font-size="16" fill="#fed7aa" text-anchor="middle" font-weight="600">Step 2: Analyze</text>
+
+  <line x1="820" y1="274" x2="820" y2="314" stroke="#f97316" stroke-width="2" opacity="0.5"/>
+  <polygon points="815,314 825,314 820,328" fill="#f97316" opacity="0.5"/>
+
+  <rect x="740" y="328" width="160" height="60" rx="8" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="1.5"/>
+  <text x="820" y="364" font-family="Arial, sans-serif" font-size="16" fill="#fed7aa" text-anchor="middle" font-weight="600">Step 3: Pick</text>
+
+  <line x1="820" y1="388" x2="820" y2="428" stroke="#f97316" stroke-width="2" opacity="0.5"/>
+  <polygon points="815,428 825,428 820,442" fill="#f97316" opacity="0.5"/>
+
+  <rect x="740" y="442" width="160" height="60" rx="8" fill="#fbbf24" opacity="0.25" stroke="#fbbf24" stroke-width="2"/>
+  <text x="820" y="478" font-family="Arial, sans-serif" font-size="16" fill="#fef3c7" text-anchor="middle" font-weight="700">Result</text>
+
+  <!-- Side decoration -->
+  <circle cx="1080" cy="200" r="100" stroke="#f97316" stroke-width="1" fill="none" opacity="0.15"/>
+  <circle cx="1080" cy="200" r="70" stroke="#f97316" stroke-width="1" fill="none" opacity="0.15"/>
+  <circle cx="1080" cy="200" r="40" stroke="#fb923c" stroke-width="1.5" fill="none" opacity="0.2"/>
+  <text x="1080" y="210" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#fed7aa" text-anchor="middle" opacity="0.4">∑</text>
+
+  <circle cx="1050" cy="450" r="70" stroke="#f97316" stroke-width="1" fill="none" opacity="0.12"/>
+  <circle cx="1050" cy="450" r="45" stroke="#f97316" stroke-width="1" fill="none" opacity="0.12"/>
+  <text x="1050" y="462" font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#fed7aa" text-anchor="middle" opacity="0.35">π</text>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="8" height="630" fill="url(#accent)" />
+
+  <!-- Category pill -->
+  <rect x="72" y="160" width="140" height="36" rx="18" fill="#f97316" opacity="0.9"/>
+  <text x="142" y="184" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">METHODS</text>
+
+  <!-- Main headline -->
+  <text x="72" y="270" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="white" letter-spacing="-1">Generation</text>
+  <text x="72" y="350" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="white" letter-spacing="-1">Methods</text>
+  <text x="72" y="430" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="url(#accent)" letter-spacing="-1">Deep Dive</text>
+
+  <!-- Subtitle -->
+  <text x="72" y="485" font-family="Arial, sans-serif" font-size="22" fill="#fed7aa" opacity="0.9">How our algorithms select lottery numbers</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1200" height="60" fill="#1c0a04" opacity="0.9"/>
+  <text x="72" y="607" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#fbbf24">LotteryPro</text>
+  <text x="200" y="607" font-family="Arial, sans-serif" font-size="18" fill="#fed7aa" opacity="0.8">· Educational Lottery Analysis Platform</text>
+  <text x="1128" y="607" font-family="Arial, sans-serif" font-size="16" fill="#fed7aa" opacity="0.6" text-anchor="end">lotterypro.app</text>
+</svg>

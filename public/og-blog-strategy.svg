@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b0764;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4c1d95;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e0a3a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c084fc;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Chess/strategy grid decoration -->
+  <rect x="700" y="80" width="440" height="440" rx="8" stroke="#6d28d9" stroke-width="1" fill="none" opacity="0.3"/>
+
+  <!-- Grid cells -->
+  <rect x="700" y="80" width="55" height="55" fill="#a855f7" opacity="0.08"/>
+  <rect x="810" y="80" width="55" height="55" fill="#a855f7" opacity="0.15"/>
+  <rect x="755" y="135" width="55" height="55" fill="#a855f7" opacity="0.12"/>
+  <rect x="865" y="135" width="55" height="55" fill="#a855f7" opacity="0.08"/>
+  <rect x="700" y="190" width="55" height="55" fill="#a855f7" opacity="0.15"/>
+  <rect x="810" y="190" width="55" height="55" fill="#a855f7" opacity="0.08"/>
+  <rect x="920" y="80" width="55" height="55" fill="#a855f7" opacity="0.08"/>
+  <rect x="975" y="135" width="55" height="55" fill="#a855f7" opacity="0.15"/>
+  <rect x="1030" y="80" width="55" height="55" fill="#a855f7" opacity="0.12"/>
+  <rect x="1085" y="135" width="55" height="55" fill="#a855f7" opacity="0.08"/>
+
+  <!-- Target/bullseye decoration -->
+  <circle cx="950" cy="380" r="130" stroke="#a855f7" stroke-width="1.5" fill="none" opacity="0.2"/>
+  <circle cx="950" cy="380" r="90" stroke="#a855f7" stroke-width="1.5" fill="none" opacity="0.25"/>
+  <circle cx="950" cy="380" r="50" stroke="#c084fc" stroke-width="2" fill="none" opacity="0.35"/>
+  <circle cx="950" cy="380" r="18" fill="#fbbf24" opacity="0.6" filter="url(#glow)"/>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="8" height="630" fill="url(#accent)" />
+
+  <!-- Category pill -->
+  <rect x="72" y="160" width="148" height="36" rx="18" fill="#a855f7" opacity="0.9"/>
+  <text x="146" y="184" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">STRATEGY</text>
+
+  <!-- Main headline -->
+  <text x="72" y="270" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="white" letter-spacing="-1">Smart Play</text>
+  <text x="72" y="350" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="white" letter-spacing="-1">Strategies</text>
+  <text x="72" y="430" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="url(#accent)" letter-spacing="-1">Explained</text>
+
+  <!-- Subtitle -->
+  <text x="72" y="485" font-family="Arial, sans-serif" font-size="22" fill="#d8b4fe" opacity="0.9">Statistical approaches to lottery number selection</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1200" height="60" fill="#1e0a3a" opacity="0.8"/>
+  <text x="72" y="607" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#fbbf24">LotteryPro</text>
+  <text x="200" y="607" font-family="Arial, sans-serif" font-size="18" fill="#d8b4fe" opacity="0.8">· Educational Lottery Analysis Platform</text>
+  <text x="1128" y="607" font-family="Arial, sans-serif" font-size="16" fill="#d8b4fe" opacity="0.6" text-anchor="end">lotterypro.app</text>
+</svg>
