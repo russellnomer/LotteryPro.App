@@ -291,16 +291,24 @@ export default function ScratchOffs() {
       />
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 text-white py-10 px-4">
-        <div className="max-w-5xl mx-auto text-center">
+      <div className="relative overflow-hidden bg-[#0a0f1e] text-white py-10 px-4">
+        {/* Grid texture overlay */}
+        <div className="lp-hero-grid absolute inset-0 pointer-events-none opacity-40" aria-hidden="true" />
+        {/* Radial amber glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[320px] bg-amber-500/8 rounded-full blur-[120px] pointer-events-none" aria-hidden="true" />
+
+        <div className="relative max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-full px-4 py-1.5 mb-4 text-sm text-amber-300 font-medium">
+            <Sparkles className="w-4 h-4" />
+            Real-time prize data
+          </div>
           <div className="flex items-center justify-center gap-3 mb-3">
-            <Ticket className="w-8 h-8" />
+            <Ticket className="w-8 h-8 text-amber-400" />
             <h1 className="text-3xl font-bold">
               {showingData ? `${stateConfig.flag} ${stateConfig.name} Scratch-Off Helper` : `${stateConfig.name} Lottery`}
             </h1>
-            <Sparkles className="w-8 h-8" />
           </div>
-          <p className="text-yellow-100 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
             {showingData
               ? `Real-time remaining prize data from official ${stateConfig.name} sources — find games that still have big prizes left`
               : `Lottery data and resources for ${stateConfig.name} players`}
@@ -308,9 +316,9 @@ export default function ScratchOffs() {
 
           {/* State picker — always a real dropdown for all users */}
           <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 bg-white/15 border border-white/30 rounded-full px-3 py-1.5">
-              <MapPin className="w-4 h-4 text-yellow-200" />
-              <span className="text-sm text-yellow-100">Viewing:</span>
+            <div className="flex items-center gap-2 bg-white/8 border border-amber-500/20 rounded-full px-3 py-1.5">
+              <MapPin className="w-4 h-4 text-amber-400" />
+              <span className="text-sm text-gray-400">Viewing:</span>
               <Select value={browseState} onValueChange={setBrowseState}>
                 <SelectTrigger className="h-7 bg-transparent border-none text-white text-sm font-semibold p-0 w-auto focus:ring-0 shadow-none">
                   <SelectValue />
@@ -326,7 +334,7 @@ export default function ScratchOffs() {
             </div>
             {!isAuthenticated && (
               <Link href="/auth">
-                <button className="text-sm bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-full px-4 py-3 transition-colors flex items-center gap-1.5 min-h-[44px]">
+                <button className="text-sm bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-4 py-3 transition-colors flex items-center gap-1.5 min-h-[44px]">
                   <LogIn className="w-3.5 h-3.5" /> Sign in to set your state permanently
                 </button>
               </Link>
@@ -336,23 +344,23 @@ export default function ScratchOffs() {
           {/* Live summary stats */}
           {data && (
             <div className="grid grid-cols-3 gap-4 mt-6 max-w-xl mx-auto">
-              <div className="bg-white/20 rounded-xl p-3">
-                <div className="text-2xl font-bold">{totalGames}</div>
-                <div className="text-xs text-yellow-100">Active Games</div>
+              <div className="lp-card bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="text-2xl font-bold text-amber-400">{totalGames}</div>
+                <div className="text-xs text-gray-400">Active Games</div>
               </div>
-              <div className="bg-white/20 rounded-xl p-3">
-                <div className="text-2xl font-bold">{topPicks}</div>
-                <div className="text-xs text-yellow-100">Top Picks Today</div>
+              <div className="lp-card bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="text-2xl font-bold text-amber-400">{topPicks}</div>
+                <div className="text-xs text-gray-400">Top Picks Today</div>
               </div>
-              <div className="bg-white/20 rounded-xl p-3">
-                <div className="text-2xl font-bold">{formatCurrency(totalPool)}</div>
-                <div className="text-xs text-yellow-100">Total Prize Pool</div>
+              <div className="lp-card bg-white/5 border border-white/10 rounded-xl p-3">
+                <div className="text-2xl font-bold text-amber-400">{formatCurrency(totalPool)}</div>
+                <div className="text-xs text-gray-400">Total Prize Pool</div>
               </div>
             </div>
           )}
 
           {data?.fetchedAt && (
-            <p className="text-yellow-200 text-xs mt-4">
+            <p className="text-gray-500 text-xs mt-4">
               Data updated: {new Date(data.fetchedAt).toLocaleString()} • Source: {data.source}
             </p>
           )}
