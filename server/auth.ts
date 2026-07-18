@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { sendPasswordResetEmail, sendVerificationEmail } from './emailService';
+import { enrollUserInDripSequence } from './dripService';
 import { db } from './db';
 import { passwordResetTokens as passwordResetTokensTable, emailVerificationCodes, userAccounts, emailPreferences } from '@shared/schema';
 import { eq, and, isNull, gt, gte } from 'drizzle-orm';
@@ -126,6 +127,11 @@ export async function register(req: Request, res: Response) {
     // Send verification email (non-blocking — registration succeeds regardless)
     sendVerificationEmail(email, otpCode).catch(err =>
       console.error('Failed to send verification email:', err)
+    );
+
+    // Enroll new user in free-to-paid drip sequence (non-blocking)
+    enrollUserInDripSequence(user.id, email).catch(err =>
+      console.error('Failed to enroll user in drip sequence:', err)
     );
 
     res.json({ 

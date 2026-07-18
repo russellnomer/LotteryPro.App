@@ -41,6 +41,7 @@ import fanContestRoutes from "./routes/fanContest";
 import ascapNetworkingRoutes from "./routes/ascapNetworking";
 import { logAudit, logError, getAuditLogs, getErrorLogs, markErrorResolved } from "./logging";
 import { z } from "zod";
+import { haltDripSequence } from './dripService';
 
 import path from "path";
 import express from "express";
@@ -1293,6 +1294,35 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // Admin endpoint — drip sequence status for all users
+  app.get('/api/admin/drip-status', requireAdmin, async (req, res) => {
+    try {
+      const { db } = await import('./db');
+      const { dripSequences, userAccounts } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+
+      const rows = await db.select({
+        userId: dripSequences.userId,
+        email: userAccounts.email,
+        sequenceName: dripSequences.sequenceName,
+        currentStep: dripSequences.currentStep,
+        isActive: dripSequences.isActive,
+        haltReason: dripSequences.haltReason,
+        enrolledAt: dripSequences.enrolledAt,
+        nextSendAt: dripSequences.nextSendAt,
+        haltedAt: dripSequences.haltedAt,
+      })
+        .from(dripSequences)
+        .innerJoin(userAccounts, eq(dripSequences.userId, userAccounts.id))
+        .orderBy(dripSequences.enrolledAt);
+
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching drip status:', error);
+      res.status(500).json({ message: 'Failed to fetch drip status' });
+    }
+  });
+
   app.get('/api/admin/vip-codes', requireAdmin, async (req, res) => {
     try {
       const { getVipCodesByAdmin } = await import('./vipManagement');
@@ -1713,6 +1743,10 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         const result = await activatePayPalSubscription(subscriptionId, userId, planId);
         
         if (result.success) {
+          // Halt the drip sequence — user is now a paid subscriber
+          haltDripSequence(userId, 'upgraded').catch(err =>
+            console.error('Failed to halt drip sequence on subscription activation:', err)
+          );
           return res.json({ success: true, tier: result.tier });
         } else {
           return res.status(400).json({ success: false, message: result.error });
@@ -1889,6 +1923,13 @@ Canonical: https://lotterypro.app/.well-known/security.txt
               updatedAt: new Date(),
             })
             .where(eq(userAccounts.id, purchase.userId));
+        }
+
+        // Halt the drip sequence for paying customers — they no longer need nurturing
+        if (purchase.userId) {
+          haltDripSequence(purchase.userId, 'upgraded').catch(err =>
+            console.error('Failed to halt drip sequence on purchase completion:', err)
+          );
         }
 
         return res.json({ success: true, status: 'completed', purchase: { ...purchase, status: 'completed' } });
@@ -2893,6 +2934,11 @@ Canonical: https://lotterypro.app/.well-known/security.txt
         .where(eq(userAccounts.id, userId));
 
       console.log(`[AppleIAP] Activated ${result.subscriptionTier} for user ${userId} — txn ${result.transactionId}`);
+
+      // Halt drip sequence — user has converted via Apple IAP
+      haltDripSequence(userId, 'upgraded').catch(err =>
+        console.error('[AppleIAP] Failed to halt drip sequence:', err)
+      );
 
       return res.json({
         success: true,

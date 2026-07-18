@@ -51,7 +51,7 @@ interface EmailData {
   html?: string;
 }
 
-async function sendMail(data: EmailData): Promise<{ success: boolean; message: string }> {
+export async function sendMail(data: EmailData): Promise<{ success: boolean; message: string }> {
   // Try Resend first (production-grade, high deliverability)
   const resend = getResendClient();
   if (resend) {

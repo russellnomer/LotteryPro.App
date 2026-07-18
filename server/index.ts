@@ -21,6 +21,7 @@ import { getStripeSync, isStripeIntegrationAvailable } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { sendAllDrawReminders } from './emailService';
 import { startWatchdog } from './watchdog';
+import { processDripEmails } from './dripService';
 import { storage } from './storage';
 
 declare module 'express-session' {
@@ -409,5 +410,16 @@ ${xmlBody}
     }
   }, { timezone: 'America/New_York' });
 
-  console.log('✅ Production scheduler active — usage reset + draw reminders scheduled');
+  // (d) Drip email processor — runs daily at 9:00 AM ET
+  // Queries drip_sequences for users whose next email is due and sends it.
+  cron.schedule('0 9 * * *', async () => {
+    try {
+      const count = await processDripEmails();
+      console.log(`📧 [Scheduler] Drip emails processed — ${count} sent`);
+    } catch (err) {
+      console.error('❌ [Scheduler] Drip email processing failed:', err);
+    }
+  }, { timezone: 'America/New_York' });
+
+  console.log('✅ Production scheduler active — usage reset + draw reminders + drip emails scheduled');
 })();

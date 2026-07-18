@@ -279,6 +279,33 @@ export const vipRedemptions = pgTable("vip_redemptions", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// Drip Sequences - Track free-to-paid nurture email sequences per user
+export const dripSequences = pgTable("drip_sequences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => userAccounts.id),
+  sequenceName: text("sequence_name").notNull().default("free_to_paid"),
+  // step 0 = enrolled (day 0 email queued), 1 = day-0 sent, 2 = day-2 sent,
+  // 3 = day-5 sent, 4 = day-10 sent (sequence complete)
+  currentStep: integer("current_step").notNull().default(0),
+  enrolledAt: timestamp("enrolled_at").default(sql`now()`),
+  nextSendAt: timestamp("next_send_at"),  // when the next step email should fire
+  isActive: boolean("is_active").notNull().default(true),
+  haltReason: text("halt_reason"), // 'upgraded', 'unsubscribed', 'completed'
+  haltedAt: timestamp("halted_at"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const insertDripSequenceSchema = createInsertSchema(dripSequences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  haltedAt: true,
+});
+
+export type InsertDripSequence = z.infer<typeof insertDripSequenceSchema>;
+export type DripSequence = typeof dripSequences.$inferSelect;
+
 // Email Send Log - Track all emails sent
 export const emailSendLog = pgTable("email_send_log", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

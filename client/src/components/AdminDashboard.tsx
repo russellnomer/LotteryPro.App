@@ -35,7 +35,10 @@ import {
   Trash2,
   Edit,
   Globe,
-  EyeOff as UnpublishIcon
+  EyeOff as UnpublishIcon,
+  Mail,
+  XCircle,
+  ArrowRight
 } from "lucide-react";
 import AdManagementDashboard from "./AdManagementDashboard";
 
@@ -87,8 +90,28 @@ interface CreateUserForm {
   adminNotes: string;
 }
 
+interface DripStatus {
+  userId: string;
+  email: string;
+  sequenceName: string;
+  currentStep: number;
+  isActive: boolean;
+  haltReason: string | null;
+  enrolledAt: string | null;
+  nextSendAt: string | null;
+  haltedAt: string | null;
+}
+
+const DRIP_STEP_LABELS: Record<number, string> = {
+  0: 'Enrolled',
+  1: 'Day 0 Sent',
+  2: 'Day 2 Sent',
+  3: 'Day 5 Sent',
+  4: 'Day 10 Sent',
+};
+
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs" | "blog">("generate");
+  const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs" | "blog" | "drip">("generate");
   const [vipForm, setVipForm] = useState<VipCodeGeneration>({
     targetEmail: "",
     currentTier: "free",
@@ -124,6 +147,11 @@ export default function AdminDashboard() {
   // Fetch admin logs
   const { data: adminLogs, isLoading: logsLoading } = useQuery<AdminLog[]>({
     queryKey: ['/api/admin/logs'],
+  });
+
+  // Fetch drip sequence status
+  const { data: dripStatus, isLoading: dripLoading } = useQuery<DripStatus[]>({
+    queryKey: ['/api/admin/drip-status'],
   });
 
   // Automated VIP allocation mutation
@@ -357,6 +385,7 @@ export default function AdminDashboard() {
                 { id: "users", label: "Manage Users", icon: Users },
                 { id: "codes", label: "VIP Codes", icon: Shield },
                 { id: "blog", label: "Blog Editor", icon: FileText },
+                { id: "drip", label: "Drip Sequences", icon: Mail },
                 { id: "ads", label: "Advertisement", icon: Monitor },
                 { id: "logs", label: "Admin Logs", icon: Activity },
               ].map((tab) => (
@@ -940,6 +969,110 @@ export default function AdminDashboard() {
 
         {/* Blog Editor Tab */}
         {activeTab === "blog" && <BlogEditorTab />}
+
+        {/* Drip Sequence Status Tab */}
+        {activeTab === "drip" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Mail className="h-5 w-5 mr-2 text-indigo-600" />
+                Free-to-Paid Drip Sequences
+              </CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                Automated 4-email nurture sequence for free users (Day 0, 2, 5, 10). Halts automatically on upgrade.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {dripLoading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                  <p className="text-gray-500 mt-2">Loading drip status...</p>
+                </div>
+              ) : !dripStatus || dripStatus.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Mail className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                  <p>No drip sequences yet. New sign-ups will appear here.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Summary stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: 'Enrolled', value: dripStatus.length, color: 'blue' },
+                      { label: 'Active', value: dripStatus.filter(d => d.isActive).length, color: 'green' },
+                      { label: 'Converted', value: dripStatus.filter(d => d.haltReason === 'upgraded').length, color: 'purple' },
+                      { label: 'Unsubscribed', value: dripStatus.filter(d => d.haltReason === 'unsubscribed').length, color: 'gray' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className={`bg-${color}-50 border border-${color}-100 rounded-lg p-4 text-center`}>
+                        <p className={`text-2xl font-bold text-${color}-700`}>{value}</p>
+                        <p className={`text-sm text-${color}-600`}>{label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Per-user rows */}
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                    {dripStatus.map((row) => {
+                      const stepLabel = DRIP_STEP_LABELS[row.currentStep] ?? `Step ${row.currentStep}`;
+                      const isConverted = row.haltReason === 'upgraded';
+                      const isUnsub = row.haltReason === 'unsubscribed';
+                      const isComplete = row.haltReason === 'completed';
+                      return (
+                        <div key={row.userId} className="border border-gray-200 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p className="font-medium text-sm">{row.email}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Enrolled: {row.enrolledAt ? new Date(row.enrolledAt).toLocaleDateString() : '—'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {/* Step progress */}
+                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200">
+                              <ArrowRight className="h-3 w-3 mr-1" />
+                              {stepLabel}
+                            </Badge>
+
+                            {/* Status badge */}
+                            {isConverted && (
+                              <Badge className="bg-purple-100 text-purple-800">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Converted
+                              </Badge>
+                            )}
+                            {isUnsub && (
+                              <Badge className="bg-gray-100 text-gray-600">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Unsubscribed
+                              </Badge>
+                            )}
+                            {isComplete && (
+                              <Badge className="bg-green-100 text-green-700">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Completed
+                              </Badge>
+                            )}
+                            {row.isActive && (
+                              <Badge className="bg-blue-100 text-blue-700">
+                                <Mail className="h-3 w-3 mr-1" />
+                                Active
+                              </Badge>
+                            )}
+                            {/* Next send */}
+                            {row.nextSendAt && row.isActive && (
+                              <span className="text-xs text-gray-400">
+                                Next: {new Date(row.nextSendAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Advertisement Management Tab */}
         {activeTab === "ads" && (
