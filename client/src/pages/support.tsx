@@ -322,7 +322,7 @@ export default function Support() {
                 <Link href="/terms">
                   <a className="block text-sm text-primary hover:underline" data-testid="link-terms">Terms of Service</a>
                 </Link>
-                <Link href="/subscription">
+                <Link href="/pricing">
                   <a className="block text-sm text-primary hover:underline" data-testid="link-subscription">Subscription Plans</a>
                 </Link>
               </CardContent>

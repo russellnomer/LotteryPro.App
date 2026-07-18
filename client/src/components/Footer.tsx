@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Phone, Shield, FileText, Accessibility, Ban, ExternalLink } from "lucide-react";
+import { Phone, Shield, FileText, Accessibility, Ban, ExternalLink, Music, BookOpen } from "lucide-react";
 import SelfExclusionModal from "./SelfExclusionModal";
 
 export default function Footer() {
@@ -15,6 +15,35 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300 py-8 mt-auto">
       <div className="max-w-7xl mx-auto px-4">
+
+        {/* Also by Russell Nomer — portfolio cross-promo */}
+        <div className="border border-yellow-500/20 rounded-lg p-4 mb-8 bg-yellow-500/5">
+          <p className="text-xs text-yellow-400 font-semibold uppercase tracking-widest mb-3">Also by Russell Nomer</p>
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="https://www.amazon.com/stores/Russell-Nomer/author/B00KQYGLDY"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-gray-300 hover:text-yellow-400 transition-colors"
+            >
+              <BookOpen className="w-4 h-4 text-yellow-400 flex-shrink-0" aria-hidden="true" />
+              <span>46+ Books on Amazon — Strategy, Self-Help & More</span>
+              <ExternalLink className="w-3 h-3 opacity-50" aria-hidden="true" />
+            </a>
+            <span className="text-gray-600 hidden sm:inline">·</span>
+            <a
+              href="https://russellnomermusic.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-gray-300 hover:text-yellow-400 transition-colors"
+            >
+              <Music className="w-4 h-4 text-yellow-400 flex-shrink-0" aria-hidden="true" />
+              <span>535-Song ASCAP Catalog — TV · Film · Commercial Licensing</span>
+              <ExternalLink className="w-3 h-3 opacity-50" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="font-bold text-white mb-3">LotteryPro</h3>

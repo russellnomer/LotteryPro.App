@@ -250,7 +250,7 @@ export default function Home() {
               <a href="/" className="text-primary font-semibold transition-colors">AI Lottery Pro</a>
               <a href="/music" className="text-gray-600 hover:text-primary transition-colors">Russell's Music</a>
               <a href="/performance" className="text-gray-600 hover:text-primary transition-colors">Performance</a>
-              <a href="/subscription" className="text-gray-600 hover:text-primary transition-colors">Subscribe</a>
+              <a href="/pricing" className="text-gray-600 hover:text-primary transition-colors">Go Premium</a>
               <a href="/social-marketing" className="text-gray-600 hover:text-primary transition-colors">Social Marketing</a>
             </nav>
           </div>

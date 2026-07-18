@@ -78,6 +78,23 @@ export default function Pricing() {
         title="LotteryPro Premium — $7.99/month | Scratch-Off Alerts & Trends"
         description="Get email alerts when big prizes drop, historical prize trend charts, personal watchlists, and unlimited generations. One simple plan: $7.99/month or $69/year."
         path="/pricing"
+        image="https://lotterypro.app/og-pricing.png"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "LotteryPro Premium",
+          "description": "Educational lottery number analysis with email alerts, historical trend charts, and unlimited picks for Powerball and Mega Millions.",
+          "applicationCategory": "EntertainmentApplication",
+          "operatingSystem": "Web, iOS",
+          "url": "https://lotterypro.app/pricing",
+          "offers": {
+            "@type": "AggregateOffer",
+            "lowPrice": "7.99",
+            "highPrice": "69.00",
+            "priceCurrency": "USD",
+            "offerCount": "2"
+          }
+        }}
       />
 
       {/* ── Header ── */}

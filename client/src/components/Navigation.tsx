@@ -98,7 +98,6 @@ export default function Navigation() {
     { path: "/music", icon: Music, label: "Russell's Music", description: "ASCAP artist catalog" },
     { path: "/books", icon: BookOpen, label: "Books", description: "35-book collection" },
     { path: "/performance", icon: TrendingUp, label: "Performance", description: "Track record & stats" },
-    { path: "/subscription", icon: CreditCard, label: "Subscription", description: "Upgrade your tier" },
     { path: "/social-marketing", icon: Share2, label: "Social Marketing", description: "Replit referrals" },
     { path: "/privacy", icon: Shield, label: "Privacy", description: "Privacy policy" },
   ];
