@@ -227,8 +227,22 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden pb-4">
+          {/* Go Premium — full-width highlighted CTA */}
+          <Link href="/pricing">
+            <Button
+              size="sm"
+              className={`w-full min-h-[44px] mb-2 font-semibold text-sm ${
+                location === "/pricing"
+                  ? "bg-yellow-500 text-black hover:bg-yellow-400"
+                  : "bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-300 hover:to-orange-400"
+              }`}
+            >
+              <CreditCard size={16} className="mr-2" />
+              ⭐ Go Premium — $7.99/mo
+            </Button>
+          </Link>
           <div className="grid grid-cols-2 gap-2">
-            {navItems.slice(0, 6).map((item) => {
+            {navItems.filter((item) => item.path !== "/pricing").slice(0, 6).map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path;
               
