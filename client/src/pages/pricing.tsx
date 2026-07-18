@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import {
-  Check, X, Zap, Bell, Music, Star, Crown, Shield, Loader2, Lock, ArrowRight
+  Check, X, Zap, Bell, Music, Star, Crown, Shield, Loader2, Lock, ArrowRight, ExternalLink
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import IAPSubscription from "@/components/IAPSubscription";
@@ -71,6 +71,28 @@ export default function Pricing() {
       toast({
         title: "Checkout Error",
         description: err.message || "Could not start checkout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/subscription/portal', {});
+      const data = await res.json();
+      return data as { url: string };
+    },
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast({ title: "Portal Error", description: "No portal URL returned.", variant: "destructive" });
+      }
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Could not open billing portal",
+        description: err.message || "Please try again or contact support.",
         variant: "destructive",
       });
     },
@@ -259,10 +281,23 @@ export default function Pricing() {
 
             <div className="mt-auto space-y-3">
               {isPremium ? (
-                <div className="bg-emerald-500/10 border border-emerald-500/40 rounded-xl p-4 text-center">
-                  <Check className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
-                  <p className="text-emerald-300 font-semibold">You're already Premium!</p>
-                  <p className="text-sm text-emerald-500 mt-1">All features unlocked.</p>
+                <div className="space-y-3">
+                  <div className="bg-emerald-500/10 border border-emerald-500/40 rounded-xl p-4 text-center">
+                    <Check className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
+                    <p className="text-emerald-300 font-semibold">You're already Premium!</p>
+                    <p className="text-sm text-emerald-500 mt-1">All features unlocked.</p>
+                  </div>
+                  <button
+                    onClick={() => portalMutation.mutate()}
+                    disabled={portalMutation.isPending}
+                    className="w-full border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 hover:border-emerald-400/60 hover:bg-emerald-500/5 disabled:opacity-60 disabled:cursor-not-allowed font-medium text-sm px-4 py-3 rounded-xl transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 min-h-[44px] flex items-center justify-center gap-2"
+                  >
+                    {portalMutation.isPending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Opening portal…</>
+                    ) : (
+                      <><ExternalLink className="w-4 h-4" /> Manage Subscription</>
+                    )}
+                  </button>
                 </div>
               ) : showWebPayments ? (
                 <>

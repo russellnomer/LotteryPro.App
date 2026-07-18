@@ -2884,6 +2884,35 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // ── Stripe Customer Portal (manage / cancel subscription) ─────
+  app.post('/api/subscription/portal', requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUserById(req.user!.id);
+      if (!user) return res.status(404).json({ error: 'User not found.' });
+
+      const { getUncachableStripeClient } = await import('./stripeClient');
+      const stripe = await getUncachableStripeClient();
+
+      // Find the Stripe customer by email
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (!customers.data.length) {
+        return res.status(404).json({ error: 'No Stripe subscription found for this account.' });
+      }
+      const customerId = customers.data[0].id;
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${baseUrl}/pricing`,
+      });
+
+      res.json({ url: portalSession.url });
+    } catch (error: any) {
+      console.error('Subscription portal error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ── Scratch-Off Helper ────────────────────────────────────────
   app.get('/api/scratchoffs', async (req, res) => {
     try {
