@@ -111,44 +111,61 @@ export default function Pricing() {
 
       {/* ── Hero header ── */}
       <div className="relative max-w-3xl mx-auto px-4 pt-16 pb-10 text-center">
-        <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-full px-4 py-1.5 mb-6 text-sm text-amber-300 font-medium">
-          <Crown className="w-3.5 h-3.5" />
-          One plan. Everything unlocked.
-        </div>
+        {isPremium ? (
+          <>
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 rounded-full px-4 py-1.5 mb-6 text-sm text-emerald-300 font-medium">
+              <Check className="w-3.5 h-3.5" />
+              Active subscription
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight tracking-tight mb-4">
+              You're <span className="text-emerald-400">Premium</span>
+            </h1>
+            <p className="text-lg text-gray-300 max-w-xl mx-auto">
+              All features are unlocked. Thank you for supporting LotteryPro.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-full px-4 py-1.5 mb-6 text-sm text-amber-300 font-medium">
+              <Crown className="w-3.5 h-3.5" />
+              One plan. Everything unlocked.
+            </div>
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight tracking-tight mb-4">
-          Go <span className="text-amber-400">Premium</span>
-        </h1>
-        <p className="text-lg text-gray-300 max-w-xl mx-auto">
-          Alerts, trends, and unlimited picks — everything you need to study lottery patterns seriously.
-        </p>
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight tracking-tight mb-4">
+              Go <span className="text-amber-400">Premium</span>
+            </h1>
+            <p className="text-lg text-gray-300 max-w-xl mx-auto">
+              Alerts, trends, and unlimited picks — everything you need to study lottery patterns seriously.
+            </p>
 
-        {/* ── Billing toggle ── */}
-        <div className="inline-flex items-center bg-white/5 border border-white/10 rounded-full p-1 mt-8 gap-1" role="group" aria-label="Billing cycle">
-          <button
-            onClick={() => setBillingCycle('monthly')}
-            className={`px-5 py-2.5 rounded-full font-medium transition-all duration-150 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 min-h-[44px] ${
-              billingCycle === 'monthly'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingCycle('annual')}
-            className={`px-5 py-2.5 rounded-full font-medium transition-all duration-150 text-sm flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 min-h-[44px] ${
-              billingCycle === 'annual'
-                ? 'bg-amber-500 text-black shadow-sm shadow-amber-500/30'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Annual
-            <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-              Save $26.88
-            </span>
-          </button>
-        </div>
+            {/* ── Billing toggle ── */}
+            <div className="inline-flex items-center bg-white/5 border border-white/10 rounded-full p-1 mt-8 gap-1" role="group" aria-label="Billing cycle">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-5 py-2.5 rounded-full font-medium transition-all duration-150 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 min-h-[44px] ${
+                  billingCycle === 'monthly'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('annual')}
+                className={`px-5 py-2.5 rounded-full font-medium transition-all duration-150 text-sm flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 min-h-[44px] ${
+                  billingCycle === 'annual'
+                    ? 'bg-amber-500 text-black shadow-sm shadow-amber-500/30'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Annual
+                <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  Save $26.88
+                </span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── Pricing cards ── */}
