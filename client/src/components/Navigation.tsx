@@ -45,13 +45,14 @@ export default function Navigation() {
     staleTime: 30000,
   });
   
-  const { data: userData } = useQuery<{ homeState?: string; email?: string } | null>({
+  const { data: userData } = useQuery<{ homeState?: string; email?: string; subscriptionTier?: string } | null>({
     queryKey: ['/api/auth/user'],
     staleTime: 60000,
   });
 
   const isAdminAuthenticated = sessionData?.isAdmin === true;
   const userStateConfig = userData?.homeState ? getStateConfig(userData.homeState) : null;
+  const isPremium = userData != null && ['premium', 'vip', 'pro'].includes(userData.subscriptionTier || '');
 
   const loginMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -138,25 +139,30 @@ export default function Navigation() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path;
-              const isPricing = item.path === "/pricing";
+              const isPricingItem = item.path === "/pricing";
+              const label = isPricingItem && isPremium ? "My Plan ✓" : item.label;
 
               return (
                 <Link href={item.path} key={item.path}>
                   <Button
-                    variant={isActive && !isPricing ? "secondary" : "ghost"}
+                    variant={isActive && !isPricingItem ? "secondary" : "ghost"}
                     size="sm"
                     className={`flex items-center space-x-2 ${
-                      isPricing
+                      isPricingItem && isPremium
                         ? isActive
-                          ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border border-yellow-400 shadow-md shadow-yellow-900/30"
-                          : "bg-gradient-to-r from-yellow-500/90 to-orange-500/90 text-white border border-yellow-400/70 hover:from-yellow-400 hover:to-orange-400 shadow-sm shadow-yellow-900/20"
-                        : isActive
-                          ? "bg-white/20 text-white"
-                          : "text-blue-100 hover:text-white hover:bg-white/10"
+                          ? "bg-white/20 text-yellow-300"
+                          : "text-yellow-300 hover:text-white hover:bg-white/10"
+                        : isPricingItem
+                          ? isActive
+                            ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border border-yellow-400 shadow-md shadow-yellow-900/30"
+                            : "bg-gradient-to-r from-yellow-500/90 to-orange-500/90 text-white border border-yellow-400/70 hover:from-yellow-400 hover:to-orange-400 shadow-sm shadow-yellow-900/20"
+                          : isActive
+                            ? "bg-white/20 text-white"
+                            : "text-blue-100 hover:text-white hover:bg-white/10"
                     }`}
                   >
                     <Icon size={16} />
-                    <span className="hidden lg:inline">{item.label}</span>
+                    <span className="hidden lg:inline">{label}</span>
                   </Button>
                 </Link>
               );
@@ -232,20 +238,27 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden pb-4">
-          {/* Go Premium — full-width highlighted CTA */}
-          <Link href="/pricing">
-            <Button
-              size="sm"
-              className={`w-full min-h-[44px] mb-2 font-semibold text-sm ${
-                location === "/pricing"
-                  ? "bg-yellow-500 text-black hover:bg-yellow-400"
-                  : "bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-300 hover:to-orange-400"
-              }`}
-            >
-              <CreditCard size={16} className="mr-2" />
-              ⭐ Go Premium — $7.99/mo
-            </Button>
-          </Link>
+          {/* Go Premium CTA — hidden for subscribers */}
+          {isPremium ? (
+            <div className="w-full min-h-[44px] mb-2 flex items-center justify-center gap-2 rounded-md bg-white/10 border border-yellow-400/40 text-yellow-300 text-sm font-semibold">
+              <CreditCard size={16} />
+              Premium ✓
+            </div>
+          ) : (
+            <Link href="/pricing">
+              <Button
+                size="sm"
+                className={`w-full min-h-[44px] mb-2 font-semibold text-sm ${
+                  location === "/pricing"
+                    ? "bg-yellow-500 text-black hover:bg-yellow-400"
+                    : "bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:from-yellow-300 hover:to-orange-400"
+                }`}
+              >
+                <CreditCard size={16} className="mr-2" />
+                ⭐ Go Premium — $7.99/mo
+              </Button>
+            </Link>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {navItems.filter((item) => item.path !== "/pricing").slice(0, 6).map((item) => {
               const Icon = item.icon;
