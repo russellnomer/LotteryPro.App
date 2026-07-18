@@ -294,13 +294,62 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section - Clean and Focused */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">🎱 Get Your Lucky Numbers Now!</h2>
-          <p className="text-purple-100">
-            Choose your game, pick a method, and generate your numbers in seconds
+      {/* Hero Section — Premium Dark */}
+      <div className="lp-hero relative overflow-hidden bg-[#0a0f1e] text-white">
+        {/* Number-grid background texture — CSS only */}
+        <div className="lp-hero-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
+        {/* Ambient amber glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[480px] bg-amber-500/8 rounded-full blur-[140px] pointer-events-none" aria-hidden="true" />
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14 text-center">
+          {/* Social proof chip — above the fold, before the headline */}
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-8 text-sm text-amber-300 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+            7,614 historical draws analyzed — updated daily
+          </div>
+
+          {/* Primary headline */}
+          <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold leading-[1.08] tracking-tight mb-5">
+            Educational lottery<br />
+            <span className="text-amber-400">number analysis</span>
+          </h1>
+
+          {/* Supporting subhead — 2 lines max */}
+          <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Study frequency patterns across 7,600+ Powerball &amp; Mega Millions draws.<br className="hidden sm:block" />
+            Generate smart picks, track trends, and study scratch-off prize data.
           </p>
+
+          {/* Single dominant CTA + secondary ghost link */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <a
+              href="/auth"
+              className="lp-btn-primary group inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-black font-bold text-base px-8 py-4 rounded-xl shadow-lg shadow-amber-500/20 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1e] min-h-[52px] w-full sm:w-auto"
+            >
+              Start Free — No Card Required
+              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </a>
+            <a
+              href="/pricing"
+              className="lp-btn-ghost inline-flex items-center justify-center gap-2 text-gray-300 hover:text-white font-medium text-base px-6 py-4 rounded-xl border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1e] min-h-[52px] w-full sm:w-auto"
+            >
+              View Premium Plans
+            </a>
+          </div>
+
+          {/* Stats row — still above the fold on desktop */}
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 mt-14 pt-10 border-t border-white/8">
+            {[
+              { value: "7,614+", label: "Historical draws" },
+              { value: "Free", label: "Always free tier" },
+              { value: "110+", label: "NY scratch-offs ranked" },
+            ].map(({ value, label }) => (
+              <div key={label} className="text-center">
+                <div className="text-2xl font-extrabold text-white tabular-nums">{value}</div>
+                <div className="text-sm text-gray-500 mt-0.5">{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
