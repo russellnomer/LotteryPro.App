@@ -53,10 +53,10 @@ interface ScratchOffResponse {
 }
 
 const RANK_CONFIG = {
-  top:  { label: 'Top Pick',   color: 'bg-emerald-500 text-white',      icon: Trophy,  border: 'border-emerald-400' },
-  good: { label: 'Good Value', color: 'bg-blue-500 text-white',          icon: Star,    border: 'border-blue-400'    },
-  fair: { label: 'Fair',       color: 'bg-yellow-500 text-white',        icon: Target,  border: 'border-yellow-400'  },
-  low:  { label: 'Low Value',  color: 'bg-gray-500 text-white',          icon: Info,    border: 'border-gray-400'    },
+  top:  { label: 'Top Pick',   color: 'bg-emerald-500 text-white',      icon: Trophy,  border: 'border-emerald-500/60' },
+  good: { label: 'Good Value', color: 'bg-blue-500 text-white',          icon: Star,    border: 'border-blue-500/60'    },
+  fair: { label: 'Fair',       color: 'bg-yellow-500 text-white',        icon: Target,  border: 'border-yellow-500/60'  },
+  low:  { label: 'Low Value',  color: 'bg-gray-500 text-white',          icon: Info,    border: 'border-gray-600/60'    },
 };
 
 function formatCurrency(n: number | null | undefined): string {
@@ -69,13 +69,13 @@ function formatCurrency(n: number | null | undefined): string {
 function ValueBar({ score }: { score: number }) {
   const s = Number(score) || 0;
   const pct = Math.min(s * 100, 100);
-  const color = pct >= 50 ? 'bg-emerald-500' : pct >= 30 ? 'bg-blue-500' : pct >= 15 ? 'bg-yellow-500' : 'bg-gray-400';
+  const color = pct >= 50 ? 'bg-emerald-500' : pct >= 30 ? 'bg-blue-500' : pct >= 15 ? 'bg-yellow-500' : 'bg-gray-500';
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 bg-gray-200 rounded-full h-2">
+      <div className="flex-1 bg-white/10 rounded-full h-2">
         <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs font-mono text-gray-600 w-10 text-right">{s.toFixed(2)}</span>
+      <span className="text-xs font-mono text-gray-500 w-10 text-right">{s.toFixed(2)}</span>
     </div>
   );
 }
@@ -86,19 +86,19 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
   const RankIcon = cfg.icon;
 
   return (
-    <Card className={`border-2 ${cfg.border} hover:shadow-lg transition-shadow`}>
+    <Card className={`border ${cfg.border} bg-[#0d1526] hover:bg-[#0f1a30] transition-colors shadow-lg`}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-gray-400">
               #{rank}
             </div>
             <div>
-              <CardTitle className="text-base leading-tight">{game.gameName}</CardTitle>
+              <CardTitle className="text-base leading-tight text-gray-100">{game.gameName}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs text-gray-500">Game #{game.gameNumber}</span>
-                <span className="text-xs text-gray-400">•</span>
-                <span className="text-sm font-bold text-green-700">
+                <span className="text-xs text-gray-600">•</span>
+                <span className="text-sm font-bold text-amber-400">
                   {game.price !== null ? `$${game.price}/ticket` : 'Price: see store'}
                 </span>
               </div>
@@ -114,16 +114,16 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
       <CardContent className="space-y-3">
         {/* Key stats row */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-gray-50 rounded-lg p-2">
-            <div className="text-lg font-bold text-emerald-700">{formatCurrency(game.totalRemainingValue)}</div>
+          <div className="bg-white/5 rounded-lg p-2">
+            <div className="text-lg font-bold text-emerald-400">{formatCurrency(game.totalRemainingValue)}</div>
             <div className="text-xs text-gray-500">Remaining Prize Pool</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-2">
-            <div className="text-lg font-bold text-blue-700">{(Number(game.bigPrizesLeft) || 0).toLocaleString()}</div>
+          <div className="bg-white/5 rounded-lg p-2">
+            <div className="text-lg font-bold text-blue-400">{(Number(game.bigPrizesLeft) || 0).toLocaleString()}</div>
             <div className="text-xs text-gray-500">Big Prizes Left ($10K+)</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-2">
-            <div className="text-lg font-bold text-purple-700">{Number(game.pctRemaining) || 0}%</div>
+          <div className="bg-white/5 rounded-lg p-2">
+            <div className="text-lg font-bold text-purple-400">{Number(game.pctRemaining) || 0}%</div>
             <div className="text-xs text-gray-500">Prizes Remaining</div>
           </div>
         </div>
@@ -131,10 +131,10 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
         {/* Top prize */}
         {(() => {
           const pct = game.topPrizePct ?? 0;
-          const bg = pct === 100 ? 'bg-emerald-50 border-emerald-300' : pct >= 50 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
-          const iconColor = pct === 100 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500';
-          const textColor = pct === 100 ? 'text-emerald-800' : pct >= 50 ? 'text-amber-800' : 'text-red-700';
-          const badgeColor = pct === 100 ? 'text-emerald-700 border-emerald-400 bg-emerald-50' : pct >= 50 ? 'text-amber-700 border-amber-400 bg-amber-50' : 'text-red-600 border-red-300 bg-red-50';
+          const bg = pct === 100 ? 'bg-emerald-500/10 border-emerald-500/30' : pct >= 50 ? 'bg-amber-500/10 border-amber-500/25' : 'bg-red-500/10 border-red-500/25';
+          const iconColor = pct === 100 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-red-400';
+          const textColor = pct === 100 ? 'text-emerald-300' : pct >= 50 ? 'text-amber-300' : 'text-red-300';
+          const badgeColor = pct === 100 ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10' : pct >= 50 ? 'text-amber-400 border-amber-500/40 bg-amber-500/10' : 'text-red-400 border-red-500/40 bg-red-500/10';
           const total = game.topPrizeTotal ?? 0;
           return (
             <div className={`border rounded-lg px-3 py-2 ${bg}`}>
@@ -150,11 +150,11 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
               {total > 0 && (
                 <div className="mt-1.5">
                   <div className="flex justify-between text-xs mb-0.5">
-                    <span className={pct === 100 ? 'text-emerald-700 font-semibold' : pct >= 50 ? 'text-amber-700' : 'text-red-600'}>
+                    <span className={pct === 100 ? 'text-emerald-400 font-semibold' : pct >= 50 ? 'text-amber-400' : 'text-red-400'}>
                       {pct === 100 ? '🟢 All top prizes still available' : pct >= 50 ? `🟡 ${pct}% of top prizes remain` : `🔴 Only ${pct}% of top prizes remain`}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div className="w-full bg-white/10 rounded-full h-1.5">
                     <div
                       className={`h-1.5 rounded-full transition-all ${pct === 100 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                       style={{ width: `${pct}%` }}
@@ -170,7 +170,7 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
         <div>
           <div className="flex justify-between text-xs text-gray-500 mb-1">
             <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Value Score</span>
-            <span className="text-gray-400">remaining prize value per dollar</span>
+            <span className="text-gray-600">remaining prize value per dollar</span>
           </div>
           <ValueBar score={game.valueScore} />
         </div>
@@ -178,32 +178,32 @@ function GameCard({ game, rank }: { game: ScratchOffGame; rank: number }) {
         {/* Prize tiers toggle */}
         <Collapsible open={expanded} onOpenChange={setExpanded}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-full text-sm text-gray-500 min-h-[44px]">
+            <Button variant="ghost" size="sm" className="w-full text-sm text-gray-500 hover:text-gray-300 hover:bg-white/5 min-h-[44px]">
               {expanded ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
               {expanded ? 'Hide' : 'Show'} all {game.prizeTiers.length} prize tiers
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mt-2 rounded-lg border overflow-x-auto">
+            <div className="mt-2 rounded-lg border border-white/10 overflow-x-auto">
               <table className="w-full text-xs min-w-[300px]">
-                <thead className="bg-gray-50">
+                <thead className="bg-white/5">
                   <tr>
-                    <th className="text-left p-2 font-medium text-gray-600">Prize</th>
-                    <th className="text-right p-2 font-medium text-gray-600">Remaining</th>
-                    <th className="text-right p-2 font-medium text-gray-600">Total</th>
-                    <th className="text-right p-2 font-medium text-gray-600">% Left</th>
+                    <th className="text-left p-2 font-medium text-gray-400">Prize</th>
+                    <th className="text-right p-2 font-medium text-gray-400">Remaining</th>
+                    <th className="text-right p-2 font-medium text-gray-400">Total</th>
+                    <th className="text-right p-2 font-medium text-gray-400">% Left</th>
                   </tr>
                 </thead>
                 <tbody>
                   {game.prizeTiers.map((tier, i) => (
-                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className={`p-2 font-medium ${tier.prizeValue >= 10000 ? 'text-emerald-700' : 'text-gray-800'}`}>
+                    <tr key={i} className={i % 2 === 0 ? 'bg-transparent' : 'bg-white/3'}>
+                      <td className={`p-2 font-medium ${tier.prizeValue >= 10000 ? 'text-emerald-400' : 'text-gray-300'}`}>
                         {tier.prizeAmount}
                       </td>
-                      <td className="p-2 text-right text-gray-700">{(Number(tier.unpaid) || 0).toLocaleString()}</td>
+                      <td className="p-2 text-right text-gray-400">{(Number(tier.unpaid) || 0).toLocaleString()}</td>
                       <td className="p-2 text-right text-gray-500">{(Number(tier.total) || 0).toLocaleString()}</td>
                       <td className="p-2 text-right">
-                        <span className={tier.total > 0 && (tier.unpaid / tier.total) > 0.5 ? 'text-emerald-600 font-medium' : 'text-gray-500'}>
+                        <span className={tier.total > 0 && (tier.unpaid / tier.total) > 0.5 ? 'text-emerald-400 font-medium' : 'text-gray-500'}>
                           {tier.total > 0 ? Math.round((tier.unpaid / tier.total) * 100) : 0}%
                         </span>
                       </td>
@@ -283,7 +283,7 @@ export default function ScratchOffs() {
   const totalGames = data?.games?.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-orange-50">
+    <div className="min-h-screen bg-[#0a0f1e]">
       <SEOHead
         title="Scratch-Off Helper - Best Lottery Tickets by State | LotteryPro"
         description="Find the best scratch-off lottery games to play based on remaining prize data. NY users get real-time data from official state sources. All states get national game analysis."
@@ -377,52 +377,47 @@ export default function ScratchOffs() {
         {/* Full scratch-off tool — shown for states that publish prize data (NY, PA) */}
         {showingData && <>
         {/* Disclaimer */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6 flex items-start gap-2 text-sm text-amber-800">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-6 flex items-start gap-2 text-sm text-amber-200">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-400" />
           <span>
-            <strong>Educational tool only.</strong> Prize data is sourced from official {stateConfig.name} lottery records{stateConfig.code === 'NY' ? ' (data.ny.gov, refreshes hourly)' : stateConfig.code === 'PA' ? ' (palottery.pa.gov, updated weekly)' : ''}. 
+            <strong className="text-amber-300">Educational tool only.</strong> Prize data is sourced from official {stateConfig.name} lottery records{stateConfig.code === 'NY' ? ' (data.ny.gov, refreshes hourly)' : stateConfig.code === 'PA' ? ' (palottery.pa.gov, updated weekly)' : ''}. 
             Value scores are analytical estimates — they do not predict or guarantee outcomes. Must be 18+ to purchase lottery tickets. 
             Please play responsibly.
           </span>
         </div>
 
         {/* How it works */}
-        <Card className="mb-6 bg-blue-50 border-blue-200">
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-900">
-                <strong>How value scores work:</strong> We pull official prize tables from NY State (updated daily), 
-                calculate the total remaining prize pool for each game, and estimate the expected prize value per dollar spent. 
-                "Big prizes" means any prize of $10,000 or more. Higher value scores = more prize money still available relative to the ticket price.
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-6 bg-blue-500/10 border border-blue-500/25 rounded-xl p-4 flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-blue-200">
+            <strong className="text-blue-100">How value scores work:</strong> We pull official prize tables from NY State (updated daily), 
+            calculate the total remaining prize pool for each game, and estimate the expected prize value per dollar spent. 
+            "Big prizes" means any prize of $10,000 or more. Higher value scores = more prize money still available relative to the ticket price.
+          </div>
+        </div>
 
         {/* Filters */}
-        <Card className="mb-6 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="w-4 h-4" /> Filter & Sort
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="mb-6 bg-[#0d1526] border border-white/10 rounded-xl shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <span className="text-sm font-semibold text-gray-300">Filter &amp; Sort</span>
+          </div>
+          <div className="p-4 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Search Game</label>
+                <label className="text-xs font-medium text-gray-400 mb-1 block">Search Game</label>
                 <Input
                   placeholder="Game name or number..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="h-9"
+                  className="h-9 bg-white/5 border-white/15 text-gray-200 placeholder:text-gray-600"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Sort By</label>
+                <label className="text-xs font-medium text-gray-400 mb-1 block">Sort By</label>
                 <Select value={sortBy} onValueChange={v => setSortBy(v as typeof sortBy)}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 bg-white/5 border-white/15 text-gray-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -437,9 +432,9 @@ export default function ScratchOffs() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Category</label>
+                <label className="text-xs font-medium text-gray-400 mb-1 block">Category</label>
                 <Select value={rankFilter} onValueChange={v => setRankFilter(v as typeof rankFilter)}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 bg-white/5 border-white/15 text-gray-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -452,7 +447,7 @@ export default function ScratchOffs() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">
+                <label className="text-xs font-medium text-gray-400 mb-1 block">
                   Max Ticket Price: ${maxPrice}
                 </label>
                 <Slider
@@ -467,7 +462,7 @@ export default function ScratchOffs() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">
+                  <label className="text-xs font-medium text-gray-400 mb-1 block">
                     Min $10K+ Prizes Left: {minBigPrizes}
                   </label>
                   <Slider
@@ -491,39 +486,39 @@ export default function ScratchOffs() {
                     refetch();
                   }}
                   disabled={isFetching}
-                  className="flex items-center gap-1 min-h-[44px]"
+                  className="flex items-center gap-1 min-h-[44px] border-white/15 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-gray-100"
                 >
                   <RefreshCw className={`w-3 h-3 ${isFetching ? 'animate-spin' : ''}`} />
                   {isFetching ? 'Updating...' : 'Refresh Now'}
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Loading state */}
         {isLoading && (
           <div className="text-center py-16">
-            <div className="inline-flex items-center gap-3 text-gray-600">
-              <RefreshCw className="w-6 h-6 animate-spin text-orange-500" />
+            <div className="inline-flex items-center gap-3 text-gray-300">
+              <RefreshCw className="w-6 h-6 animate-spin text-amber-400" />
               <span className="text-lg">Loading live prize data from NY State...</span>
             </div>
-            <p className="text-sm text-gray-400 mt-2">Fetching official remaining prize tables</p>
+            <p className="text-sm text-gray-600 mt-2">Fetching official remaining prize tables</p>
           </div>
         )}
 
         {/* Error state */}
         {error && (
           <div className="text-center py-12">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-            <p className="text-gray-600 font-medium">Could not load scratch-off data</p>
-            <p className="text-sm text-gray-400 mb-4">The NY State data server may be temporarily unavailable</p>
-            <Button onClick={() => refetch()} variant="outline">Try Again</Button>
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <p className="text-gray-300 font-medium">Could not load scratch-off data</p>
+            <p className="text-sm text-gray-500 mb-4">The NY State data server may be temporarily unavailable</p>
+            <Button onClick={() => refetch()} variant="outline" className="border-white/15 text-gray-300 hover:bg-white/10">Try Again</Button>
           </div>
         )}
 
         {/* ── Premium upgrade banner ── */}
-        <div className="mb-6 bg-gradient-to-r from-purple-900 to-indigo-900 border border-purple-600 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mb-6 bg-gradient-to-r from-purple-900/70 to-indigo-900/70 border border-purple-500/40 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Bell className="w-5 h-5 text-yellow-400 flex-shrink-0" />
             <p className="text-sm text-white">
@@ -541,8 +536,8 @@ export default function ScratchOffs() {
         {/* Top picks spotlight */}
         {!isLoading && filtered.length > 0 && filtered.filter(g => g.rank === 'top').length > 0 && (
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
-              <Flame className="w-5 h-5 text-orange-500" />
+            <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2 mb-3">
+              <Flame className="w-5 h-5 text-amber-400" />
               Top Picks Right Now
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -552,13 +547,13 @@ export default function ScratchOffs() {
             </div>
 
             {/* Post-top-picks upgrade card */}
-            <div className="mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-4">
+            <div className="mt-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-4">
               <div className="flex-1 text-center sm:text-left">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 justify-center sm:justify-start">
-                  <Bell className="w-4 h-4 text-orange-500" />
+                <h3 className="font-bold text-gray-100 flex items-center gap-2 justify-center sm:justify-start">
+                  <Bell className="w-4 h-4 text-amber-400" />
                   Want alerts when these games hit Value Score 50+?
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-400 mt-1">
                   Premium members get instant email alerts so they're first to know — no need to check manually.
                 </p>
               </div>
@@ -574,8 +569,8 @@ export default function ScratchOffs() {
         {/* All results */}
         {!isLoading && filtered.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 mb-3">
-              <Medal className="w-5 h-5 text-blue-500" />
+            <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2 mb-3">
+              <Medal className="w-5 h-5 text-blue-400" />
               All Games Ranked
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -589,32 +584,32 @@ export default function ScratchOffs() {
         {/* Empty state */}
         {!isLoading && !error && filtered.length === 0 && data && (
           <div className="text-center py-12">
-            <Ticket className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-600 font-medium">No games match your filters</p>
-            <p className="text-sm text-gray-400 mb-4">Try adjusting your price range or removing the big prize minimum</p>
-            <Button onClick={() => { setSearch(''); setMaxPrice(30); setMinBigPrizes(0); setRankFilter('all'); }} variant="outline">
+            <Ticket className="w-12 h-12 text-gray-700 mx-auto mb-3" />
+            <p className="text-gray-300 font-medium">No games match your filters</p>
+            <p className="text-sm text-gray-500 mb-4">Try adjusting your price range or removing the big prize minimum</p>
+            <Button onClick={() => { setSearch(''); setMaxPrice(30); setMinBigPrizes(0); setRankFilter('all'); }} variant="outline" className="border-white/15 text-gray-300 hover:bg-white/10">
               Clear Filters
             </Button>
           </div>
         )}
 
         {/* Footer note */}
-        <div className="mt-10 text-center text-xs text-gray-400 border-t pt-6">
+        <div className="mt-10 text-center text-xs text-gray-600 border-t border-white/10 pt-6">
           Prize data sourced from the official NY State Open Data portal (data.ny.gov) • Refreshes hourly •
           For educational and entertainment purposes only • Gambling involves risk • Must be 18+
         </div>
 
         {/* Russell Nomer attribution footer — single scrollable line on all viewports */}
         <div className="mt-3 overflow-x-auto">
-          <p className="whitespace-nowrap text-center text-xs text-gray-400">
+          <p className="whitespace-nowrap text-center text-xs text-gray-600">
             Tool built by independent musician{' '}
-            <a href="https://russellnomermusic.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Russell Nomer</a>
+            <a href="https://russellnomermusic.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">Russell Nomer</a>
             {' '}· Stream my music (entertainment only) →{' '}
-            <a href="https://music.apple.com/us/artist/russell-nomer/452485944" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Apple Music</a>
+            <a href="https://music.apple.com/us/artist/russell-nomer/452485944" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">Apple Music</a>
             {' '}·{' '}
-            <a href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Spotify</a>
+            <a href="https://open.spotify.com/artist/6sW3FG7MiVFoNMCRQ3cKmq" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">Spotify</a>
             {' '}·{' '}
-            <a href="https://youtube.com/@russellnomermusic" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">YouTube</a>
+            <a href="https://youtube.com/@russellnomermusic" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-400">YouTube</a>
             {' '}· Play responsibly.
           </p>
         </div>
