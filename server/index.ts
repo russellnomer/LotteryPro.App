@@ -20,6 +20,7 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync, isStripeIntegrationAvailable } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { sendAllDrawReminders } from './emailService';
+import { startWatchdog } from './watchdog';
 import { storage } from './storage';
 
 declare module 'express-session' {
@@ -339,6 +340,13 @@ ${xmlBody}
       if (!emailOk) {
         console.warn('⚠️  Email not configured. Draw reminders and verification emails will not send.');
       }
+    }
+
+    // ── Production watchdog ──
+    // Pings DB health every 5 min and emails Russell on failure or unhandled 5xx.
+    // Only runs in production; gated here so dev/test cycles stay noise-free.
+    if (process.env.NODE_ENV === 'production') {
+      startWatchdog();
     }
   });
 

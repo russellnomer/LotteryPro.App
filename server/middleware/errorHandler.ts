@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { logError } from "../logging";
+import { triggerAlert } from "../watchdog";
 
 interface AppError extends Error {
   statusCode?: number;
@@ -29,6 +30,30 @@ export function globalErrorHandler(
   ).catch(logErr => {
     console.error('Failed to log error:', logErr);
   });
+
+  // Send push alert for unhandled 5xx errors (not user validation/operational errors)
+  // Uses 30-minute cooldown via triggerAlert to prevent inbox flooding
+  if (statusCode >= 500 && !err.isOperational && isProduction) {
+    const stackSummary = err.stack
+      ? err.stack.split('\n').slice(0, 6).join('\n')
+      : 'No stack trace available';
+
+    triggerAlert(
+      '5xx_unhandled_exception',
+      `Unhandled 5xx — ${req.method} ${req.path}`,
+      [
+        `Status   : ${statusCode}`,
+        `Method   : ${req.method}`,
+        `Path     : ${req.path}`,
+        `Message  : ${err.message || 'No message'}`,
+        '',
+        'Stack trace (first 6 lines):',
+        stackSummary,
+      ].join('\n')
+    ).catch(alertErr => {
+      console.error('[ErrorHandler] triggerAlert threw:', alertErr);
+    });
+  }
   
   const errorResponse: Record<string, any> = {
     success: false,

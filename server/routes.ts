@@ -49,10 +49,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ── Health check endpoint ──
   // GET /api/health — Replit's deploy system pings this to confirm the app started.
-  // Returns 200 with basic status. Must NOT require authentication.
-  app.get('/api/health', (_req, res) => {
-    res.status(200).json({
-      status: 'ok',
+  // Also used by the internal watchdog (checkDatabaseHealth). Must NOT require auth.
+  // Returns: status "ok" | "degraded", db "connected" | "error", uptime, version.
+  app.get('/api/health', async (_req, res) => {
+    const { checkDatabaseHealth } = await import('./watchdog');
+    const dbStatus = await checkDatabaseHealth();
+
+    const status = dbStatus.db === 'connected' ? 'ok' : 'degraded';
+    const httpCode = status === 'ok' ? 200 : 503;
+
+    res.status(httpCode).json({
+      status,
+      db: dbStatus.db,
+      ...(dbStatus.dbError ? { dbError: dbStatus.dbError } : {}),
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       env: process.env.NODE_ENV || 'development',

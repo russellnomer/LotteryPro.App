@@ -500,6 +500,52 @@ export async function sendAllDrawReminders(game: 'powerball' | 'megamillions'): 
   }
 }
 
+/**
+ * CRITICAL ALERT EMAIL
+ * Sends a plain-text alert to the admin when a server-side failure is detected.
+ * Used by the watchdog and the global error handler.
+ * Subject and details are caller-supplied; timestamp and dashboard link are auto-appended.
+ */
+export async function sendCriticalAlertEmail(
+  subject: string,
+  details: string
+): Promise<void> {
+  // Admin email: configurable via env, falls back to platform owner address
+  const adminEmail = process.env.ADMIN_ALERT_EMAIL || 'russell@lotterypro.app';
+
+  const domain =
+    process.env.REPLIT_DOMAINS?.split(',')[0]?.trim() || 'lotterypro.app';
+
+  const body = [
+    '⚠️  LotteryPro Production Alert',
+    '════════════════════════════════',
+    `Timestamp : ${new Date().toISOString()}`,
+    `Subject   : ${subject}`,
+    '',
+    'Details:',
+    details,
+    '',
+    '────────────────────────────────',
+    `Admin dashboard: https://${domain}/admin`,
+    `Health check:    https://${domain}/api/health`,
+    '────────────────────────────────',
+    'This alert was generated automatically by the LotteryPro watchdog.',
+    'Check Replit deployment logs for full stack traces.',
+  ].join('\n');
+
+  try {
+    await sendMail({
+      to: adminEmail,
+      subject: `🚨 [LotteryPro] ${subject}`,
+      text: body,
+    });
+    console.log(`🚨 [Watchdog] Alert email sent to ${adminEmail} — ${subject}`);
+  } catch (err: any) {
+    // Never let the alert mechanism itself crash the server
+    console.error(`❌ [Watchdog] Failed to send alert email: ${err?.message}`);
+  }
+}
+
 export async function sendPasswordResetEmail(
   recipientEmail: string,
   resetToken: string
