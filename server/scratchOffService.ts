@@ -156,6 +156,8 @@ const PRICE_LOOKUP: Record<string, number> = {
   '1702': 3,  // DIAMOND CASHWORD
   '1703': 5,  // $1,000,000 50X CASHWORD
   '1704': 10, // $50 OR $100 (same price tier as game #1646, identical name/series)
+  '1705': 5,  // LADY LUCK 25X (confirmed via NY API: min prize $5, top prize $500,000; same tier as WINNING STREAK 25X #1664)
+  '1706': 2,  // WIN IT ALL (confirmed via NY API: min prize $2, prizes at $2/$4/$5 — double-or-nothing $2 ticket)
   '1707': 1,  // LOOSE CHANGE (same series as games #1552 and #1618 — confirmed $1)
   '1708': 5,  // DOUBLE TRIPLE CASHWORD (same series as game #1632 — confirmed $5)
 };
