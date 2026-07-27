@@ -262,21 +262,30 @@ export default function ScratchOffs() {
     if (!data?.games) return [];
     return data.games
       .filter(g => {
+        if (g.price === null) return false; // excluded — shown in unranked section instead
         if (search && !g.gameName.toLowerCase().includes(search.toLowerCase()) && !g.gameNumber.includes(search)) return false;
-        if (g.price !== null && g.price > maxPrice) return false;
+        if (g.price > maxPrice) return false;
         if (g.bigPrizesLeft < minBigPrizes) return false;
         if (rankFilter !== 'all' && g.rank !== rankFilter) return false;
         return true;
       })
       .sort((a, b) => {
         if (sortBy === 'price') {
-          const pa = a.price ?? Infinity;
-          const pb = b.price ?? Infinity;
-          return pa - pb;
+          return a.price! - b.price!;
         }
         return (b[sortBy] as number) - (a[sortBy] as number);
       });
   }, [data, search, maxPrice, minBigPrizes, sortBy, rankFilter]);
+
+  // Games whose ticket price isn't in our lookup — shown separately so users know they exist
+  const unrankedGames = useMemo(() => {
+    if (!data?.games) return [];
+    return data.games.filter(g => {
+      if (g.price !== null) return false;
+      if (search && !g.gameName.toLowerCase().includes(search.toLowerCase()) && !g.gameNumber.includes(search)) return false;
+      return true;
+    });
+  }, [data, search]);
 
   const topPicks = useMemo(() => data?.games?.filter(g => g.rank === 'top').length ?? 0, [data]);
   const totalPool = useMemo(() => data?.games?.reduce((s, g) => s + g.totalRemainingValue, 0) ?? 0, [data]);
@@ -581,8 +590,67 @@ export default function ScratchOffs() {
           </div>
         )}
 
+        {/* Unranked games — price unknown, so value score can't be calculated */}
+        {!isLoading && unrankedGames.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+                <Ticket className="w-5 h-5 text-gray-400" />
+                New Games — Price Not Yet Rated
+              </h2>
+              <span className="text-xs text-gray-500 bg-white/5 border border-white/10 rounded-full px-2 py-0.5">{unrankedGames.length}</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              These games appear in the official NY prize data but their ticket prices are not yet in our lookup. Value ranking is unavailable — check{' '}
+              <a href="https://nylottery.ny.gov/scratch-off-games" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline hover:text-amber-300">nylottery.ny.gov</a>
+              {' '}for the ticket price before purchasing.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {unrankedGames.map(game => (
+                <Card key={game.gameNumber} className="border border-gray-700/50 bg-[#0d1526] shadow-lg">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <CardTitle className="text-base leading-tight text-gray-100">{game.gameName}</CardTitle>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500">Game #{game.gameNumber}</span>
+                          <span className="text-xs text-gray-600">•</span>
+                          <span className="text-xs text-gray-500">Price unknown</span>
+                        </div>
+                      </div>
+                      <span className="flex-shrink-0 text-xs bg-gray-700/60 text-gray-400 border border-gray-600/50 rounded-full px-2 py-0.5 font-medium">Unranked</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-2">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="bg-white/5 rounded-lg p-2">
+                        <div className="text-gray-500 text-xs mb-0.5">Top Prize</div>
+                        <div className="font-semibold text-gray-200">{game.topPrizeAmount}</div>
+                        <div className="text-xs text-gray-500">{game.topPrizeRemaining.toLocaleString()} remaining</div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2">
+                        <div className="text-gray-500 text-xs mb-0.5">Total Winners Left</div>
+                        <div className="font-semibold text-gray-200">{game.totalRemainingWinners.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500">{game.pctRemaining}% unclaimed</div>
+                      </div>
+                    </div>
+                    <a
+                      href={`https://nylottery.ny.gov/scratch-off-games`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-center text-xs text-amber-400 hover:text-amber-300 underline mt-1"
+                    >
+                      View on nylottery.ny.gov →
+                    </a>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Empty state */}
-        {!isLoading && !error && filtered.length === 0 && data && (
+        {!isLoading && !error && filtered.length === 0 && unrankedGames.length === 0 && data && (
           <div className="text-center py-12">
             <Ticket className="w-12 h-12 text-gray-700 mx-auto mb-3" />
             <p className="text-gray-300 font-medium">No games match your filters</p>
