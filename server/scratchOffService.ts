@@ -1,4 +1,5 @@
 import https from 'https';
+import { sendMail } from './emailService';
 
 export interface ScratchOffPrizeTier {
   prizeAmount: string;
@@ -315,12 +316,122 @@ export interface ScratchOffGap {
 let detectedGaps: ScratchOffGap[] = [];
 let lastGapCheckAt: string | null = null;
 
+// Game numbers that were present in the previous run for which an alert email was
+// successfully delivered. Comparing against this — not a permanent historical set —
+// means a gap that disappears and reappears will trigger a fresh alert, while gaps
+// that persist unchanged week over week produce no duplicate email.
+// Reset to empty on every process restart (intentional: see follow-up task #72).
+let previousAlertedGapNumbers = new Set<string>();
+
 export function getDetectedGaps(): { gaps: ScratchOffGap[]; lastCheckedAt: string | null } {
   return { gaps: detectedGaps, lastCheckedAt: lastGapCheckAt };
 }
 
+// Sends the admin a formatted email listing each newly-discovered gap game.
+// Returns true only when sendMail confirms delivery (success: true).
+async function sendGapAlertEmail(newGaps: ScratchOffGap[]): Promise<boolean> {
+  const adminEmail = process.env.ADMIN_ALERT_EMAIL || 'russell@lotterypro.app';
+  const domain = process.env.REPLIT_DOMAINS?.split(',')[0]?.trim() || 'lotterypro.app';
+
+  // Plain-text body — one line per game with a direct NY Lottery link
+  const gameLines = newGaps
+    .map(g => `  • Game #${g.gameNumber} — ${g.gameName}\n    https://nylottery.ny.gov/scratch-off?game=${g.gameNumber}`)
+    .join('\n\n');
+
+  const text = [
+    `⚠️  ${newGaps.length} new NY scratch-off game(s) detected without a ticket price.`,
+    '',
+    'These games are live in the NY Lottery API but are missing from PRICE_LOOKUP',
+    'in server/scratchOffService.ts. Until a price is added, these games will show',
+    '"Unknown" price to users on the Scratch-Off Helper page.',
+    '',
+    'New games:',
+    gameLines,
+    '',
+    '────────────────────────────────',
+    `Admin dashboard: https://${domain}/admin`,
+    `Detected at: ${new Date().toISOString()}`,
+    '────────────────────────────────',
+    'To fix: open server/scratchOffService.ts and add each game number to PRICE_LOOKUP.',
+  ].join('\n');
+
+  // HTML body — table of new games with clickable links
+  const tableRows = newGaps
+    .map(g => `
+      <tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;">${g.gameNumber}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">${g.gameName}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">
+          <a href="https://nylottery.ny.gov/scratch-off?game=${g.gameNumber}"
+             style="color:#667eea;text-decoration:none;">nylottery.ny.gov ↗</a>
+        </td>
+      </tr>`)
+    .join('');
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;padding:20px;background:#f9f9f9;">
+      <div style="background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%);padding:28px;border-radius:10px;text-align:center;color:white;">
+        <h1 style="margin:0;font-size:24px;">⚠️ NY Scratch-Off Price Gap Alert</h1>
+        <p style="margin:8px 0 0 0;opacity:0.9;">LotteryPro · Admin Notification</p>
+      </div>
+      <div style="background:white;padding:28px;border-radius:0 0 10px 10px;margin-top:2px;">
+        <p style="color:#333;font-size:16px;">
+          <strong>${newGaps.length} new game(s)</strong> appeared in the NY Lottery API without
+          a ticket price in <code>PRICE_LOOKUP</code>. These games will display
+          <em>"Unknown"</em> price until the lookup is updated.
+        </p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;">
+          <thead>
+            <tr style="background:#f7fafc;">
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e2e8f0;color:#4a5568;">Game #</th>
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e2e8f0;color:#4a5568;">Game Name</th>
+              <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #e2e8f0;color:#4a5568;">NY Lottery Link</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        <div style="background:#fff5f5;border-left:4px solid #e53e3e;padding:14px;border-radius:4px;margin:20px 0;">
+          <strong style="color:#c53030;">Action required:</strong>
+          <span style="color:#555;"> Open <code>server/scratchOffService.ts</code> and add each
+          game number to <code>PRICE_LOOKUP</code> with the correct ticket price.</span>
+        </div>
+        <div style="text-align:center;margin:24px 0;">
+          <a href="https://${domain}/admin"
+             style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:12px 28px;text-decoration:none;border-radius:20px;font-weight:bold;display:inline-block;">
+            Open Admin Dashboard
+          </a>
+        </div>
+        <p style="color:#aaa;font-size:12px;text-align:center;margin-top:24px;">
+          Detected at ${new Date().toISOString()} · LotteryPro automated alert
+        </p>
+      </div>
+    </div>`;
+
+  try {
+    const result = await sendMail({
+      to: adminEmail,
+      subject: `🚨 [LotteryPro] ${newGaps.length} new NY scratch-off game(s) missing a price`,
+      text,
+      html,
+    });
+    if (result.success) {
+      console.log(`[scratchOff] Gap alert email sent to ${adminEmail} for ${newGaps.length} new game(s).`);
+      return true;
+    }
+    console.warn(`[scratchOff] Gap alert email not delivered (no transport): ${result.message}`);
+    return false;
+  } catch (err: any) {
+    console.error('[scratchOff] Failed to send gap alert email:', err?.message ?? err);
+    return false;
+  }
+}
+
 // Fetch the NY API, find all game numbers with no PRICE_LOOKUP entry, and
 // store them so the admin dashboard can surface them for manual follow-up.
+// Emails the admin only when the current run contains game numbers that were
+// NOT present in the previous successfully-alerted run (i.e. genuinely new
+// or reappeared gaps). previousAlertedGapNumbers is updated only when the
+// email is confirmed delivered, so a failed send triggers a retry next run.
 export async function detectNYScratchOffGaps(): Promise<ScratchOffGap[]> {
   console.log('[scratchOff] Running weekly NY game-gap detection...');
   try {
@@ -358,7 +469,26 @@ export async function detectNYScratchOffGaps(): Promise<ScratchOffGap[]> {
         `[scratchOff] ${gaps.length} NY game(s) missing from PRICE_LOOKUP:`,
         gaps.map(g => `#${g.gameNumber} ${g.gameName}`).join(', ')
       );
+
+      // New gaps = current gaps whose game number was absent from the previous
+      // successful alert. This means a gap that resolves and later reappears
+      // will alert again (correct), while persistent unchanged gaps stay silent.
+      const newGaps = gaps.filter(g => !previousAlertedGapNumbers.has(g.gameNumber));
+
+      if (newGaps.length > 0) {
+        const delivered = await sendGapAlertEmail(newGaps);
+        if (delivered) {
+          // Snapshot the full current gap set as the new baseline. Only
+          // advance the baseline on confirmed delivery so a transport failure
+          // causes a retry on the next weekly run instead of silent suppression.
+          previousAlertedGapNumbers = new Set(gaps.map(g => g.gameNumber));
+        }
+      } else {
+        console.log('[scratchOff] All current gaps match the previous alert — no duplicate email sent.');
+      }
     } else {
+      // No gaps this run: clear the baseline so any future gaps are treated as new.
+      previousAlertedGapNumbers = new Set();
       console.log('[scratchOff] No NY price gaps detected — all live games have prices.');
     }
 
