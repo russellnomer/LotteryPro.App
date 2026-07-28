@@ -1429,10 +1429,10 @@ interface BlogPostAdmin {
 }
 
 const CATEGORY_OG_IMAGES: Record<string, string> = {
-  Analysis: "/og-blog-analysis.svg",
-  Education: "/og-blog-education.svg",
-  Strategy: "/og-blog-strategy.svg",
-  Methods: "/og-blog-methods.svg",
+  Analysis: "/og-blog-analysis.png",
+  Education: "/og-blog-education.png",
+  Strategy: "/og-blog-strategy.png",
+  Methods: "/og-blog-methods.png",
 };
 
 const EMPTY_FORM = {
@@ -1794,7 +1794,7 @@ function BlogEditorTab() {
                   <Input
                     value={form.ogImageUrl ?? ""}
                     onChange={e => setForm(f => ({ ...f, ogImageUrl: e.target.value || null }))}
-                    placeholder="/og-blog-analysis.svg or https://..."
+                    placeholder="/og-blog-analysis.png or https://..."
                     className="font-mono text-sm"
                   />
                   <p className="text-xs text-gray-400 mt-1">

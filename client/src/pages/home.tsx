@@ -261,8 +261,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEOHead
-        title="AI-Powered Lottery Analysis & Smart Picks"
-        description="Analyze Powerball & Mega Millions with 2,020+ real winning numbers. Generate smart picks with statistical algorithms. Free tier available."
+        title="AI-Powered Lottery Stats & Smart Number Picks"
+        description="Analyze Powerball & Mega Millions with 7,600+ real winning draws. Generate smart picks with statistical algorithms. Free tier available."
         path="/"
         jsonLd={{
           "@context": "https://schema.org",
@@ -303,9 +303,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-primary">
                 <i className="fas fa-robot mr-2"></i>AI LotteryPro
-              </h1>
+              </p>
               <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                 By Russell Nomer
               </Badge>

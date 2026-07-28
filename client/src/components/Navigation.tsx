@@ -118,7 +118,7 @@ export default function Navigation() {
                 LP
               </div>
               <div>
-                <h1 className="text-xl font-bold">LotteryPro</h1>
+                <span className="text-xl font-bold">LotteryPro</span>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-blue-200">Russell Nomer Platform</p>
                   {userStateConfig && (

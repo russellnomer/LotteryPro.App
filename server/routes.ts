@@ -77,17 +77,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use(express.static(publicPath));
   }
   
-  // Explicit routes for security files
-  app.get('/robots.txt', (req, res) => {
-    res.type('text/plain').send(`User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /admin/
-Disallow: /god-mode
-
-Sitemap: https://lotterypro.app/sitemap.xml
-`);
-  });
+  // Note: robots.txt is served from public/robots.txt via express.static above.
+  // Do NOT add a route here — the static file is the single source of truth.
 
   // Note: /subscription redirect and /sitemap.xml are registered in server/index.ts
   // before registerRoutes() so they run before Vite's dev middleware.
