@@ -5,3 +5,6 @@ Disallow: /admin/
 Disallow: /god-mode
 
 Sitemap: https://lotterypro.replit.app/sitemap.xml
+
+# AI crawler guidance
+LLMs-txt: https://lotterypro.app/llms.txt

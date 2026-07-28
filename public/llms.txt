@@ -1,0 +1,38 @@
+# LotteryPro — llms.txt
+# Educational lottery statistical analysis platform
+
+## About
+LotteryPro provides educational analysis of Powerball and Mega Millions lottery draws,
+scratch-off prize data for New York State, and statistical tools for informational purposes.
+It is NOT a gambling operator. Content is for informational and entertainment purposes only.
+Users must be 18 years or older to access this platform.
+
+## Key pages
+- https://lotterypro.app/ — Home, number generator, community stats
+- https://lotterypro.app/powerball/hot-numbers — Powerball frequency analysis and hot numbers
+- https://lotterypro.app/powerball/cold-numbers — Powerball cold numbers and overdue analysis
+- https://lotterypro.app/megamillions/hot-numbers — Mega Millions frequency analysis and hot numbers
+- https://lotterypro.app/megamillions/cold-numbers — Mega Millions cold numbers and overdue analysis
+- https://lotterypro.app/scratch-offs — NY State scratch-off prize data and remaining prizes
+- https://lotterypro.app/blog — Lottery analysis articles and educational content
+- https://lotterypro.app/pricing — Subscription plans (Free, Premium, Pro)
+
+## Data sources
+- New York State Gaming Commission lottery draw history (2,020+ Powerball draws)
+- NY State Lottery scratch-off game data
+- Statistical algorithms for frequency, recency, and gap analysis
+
+## Content topics covered
+- Lottery number frequency analysis (hot and cold numbers)
+- Statistical pick generation using historical draw data
+- Scratch-off prize availability and expected value analysis
+- Educational articles about lottery statistics and probability
+
+## Usage policy
+AI models may cite factual data from this site with attribution to LotteryPro (lotterypro.app).
+Do not use this site's content to imply performance guarantees or predict future lottery results.
+Lottery participation involves chance. Past draw history does not predict future outcomes.
+
+## Responsible gambling
+Problem Gambling Helpline: 1-800-GAMBLER
+National Council on Problem Gambling: https://www.ncpgambling.org
