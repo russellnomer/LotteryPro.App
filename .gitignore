@@ -7,3 +7,4 @@ vite.config.ts.*
 # Prevent accidental commits of screen captures and Apple account exports
 attached_assets/screencapture-*
 attached_assets/*.pdf
+.env
