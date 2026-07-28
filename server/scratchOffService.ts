@@ -485,11 +485,15 @@ export async function detectNYScratchOffGaps(): Promise<ScratchOffGap[]> {
     const url = 'https://data.ny.gov/resource/nzqa-7unk.json?%24limit=5000';
     const rows = await fetchJson(url);
 
-    // Collect unique game numbers + names from the live API
-    const seen = new Map<string, string>(); // gameNumber → gameName
+    // Collect unique game numbers + names from the live API, summing unpaid
+    // prize counts across all tiers so we can detect sold-out games below.
+    const seen = new Map<string, { name: string; totalUnpaid: number }>(); // gameNumber → { name, totalUnpaid }
     for (const row of rows) {
+      const unpaid = parseInt(row.unpaid) || 0;
       if (!seen.has(row.game_number)) {
-        seen.set(row.game_number, row.game_name);
+        seen.set(row.game_number, { name: row.game_name, totalUnpaid: unpaid });
+      } else {
+        seen.get(row.game_number)!.totalUnpaid += unpaid;
       }
     }
 
@@ -497,13 +501,19 @@ export async function detectNYScratchOffGaps(): Promise<ScratchOffGap[]> {
     const dbPrices = await loadDbPrices();
     const effectivePriceLookup: Record<string, number> = { ...PRICE_LOOKUP, ...dbPrices };
 
-    // Identify games in the API that have no price entry (in either source)
+    // Identify games in the API that have no price entry (in either source) AND are still active.
+    // Suppression rule: if every prize tier for a game has unpaid === 0 the game
+    // is fully sold out or retired — alerting the admin to add a price for a dead
+    // game produces noise with no user-facing benefit, so we skip it silently.
+    // Only games with at least one remaining unpaid prize are flagged as true gaps.
     const gaps: ScratchOffGap[] = [];
-    for (const [gameNumber, gameName] of seen.entries()) {
+    for (const [gameNumber, { name, totalUnpaid }] of seen.entries()) {
       if (effectivePriceLookup[gameNumber] === undefined) {
+        // Skip sold-out / retired games: all remaining prize tiers have unpaid === 0
+        if (totalUnpaid === 0) continue;
         gaps.push({
           gameNumber,
-          gameName,
+          gameName: name,
           detectedAt: new Date().toISOString(),
         });
       }
