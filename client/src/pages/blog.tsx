@@ -16,6 +16,7 @@ interface BlogPostData {
   content: string;
   published: boolean;
   publishedAt: string | null;
+  updatedAt: string | null;
   author: string;
   ogImageUrl: string | null;
   category: string;
@@ -260,16 +261,25 @@ export function BlogPost() {
           "@type": "Article",
           "headline": post.title,
           "description": post.metaDescription,
+          "image": post.ogImageUrl || "https://lotterypro.app/og-default.png",
           "author": {
-            "@type": "Organization",
+            "@type": "Person",
             "name": post.author || "LotteryPro Team",
           },
           "publisher": {
             "@type": "Organization",
             "name": "LotteryPro",
-            "url": "https://lotterypro.app",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://lotterypro.app/icons/icon-512.png",
+            },
           },
           "datePublished": post.publishedAt,
+          "dateModified": post.updatedAt || post.publishedAt,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `https://lotterypro.app/blog/${post.slug}`,
+          },
           "url": `https://lotterypro.app/blog/${post.slug}`,
         }}
       />

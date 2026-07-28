@@ -33,11 +33,6 @@ const defaultJsonLd = {
       "unitText": "MONTH"
     }
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "ratingCount": "127"
-  }
 };
 
 export default function SEOHead({ title, description, path, image, type = "website", jsonLd }: SEOHeadProps) {

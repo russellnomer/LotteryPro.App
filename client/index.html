@@ -30,6 +30,41 @@
     <meta name="twitter:description" content="Analyze Powerball & Mega Millions with real data. Generate smart picks with statistical algorithms." />
     <meta name="twitter:image" content="https://lotterypro.app/og-default.png" />
     
+    <!-- Site-level structured data: WebSite + Organization (static, crawler-visible) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://lotterypro.app/#website",
+          "name": "LotteryPro",
+          "url": "https://lotterypro.app",
+          "description": "Educational lottery number analysis for Powerball and Mega Millions.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://lotterypro.app/blog?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://lotterypro.app/#organization",
+          "name": "LotteryPro",
+          "url": "https://lotterypro.app",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://lotterypro.app/icons/icon-512.png"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "legal@russellnomer.com",
+            "contactType": "customer support"
+          }
+        }
+      ]
+    }
+    </script>
     <!-- Google AdSense - Loaded securely via server endpoint -->
     <script>
       // Secure AdSense loading - no sensitive data exposed to client
