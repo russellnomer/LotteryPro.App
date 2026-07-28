@@ -1,0 +1,1 @@
+- [SSR meta injection pattern](ssr-meta-injection.md) — sentinel comment approach to inject per-route OG/JSON-LD into index.html without full React SSR

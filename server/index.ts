@@ -297,6 +297,213 @@ ${xmlBody}
 </urlset>`);
   });
 
+  // ── SSR meta-tag injection for high-value public pages ───────────────────
+  // These Express routes run BEFORE registerRoutes() and Vite's SPA catch-all.
+  // They read index.html, replace the SSR_META_START/END block with per-route
+  // meta tags, and return the full HTML. Social/AI crawlers receive correct
+  // <title>, <meta description>, OG, Twitter, and JSON-LD in the static HTML.
+  // Regular users get the same HTML — React hydrates and react-helmet-async
+  // takes over after mount, so the experience is identical.
+  //
+  // AI/human time: ~1.5h AI, 0h human
+  {
+    const { renderWithMeta } = await import('./ssrShell');
+
+    // ── /blog/:slug ─────────────────────────────────────────────────────────
+    // Fetches the blog post from the DB and injects Article JSON-LD + OG tags.
+    // Falls back to the default index.html if the post is not found so that
+    // the SPA can show its own 404 page.
+    app.get('/blog/:slug', async (req, res, next) => {
+      // Only intercept for non-API, non-asset requests (defensive check).
+      if (req.path.startsWith('/api') || req.path.includes('.')) return next();
+
+      try {
+        const { db } = await import('./db');
+        const { blogPosts } = await import('@shared/schema');
+        const { eq, and } = await import('drizzle-orm');
+
+        const slug = req.params.slug;
+        const [post] = await db
+          .select({
+            title: blogPosts.title,
+            metaDescription: blogPosts.metaDescription,
+            slug: blogPosts.slug,
+            ogImageUrl: blogPosts.ogImageUrl,
+            author: blogPosts.author,
+            publishedAt: blogPosts.publishedAt,
+            category: blogPosts.category,
+          })
+          .from(blogPosts)
+          .where(and(eq(blogPosts.slug, slug), eq(blogPosts.published, true)))
+          .limit(1);
+
+        // Post not found — let SPA handle 404 display.
+        if (!post) return next();
+
+        const canonical = `https://lotterypro.app/blog/${slug}`;
+        const postTitle = `${post.title} | LotteryPro`;
+
+        // Article JSON-LD structured data for Google's rich results.
+        const jsonLd = {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: post.title,
+          description: post.metaDescription ?? '',
+          url: canonical,
+          image: post.ogImageUrl ?? 'https://lotterypro.app/og-default.png',
+          datePublished: post.publishedAt ?? undefined,
+          author: {
+            '@type': 'Person',
+            name: post.author ?? 'LotteryPro Team',
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'LotteryPro',
+            url: 'https://lotterypro.app',
+            logo: {
+              '@type': 'ImageObject',
+              url: 'https://lotterypro.app/og-default.png',
+            },
+          },
+        };
+
+        const html = renderWithMeta({
+          title: postTitle,
+          description: post.metaDescription ?? `Read ${post.title} on LotteryPro.`,
+          canonical,
+          ogType: 'article',
+          ogImage: post.ogImageUrl ?? undefined,
+          jsonLd,
+        });
+
+        res.status(200).set('Content-Type', 'text/html').end(html);
+      } catch (err) {
+        // DB error — fall through to SPA so the page still loads.
+        console.error('[SSR /blog/:slug] Error fetching post for meta injection:', err);
+        next();
+      }
+    });
+
+    // ── /powerball/hot-numbers ───────────────────────────────────────────────
+    app.get('/powerball/hot-numbers', (_req, res) => {
+      const html = renderWithMeta({
+        title: 'Powerball Hot & Cold Numbers | Statistical Frequency Analysis — LotteryPro',
+        description: 'See which Powerball numbers appear most and least often. Historical frequency charts built from 2,020+ real NY State draws. Free to use.',
+        canonical: 'https://lotterypro.app/powerball/hot-numbers',
+        ogType: 'website',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'Powerball Hot & Cold Numbers',
+          description: 'Statistical frequency analysis of Powerball winning numbers based on historical NY State draw data.',
+          url: 'https://lotterypro.app/powerball/hot-numbers',
+          isPartOf: { '@type': 'WebSite', name: 'LotteryPro', url: 'https://lotterypro.app' },
+        },
+      });
+      res.status(200).set('Content-Type', 'text/html').end(html);
+    });
+
+    // ── /megamillions/hot-numbers ────────────────────────────────────────────
+    app.get('/megamillions/hot-numbers', (_req, res) => {
+      const html = renderWithMeta({
+        title: 'Mega Millions Hot & Cold Numbers | Statistical Frequency Analysis — LotteryPro',
+        description: 'See which Mega Millions numbers appear most and least often. Historical frequency charts from real draw data. Identify patterns for educational purposes.',
+        canonical: 'https://lotterypro.app/megamillions/hot-numbers',
+        ogType: 'website',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'Mega Millions Hot & Cold Numbers',
+          description: 'Statistical frequency analysis of Mega Millions winning numbers based on historical draw data.',
+          url: 'https://lotterypro.app/megamillions/hot-numbers',
+          isPartOf: { '@type': 'WebSite', name: 'LotteryPro', url: 'https://lotterypro.app' },
+        },
+      });
+      res.status(200).set('Content-Type', 'text/html').end(html);
+    });
+
+    // ── /pricing ─────────────────────────────────────────────────────────────
+    app.get('/pricing', (_req, res) => {
+      const html = renderWithMeta({
+        title: 'LotteryPro Pricing — Free & Premium Plans',
+        description: 'Start free or upgrade to LotteryPro Premium for $7.99/month. Unlock advanced statistical analysis, AI-powered picks, and full draw history for Powerball & Mega Millions.',
+        canonical: 'https://lotterypro.app/pricing',
+        ogType: 'website',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: 'LotteryPro Premium',
+          description: 'Advanced lottery statistical analysis — hot/cold numbers, AI picks, full draw history, and more.',
+          url: 'https://lotterypro.app/pricing',
+          offers: [
+            {
+              '@type': 'Offer',
+              name: 'Free Plan',
+              price: '0',
+              priceCurrency: 'USD',
+            },
+            {
+              '@type': 'Offer',
+              name: 'Premium Plan',
+              price: '7.99',
+              priceCurrency: 'USD',
+              priceSpecification: {
+                '@type': 'UnitPriceSpecification',
+                price: '7.99',
+                priceCurrency: 'USD',
+                unitText: 'MONTH',
+              },
+            },
+          ],
+        },
+      });
+      res.status(200).set('Content-Type', 'text/html').end(html);
+    });
+
+    // ── /scratch-offs ────────────────────────────────────────────────────────
+    app.get('/scratch-offs', (_req, res) => {
+      const html = renderWithMeta({
+        title: 'NY Lottery Scratch-Off Games — Live Prize Data | LotteryPro',
+        description: 'Browse all active NY Lottery scratch-off tickets with remaining top prizes, odds, and ticket prices. Updated daily from official NY Lottery data.',
+        canonical: 'https://lotterypro.app/scratch-offs',
+        ogType: 'website',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'NY Lottery Scratch-Off Games',
+          description: 'Live remaining prize data for all active NY Lottery scratch-off tickets, updated daily.',
+          url: 'https://lotterypro.app/scratch-offs',
+          isPartOf: { '@type': 'WebSite', name: 'LotteryPro', url: 'https://lotterypro.app' },
+        },
+      });
+      res.status(200).set('Content-Type', 'text/html').end(html);
+    });
+
+    // ── /blog (listing page) ─────────────────────────────────────────────────
+    app.get('/blog', (_req, res) => {
+      const html = renderWithMeta({
+        title: 'Lottery Strategy & Analysis Blog | LotteryPro',
+        description: 'Expert articles on Powerball and Mega Millions strategy, statistical analysis, scratch-off tips, and responsible gambling. Learn how to read the numbers.',
+        canonical: 'https://lotterypro.app/blog',
+        ogType: 'website',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Blog',
+          name: 'LotteryPro Blog',
+          description: 'Lottery strategy, statistical analysis, and responsible gambling articles.',
+          url: 'https://lotterypro.app/blog',
+          publisher: {
+            '@type': 'Organization',
+            name: 'LotteryPro',
+            url: 'https://lotterypro.app',
+          },
+        },
+      });
+      res.status(200).set('Content-Type', 'text/html').end(html);
+    });
+  }
+  // ── End SSR meta-tag injection ────────────────────────────────────────────
+
   const server = await registerRoutes(app);
 
   // Use secure error handler
