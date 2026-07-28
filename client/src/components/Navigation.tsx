@@ -91,7 +91,7 @@ export default function Navigation() {
   };
 
   const navItems = [
-    { path: "/home", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },
+    { path: "/", icon: Home, label: "Lottery Generator", description: "Generate lottery numbers" },
     { path: "/scratch-offs", icon: Ticket, label: "Scratch-Off Helper", description: "Best scratch-offs to buy" },
     { path: "/pricing", icon: CreditCard, label: "Go Premium — $7.99/mo", description: "Unlock alerts & history" },
     { path: "/pools", icon: Users, label: "Community Pools", description: "Join lottery pools" },
@@ -112,7 +112,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/home">
+          <Link href="/">
             <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center font-bold text-black">
                 LP

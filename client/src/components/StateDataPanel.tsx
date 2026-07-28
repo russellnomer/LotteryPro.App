@@ -87,7 +87,7 @@ export default function StateDataPanel({ stateConfig, onNotifyRequest }: Props) 
             ))}
           </div>
           <Button
-            onClick={() => setLocation('/home')}
+            onClick={() => setLocation('/')}
             className="bg-emerald-600 hover:bg-emerald-500 text-white w-full sm:w-auto"
           >
             <TrendingUp className="w-4 h-4 mr-2" /> Generate Numbers for These Games

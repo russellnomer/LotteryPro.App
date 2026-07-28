@@ -235,6 +235,9 @@ app.use((req, res, next) => {
   // Redirect legacy /subscription → canonical /pricing (301 permanent)
   app.get('/subscription', (_req, res) => res.redirect(301, '/pricing'));
 
+  // Redirect /home → canonical / (301 permanent, prevents duplicate-content split)
+  app.get('/home', (_req, res) => res.redirect(301, '/'));
+
   // Serve dynamic sitemap.xml for Google indexing
   app.get('/sitemap.xml', async (_req, res) => {
     const today = new Date().toISOString().split('T')[0];
