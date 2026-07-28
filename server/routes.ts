@@ -1209,6 +1209,75 @@ Canonical: https://lotterypro.app/.well-known/security.txt
     }
   });
 
+  // ── NY Scratch-Off Admin-Managed Prices ──────────────────────────────────────
+  // Ensure the prices table exists (idempotent — safe to call on every boot)
+  {
+    const { ensurePricesTable } = await import('./scratchOffService');
+    await ensurePricesTable();
+  }
+
+  // GET /api/admin/scratch-off-prices — list all DB-stored prices
+  app.get('/api/admin/scratch-off-prices', requireAdmin, async (_req, res) => {
+    try {
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        'SELECT game_number, price, game_name, added_at, added_by FROM scratch_off_prices ORDER BY game_number ASC'
+      );
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching scratch-off prices:', error);
+      res.status(500).json({ message: 'Failed to fetch prices' });
+    }
+  });
+
+  // POST /api/admin/scratch-off-prices — upsert a game price (add or update)
+  // Body: { gameNumber: string, price: number, gameName?: string }
+  app.post('/api/admin/scratch-off-prices', requireAdmin, async (req, res) => {
+    try {
+      const { gameNumber, price, gameName } = req.body;
+      if (!gameNumber || typeof gameNumber !== 'string' || gameNumber.trim() === '') {
+        return res.status(400).json({ message: 'gameNumber is required' });
+      }
+      const priceNum = Number(price);
+      if (!Number.isInteger(priceNum) || priceNum < 1 || priceNum > 100) {
+        return res.status(400).json({ message: 'price must be a whole dollar amount between 1 and 100' });
+      }
+      const { pool } = await import('./db');
+      await pool.query(
+        `INSERT INTO scratch_off_prices (game_number, price, game_name, added_at, added_by)
+         VALUES ($1, $2, $3, now(), 'admin')
+         ON CONFLICT (game_number) DO UPDATE
+           SET price = EXCLUDED.price,
+               game_name = COALESCE(EXCLUDED.game_name, scratch_off_prices.game_name),
+               added_at  = now()`,
+        [gameNumber.trim(), priceNum, gameName?.trim() || null]
+      );
+      // Clear the in-memory game cache so the new price takes effect immediately
+      const { clearNYCache } = await import('./scratchOffService');
+      clearNYCache();
+      logAudit('admin', 'scratch_off_price_upsert', null, { gameNumber, price: priceNum }, req.ip || '');
+      res.json({ success: true, gameNumber: gameNumber.trim(), price: priceNum });
+    } catch (error: any) {
+      console.error('Error upserting scratch-off price:', error);
+      res.status(500).json({ message: 'Failed to save price' });
+    }
+  });
+
+  // DELETE /api/admin/scratch-off-prices/:gameNumber — remove a DB-stored price
+  app.delete('/api/admin/scratch-off-prices/:gameNumber', requireAdmin, async (req, res) => {
+    try {
+      const { pool } = await import('./db');
+      await pool.query('DELETE FROM scratch_off_prices WHERE game_number = $1', [req.params.gameNumber]);
+      const { clearNYCache } = await import('./scratchOffService');
+      clearNYCache();
+      logAudit('admin', 'scratch_off_price_delete', null, { gameNumber: req.params.gameNumber }, req.ip || '');
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting scratch-off price:', error);
+      res.status(500).json({ message: 'Failed to delete price' });
+    }
+  });
+
   // Advertisement Management Routes (Admin only)
   app.get('/api/admin/campaigns', requireAdmin, async (req, res) => {
     try {

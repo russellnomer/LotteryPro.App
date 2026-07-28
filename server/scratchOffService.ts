@@ -1,5 +1,6 @@
 import https from 'https';
 import { sendMail } from './emailService';
+import { pool } from './db';
 
 export interface ScratchOffPrizeTier {
   prizeAmount: string;
@@ -220,10 +221,54 @@ const CACHE_TTL = 3600 * 1000; // 1 hour
 
 export function clearNYCache() { cache = null; }
 
+// ─── DB-managed price overrides ───────────────────────────────────────────────
+// Loads all rows from scratch_off_prices (admin-entered via the dashboard).
+// Returns a plain object so it can be merged with PRICE_LOOKUP without modifying
+// the hardcoded constant.  Returns {} on any DB error so the service degrades
+// gracefully to PRICE_LOOKUP-only behaviour.
+async function loadDbPrices(): Promise<Record<string, number>> {
+  try {
+    const result = await pool.query<{ game_number: string; price: number }>(
+      'SELECT game_number, price FROM scratch_off_prices'
+    );
+    const map: Record<string, number> = {};
+    for (const row of result.rows) {
+      map[row.game_number] = row.price;
+    }
+    return map;
+  } catch (err: any) {
+    console.warn('[scratchOff] Could not load DB prices (table may not exist yet):', err?.message);
+    return {};
+  }
+}
+
+// Ensure the scratch_off_prices table exists.  Called once at service init time
+// so the admin UI works even before a formal schema migration is run.
+export async function ensurePricesTable(): Promise<void> {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS scratch_off_prices (
+        game_number VARCHAR(10) PRIMARY KEY,
+        price       INTEGER     NOT NULL,
+        game_name   TEXT,
+        added_at    TIMESTAMP   DEFAULT now(),
+        added_by    TEXT        DEFAULT 'admin'
+      )
+    `);
+  } catch (err: any) {
+    console.error('[scratchOff] Failed to create scratch_off_prices table:', err?.message);
+  }
+}
+
 export async function getScratchOffGames(): Promise<ScratchOffGame[]> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL) {
     return cache.data;
   }
+
+  // Merge hardcoded lookup with any admin-entered DB prices.
+  // DB prices take precedence so corrections don't require a redeployment.
+  const dbPrices = await loadDbPrices();
+  const effectivePriceLookup: Record<string, number> = { ...PRICE_LOOKUP, ...dbPrices };
 
   const url = 'https://data.ny.gov/resource/nzqa-7unk.json?%24limit=5000';
   const rows = await fetchJson(url);
@@ -249,7 +294,7 @@ export async function getScratchOffGames(): Promise<ScratchOffGame[]> {
   const games: ScratchOffGame[] = [];
 
   for (const [gameNumber, { name, tiers }] of gameMap.entries()) {
-    const price: number | null = PRICE_LOOKUP[gameNumber] ?? null;
+    const price: number | null = effectivePriceLookup[gameNumber] ?? null;
 
     const totalRemainingWinners = tiers.reduce((s, t) => s + t.unpaid, 0);
     const totalRemainingValue = tiers.reduce((s, t) => s + t.unpaid * t.prizeValue, 0);
@@ -448,10 +493,14 @@ export async function detectNYScratchOffGaps(): Promise<ScratchOffGap[]> {
       }
     }
 
-    // Identify games in the API that have no price entry
+    // Merge hardcoded lookup with DB-stored prices so admin entries close gaps immediately
+    const dbPrices = await loadDbPrices();
+    const effectivePriceLookup: Record<string, number> = { ...PRICE_LOOKUP, ...dbPrices };
+
+    // Identify games in the API that have no price entry (in either source)
     const gaps: ScratchOffGap[] = [];
     for (const [gameNumber, gameName] of seen.entries()) {
-      if (PRICE_LOOKUP[gameNumber] === undefined) {
+      if (effectivePriceLookup[gameNumber] === undefined) {
         gaps.push({
           gameNumber,
           gameName,

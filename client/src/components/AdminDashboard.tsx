@@ -122,8 +122,20 @@ interface ScratchOffGapsData {
   lastCheckedAt: string | null;
 }
 
+interface ScratchOffPrice {
+  game_number: string;
+  price: number;
+  game_name: string | null;
+  added_at: string;
+  added_by: string;
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"generate" | "users" | "codes" | "ads" | "logs" | "blog" | "drip" | "scratchGaps">("generate");
+  // Pre-fillable form for adding a game price — can be seeded by clicking a gap row
+  const [priceGameNumber, setPriceGameNumber] = useState("");
+  const [priceGameName, setPriceGameName] = useState("");
+  const [priceAmount, setPriceAmount] = useState("");
   const [vipForm, setVipForm] = useState<VipCodeGeneration>({
     targetEmail: "",
     currentTier: "free",
@@ -286,6 +298,47 @@ export default function AdminDashboard() {
   const scratchGapsQuery = useQuery<ScratchOffGapsData>({
     queryKey: ['/api/admin/scratch-off-gaps'],
     refetchOnWindowFocus: false,
+  });
+
+  // DB-stored game prices query
+  const scratchPricesQuery = useQuery<ScratchOffPrice[]>({
+    queryKey: ['/api/admin/scratch-off-prices'],
+    refetchOnWindowFocus: false,
+  });
+
+  // Add or update a game price
+  const addPriceMutation = useMutation({
+    mutationFn: async (data: { gameNumber: string; price: number; gameName?: string }) => {
+      const response = await apiRequest('POST', '/api/admin/scratch-off-prices', data);
+      return response.json();
+    },
+    onSuccess: (_data, vars) => {
+      toast({ title: "Price saved", description: `Game #${vars.gameNumber} set to $${vars.price}.` });
+      setPriceGameNumber("");
+      setPriceGameName("");
+      setPriceAmount("");
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scratch-off-prices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scratch-off-gaps'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save price", description: error.message || "Could not save price", variant: "destructive" });
+    },
+  });
+
+  // Delete a DB-stored price override
+  const deletePriceMutation = useMutation({
+    mutationFn: async (gameNumber: string) => {
+      const response = await apiRequest('DELETE', `/api/admin/scratch-off-prices/${gameNumber}`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Price removed", description: "Game price removed from database." });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scratch-off-prices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/scratch-off-gaps'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to remove price", description: error.message || "Could not remove price", variant: "destructive" });
+    },
   });
 
   // Trigger manual gap re-check
@@ -1117,120 +1170,242 @@ export default function AdminDashboard() {
 
         {/* Scratch-Off Gaps Tab */}
         {activeTab === "scratchGaps" && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center">
-                    <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
-                    NY Scratch-Off Price Gaps
-                  </CardTitle>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Games found in the live NY API ({" "}
-                    <a
-                      href="https://data.ny.gov/resource/nzqa-7unk.json"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      data.ny.gov
-                    </a>
-                    ) that are missing from the PRICE_LOOKUP in{" "}
-                    <code className="bg-gray-100 px-1 rounded text-xs">server/scratchOffService.ts</code>.
-                    These games show &ldquo;Unknown&rdquo; price and score 0 in rankings. Look up each ticket price at{" "}
-                    <a
-                      href="https://nylottery.ny.gov/scratch-off-games"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      nylottery.ny.gov
-                    </a>{" "}
-                    and add the entry to the lookup. Checked automatically once per week.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => refreshGapsMutation.mutate()}
-                  disabled={refreshGapsMutation.isPending}
-                  className="shrink-0"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshGapsMutation.isPending ? "animate-spin" : ""}`} />
-                  Refresh Now
-                </Button>
-              </div>
-              {scratchGapsQuery.data?.lastCheckedAt && (
-                <p className="text-xs text-gray-400 mt-2">
-                  Last checked: {formatDate(scratchGapsQuery.data.lastCheckedAt)}
+          <div className="space-y-6">
+
+            {/* ── Add Game Price Form ───────────────────────────────────── */}
+            <Card className="border-2 border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center text-blue-800">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add Game Price
+                </CardTitle>
+                <p className="text-sm text-blue-700 mt-1">
+                  Enter a game number and ticket price to store it in the database. This takes effect
+                  immediately — no code change or redeployment needed. Prices here override the
+                  hardcoded lookup and close the gap automatically.
                 </p>
-              )}
-            </CardHeader>
-            <CardContent>
-              {scratchGapsQuery.isLoading ? (
-                <div className="text-center py-8">
-                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
-                  <p className="text-gray-500 mt-2">Loading gap report…</p>
-                </div>
-              ) : !scratchGapsQuery.data?.lastCheckedAt ? (
-                <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <RefreshCw className="h-5 w-5 text-blue-500 shrink-0" />
-                  <div>
-                    <p className="font-medium text-blue-800">First scan pending</p>
-                    <p className="text-sm text-blue-600">The gap detector runs 10 seconds after server boot. Click &ldquo;Refresh Now&rdquo; to trigger an immediate check.</p>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-3 items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="price-game-number" className="text-blue-800">Game Number</Label>
+                    <Input
+                      id="price-game-number"
+                      type="text"
+                      placeholder="e.g. 1710"
+                      value={priceGameNumber}
+                      onChange={(e) => setPriceGameNumber(e.target.value.trim())}
+                      className="font-mono"
+                    />
                   </div>
-                </div>
-              ) : scratchGapsQuery.data?.gaps.length === 0 ? (
-                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
-                  <div>
-                    <p className="font-medium text-green-800">All clear — no price gaps detected</p>
-                    <p className="text-sm text-green-600">Every game in the live NY API has a price entry. Rankings are complete.</p>
+                  <div className="flex-1">
+                    <Label htmlFor="price-game-name" className="text-blue-800">Game Name <span className="text-blue-500">(optional)</span></Label>
+                    <Input
+                      id="price-game-name"
+                      type="text"
+                      placeholder="e.g. LUCKY 7S"
+                      value={priceGameName}
+                      onChange={(e) => setPriceGameName(e.target.value)}
+                    />
                   </div>
+                  <div className="w-32">
+                    <Label htmlFor="price-amount" className="text-blue-800">Price ($)</Label>
+                    <Input
+                      id="price-amount"
+                      type="number"
+                      min={1}
+                      max={100}
+                      placeholder="e.g. 5"
+                      value={priceAmount}
+                      onChange={(e) => setPriceAmount(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const num = parseInt(priceAmount, 10);
+                      if (!priceGameNumber || isNaN(num) || num < 1) return;
+                      addPriceMutation.mutate({
+                        gameNumber: priceGameNumber,
+                        price: num,
+                        gameName: priceGameName || undefined,
+                      });
+                    }}
+                    disabled={!priceGameNumber || !priceAmount || addPriceMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700 text-white shrink-0"
+                  >
+                    {addPriceMutation.isPending ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Save Price
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <Alert className="border-amber-300 bg-amber-50">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-amber-800">
-                      <strong>{scratchGapsQuery.data?.gaps.length} game(s)</strong> in the live NY API have no price entry.
-                      They are showing &ldquo;Unknown&rdquo; price and rank 0 in the scratch-off helper.
-                      Look up each price at nylottery.ny.gov and add them to <code className="bg-amber-100 px-1 rounded text-xs">PRICE_LOOKUP</code> in <code className="bg-amber-100 px-1 rounded text-xs">server/scratchOffService.ts</code>.
-                    </AlertDescription>
-                  </Alert>
+              </CardContent>
+            </Card>
+
+            {/* ── Existing DB-Stored Prices ─────────────────────────────── */}
+            {(scratchPricesQuery.data?.length ?? 0) > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold text-gray-700">
+                    Admin-Entered Prices ({scratchPricesQuery.data!.length})
+                  </CardTitle>
+                  <p className="text-xs text-gray-500">
+                    These prices are stored in the database and merged with the built-in lookup at runtime.
+                  </p>
+                </CardHeader>
+                <CardContent>
                   <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
-                    {scratchGapsQuery.data?.gaps.map((gap) => (
-                      <div key={gap.gameNumber} className="flex items-center justify-between p-3 hover:bg-gray-50">
+                    {scratchPricesQuery.data!.map((row) => (
+                      <div key={row.game_number} className="flex items-center justify-between p-3 hover:bg-gray-50">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className="font-mono text-xs shrink-0">
-                            #{gap.gameNumber}
+                            #{row.game_number}
                           </Badge>
-                          <span className="font-medium text-gray-900">{gap.gameName}</span>
+                          <span className="font-medium text-gray-900">
+                            {row.game_name || <span className="text-gray-400 italic">no name</span>}
+                          </span>
+                          <Badge className="bg-green-100 text-green-800 font-mono">${row.price}</Badge>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <span className="text-xs text-gray-400">
-                            Detected {new Date(gap.detectedAt).toLocaleDateString()}
+                            {new Date(row.added_at).toLocaleDateString()}
                           </span>
-                          <a
-                            href={`https://nylottery.ny.gov/scratch-off-games`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => deletePriceMutation.mutate(row.game_number)}
+                            disabled={deletePriceMutation.isPending}
                           >
-                            <Globe className="h-3 w-3" />
-                            Look up price
-                          </a>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400">
-                    After adding prices to PRICE_LOOKUP, redeploy the server and click &ldquo;Refresh Now&rdquo; to confirm gaps are resolved.
-                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ── Gap Report ───────────────────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
+                      NY Scratch-Off Price Gaps
+                    </CardTitle>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Games found in the live NY API (
+                      <a
+                        href="https://data.ny.gov/resource/nzqa-7unk.json"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        data.ny.gov
+                      </a>
+                      ) with no price in either the built-in lookup or the database above.
+                      Click <strong>Add Price ↑</strong> on any row to fill in the form. Checked automatically once per week.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refreshGapsMutation.mutate()}
+                    disabled={refreshGapsMutation.isPending}
+                    className="shrink-0"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshGapsMutation.isPending ? "animate-spin" : ""}`} />
+                    Refresh Now
+                  </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                {scratchGapsQuery.data?.lastCheckedAt && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    Last checked: {formatDate(scratchGapsQuery.data.lastCheckedAt)}
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent>
+                {scratchGapsQuery.isLoading ? (
+                  <div className="text-center py-8">
+                    <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
+                    <p className="text-gray-500 mt-2">Loading gap report…</p>
+                  </div>
+                ) : !scratchGapsQuery.data?.lastCheckedAt ? (
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <RefreshCw className="h-5 w-5 text-blue-500 shrink-0" />
+                    <div>
+                      <p className="font-medium text-blue-800">First scan pending</p>
+                      <p className="text-sm text-blue-600">The gap detector runs 10 seconds after server boot. Click &ldquo;Refresh Now&rdquo; to trigger an immediate check.</p>
+                    </div>
+                  </div>
+                ) : scratchGapsQuery.data?.gaps.length === 0 ? (
+                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+                    <div>
+                      <p className="font-medium text-green-800">All clear — no price gaps detected</p>
+                      <p className="text-sm text-green-600">Every game in the live NY API has a price entry. Rankings are complete.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Alert className="border-amber-300 bg-amber-50">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-800">
+                        <strong>{scratchGapsQuery.data?.gaps.length} game(s)</strong> in the live NY API have no price entry.
+                        They show &ldquo;Unknown&rdquo; price and rank 0. Use the form above to add prices without a code change.
+                      </AlertDescription>
+                    </Alert>
+                    <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+                      {scratchGapsQuery.data?.gaps.map((gap) => (
+                        <div key={gap.gameNumber} className="flex items-center justify-between p-3 hover:bg-gray-50">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="font-mono text-xs shrink-0">
+                              #{gap.gameNumber}
+                            </Badge>
+                            <span className="font-medium text-gray-900">{gap.gameName}</span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-xs text-gray-400">
+                              Detected {new Date(gap.detectedAt).toLocaleDateString()}
+                            </span>
+                            <a
+                              href={`https://nylottery.ny.gov/scratch-off-games`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              <Globe className="h-3 w-3" />
+                              Look up
+                            </a>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                              onClick={() => {
+                                setPriceGameNumber(gap.gameNumber);
+                                setPriceGameName(gap.gameName);
+                                setPriceAmount("");
+                                // Scroll to the form
+                                document.getElementById("price-game-number")?.focus();
+                              }}
+                            >
+                              <ArrowRight className="h-3 w-3 mr-1" />
+                              Add Price ↑
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>

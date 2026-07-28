@@ -1013,3 +1013,16 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
 
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+
+// Admin-managed NY scratch-off ticket prices.
+// DB entries override (supplement) the hardcoded PRICE_LOOKUP in scratchOffService.ts
+// so Russell can add new game prices without a code change or redeployment.
+export const scratchOffPrices = pgTable("scratch_off_prices", {
+  gameNumber: varchar("game_number", { length: 10 }).primaryKey(),
+  price: integer("price").notNull(),          // ticket price in whole dollars
+  gameName: text("game_name"),               // optional: human label for quick reference
+  addedAt: timestamp("added_at").default(sql`now()`),
+  addedBy: text("added_by").default("admin"),
+});
+
+export type ScratchOffPrice = typeof scratchOffPrices.$inferSelect;
